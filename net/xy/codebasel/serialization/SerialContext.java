@@ -32,6 +32,8 @@ public class SerialContext {
      */
     public final List classes;
 
+    // TODO make performancetest java serial versus own
+
     /**
      * constructs the class index
      * 
