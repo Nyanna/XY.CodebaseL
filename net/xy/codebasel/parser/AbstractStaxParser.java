@@ -131,7 +131,7 @@ public class AbstractStaxParser {
      * @param name
      * @return
      */
-    protected List intlist(final String name) {
+    protected Integer[] intarray(final String name) {
         final List res = new ArrayList();
         final String attrib = attribute(name);
         if (attrib != null) {
@@ -140,7 +140,7 @@ public class AbstractStaxParser {
                 res.add(Integer.valueOf(vals[i].trim()));
             }
         }
-        return res;
+        return (Integer[]) res.toArray(new Integer[res.size()]);
     }
 
     /**
@@ -149,7 +149,7 @@ public class AbstractStaxParser {
      * @param name
      * @return
      */
-    protected List strlist(final String name) {
+    protected String[] strarray(final String name) {
         final List res = new ArrayList();
         final String attrib = attribute(name);
         if (attrib != null) {
@@ -158,7 +158,7 @@ public class AbstractStaxParser {
                 res.add(vals[i].trim());
             }
         }
-        return res;
+        return (String[]) res.toArray(new Integer[res.size()]);
     }
 
     /**
