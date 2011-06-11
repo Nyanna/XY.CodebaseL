@@ -15,8 +15,20 @@ public class CLIRetriever implements IConfigRetriever {
     /**
      * holds the config
      */
-    private final Map args = new HashMap();
+    private static final Map ARGS = new HashMap();
 
+    /**
+     * uses prior parsed args if present
+     */
+    public CLIRetriever() {
+
+    }
+
+    /**
+     * inits with args
+     * 
+     * @param args
+     */
     public CLIRetriever(final String[] args) {
         for (int i = 0; i < args.length; i++) {
             final String val = args[i];
@@ -26,18 +38,18 @@ public class CLIRetriever implements IConfigRetriever {
             } else if (val.contains(":")) {
                 parts = val.split(":", 2);
             } else {
-                this.args.put(Integer.valueOf(i), val);
+                CLIRetriever.ARGS.put(Integer.valueOf(i), val);
                 continue;
             }
             String key = parts[0];
             while (key.startsWith("-")) {
                 key = key.substring(1);
             }
-            this.args.put(key, parts[1].trim());
+            CLIRetriever.ARGS.put(key, parts[1].trim());
         }
     }
 
     public Object load(final String key) {
-        return args.get(key.startsWith("cli:") ? key.substring(4) : key);
+        return ARGS.get(key.startsWith("cli:") ? key.substring(4) : key);
     }
 }

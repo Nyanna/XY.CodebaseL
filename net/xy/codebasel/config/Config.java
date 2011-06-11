@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import net.xy.codebasel.Debug;
 
@@ -26,10 +27,16 @@ public class Config {
     private static final Map objects = new HashMap();
     private static final Map lists = new HashMap();
     private static final Map maps = new HashMap();
+    private static final Map[] index = new Map[] { strings, integers, floats, doubles, booleans,
+            objects, lists, maps };
     /**
      * retrieverlist
      */
     private static final List retriever = new ArrayList();
+    /**
+     * toggles always include defaults on reset
+     */
+    public static boolean includeDefaults = false;
 
     /**
      * loads all classes and call their static initializers
@@ -46,9 +53,27 @@ public class Config {
      * @param args
      */
     public static void addDefaultRetrievers(final String[] args) {
-        addRetriever(new CLIRetriever(args));
+        includeDefaults = true;
+        if (args != null) {
+            addRetriever(new CLIRetriever(args));
+        } else {
+            addRetriever(new CLIRetriever());
+        }
         addRetriever(new EnvarRetriever());
         addRetriever(new SystemPropertyRetriever());
+    }
+
+    /**
+     * refrehes all values by passing all retrivers again
+     */
+    public static void refresh() {
+        for (int i = 0; i < index.length; i++) {
+            final Map map = index[i];
+            for (final Iterator iterator = map.entrySet().iterator(); iterator.hasNext();) {
+                final Entry entry = (Entry) iterator.next();
+                readValue((ConfigKey) entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     /**
@@ -66,18 +91,32 @@ public class Config {
             throw new IllegalArgumentException(Debug.values("Configkey already registered",
                     new Object[] { key, defaultValue }));
         }
+        readValue(keyo, defaultValue);
+        return keyo;
+    }
+
+    /**
+     * inner read checks all retrievers and sets value
+     * 
+     * @param key
+     * @param keyo
+     * @param defaultValue
+     */
+    private static void readValue(final ConfigKey keyo, final Object defaultValue) {
         Object value = null;
         for (final Iterator iterator = retriever.iterator(); iterator.hasNext();) {
             final IConfigRetriever retriever = (IConfigRetriever) iterator.next();
-            value = retriever.load(key);
+            value = retriever.load(keyo.backup);
+            if (value != null) {
+                break;
+            }
         }
         if (value != null && defaultValue != null && value.getClass() != defaultValue.getClass()) {
             throw new IllegalStateException(Debug.values(
-                    "Default value and retrieved values have differing types", new Object[] { key,
-                            defaultValue, value }));
+                    "Default value and retrieved values have differing types", new Object[] {
+                            keyo.backup, defaultValue, value }));
         }
         setValueInner(keyo, value != null ? value : defaultValue);
-        return keyo;
     }
 
     /**
@@ -168,10 +207,11 @@ public class Config {
      * @return
      */
     public static boolean isRegistered(final ConfigKey key, final Class valueType) {
-        if (strings.containsKey(key) || integers.containsKey(key) || floats.containsKey(key)
-                || doubles.containsKey(key) || booleans.containsKey(key)
-                || objects.containsKey(key) || lists.containsKey(key) || maps.containsKey(key)) {
-            return true;
+        for (int i = 0; i < index.length; i++) {
+            final Map map = index[i];
+            if (map.containsKey(key)) {
+                return true;
+            }
         }
         return false;
     }
@@ -226,6 +266,25 @@ public class Config {
     }
 
     /**
+     * remove retriever
+     * 
+     * @param retriever
+     */
+    public static void removeRetriever(final IConfigRetriever retriever) {
+        Config.retriever.remove(retriever);
+    }
+
+    /**
+     * removes all retrievers but reinits defaults if previously were init
+     */
+    public static void removeAllRetriever() {
+        Config.retriever.clear();
+        if (includeDefaults) {
+            addDefaultRetrievers(null);
+        }
+    }
+
+    /**
      * config retriever for reading config on demand
      * 
      * @author xyan
@@ -250,6 +309,8 @@ public class Config {
     public static class ConfigKey {
         // holds the initial hashcode
         private final Integer hashkey;
+        // backup of the key string for internal use
+        private final String backup;
 
         /**
          * private constructor
@@ -257,6 +318,7 @@ public class Config {
          * @param key
          */
         public ConfigKey(final String key) {
+            backup = key;
             hashkey = Integer.valueOf(key.hashCode());
         }
 

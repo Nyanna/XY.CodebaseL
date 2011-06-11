@@ -64,6 +64,8 @@ public class Log {
             "debug.tracelog.level", LVL_WARNING.num);
     private static final ConfigKey CONFIG_ERROROUT_LEVEL = Config.registerValues(
             "debug.stout.errorout.level", LVL_WARNING.num);
+    private static final ConfigKey CONFIG_DEF_LOGLEVEL = Config.registerValues(
+            "debug.default.level", LVL_COMMENT.num);
 
     /**
      * class indicating error level
@@ -86,6 +88,9 @@ public class Log {
      */
     public static ILogListener listener = new ILogListener() {
         public boolean log(final Level level, final String message, final StackTraceElement[] stack) {
+            if (level.num.intValue() > Config.getInteger(CONFIG_DEF_LOGLEVEL).intValue()) {
+                return false;
+            }
             final String messageLine = new StringBuilder("[").append(Config.getString(level.name))
                     .append("] ").append(message).toString();
             if (level.num.intValue() > Config.getInteger(CONFIG_ERROROUT_LEVEL).intValue()) {
@@ -296,33 +301,35 @@ public class Log {
     }
 
     /**
+     * delegate converting the ConfigKey
+     * 
+     * @param level
+     * @param key
+     * @param objs
+     * @return
+     */
+    private static final boolean log(final Level level, final ConfigKey key, final Object[] objs) {
+        return log(level, Config.getString(key), objs);
+    }
+
+    /**
      * log an message
      * 
      * @param level
      *            errorlevel see constants
-     * @param key
+     * @param message
      *            of message to ask config for
      * @param objs
      *            additional log objects
      * @return if this loglevel was enabled to calculate/add additional logdata
      */
-    private static final boolean log(final Level level, final ConfigKey key, final Object[] objs) {
+    public static final boolean log(final Level level, final String message, final Object[] objs) {
         if (listener == null) {
             return false;
         }
-        Throwable exception = null; // look for exception
-        if (objs != null) {
-            for (int i = 0; i < objs.length; i++) {
-                if (objs[i] instanceof Throwable) {
-                    exception = (Throwable) objs[i];
-                    break;
-                }
-            }
-        }
 
-        if (level.num.intValue() > Config.getInteger(CONFIG_TRACELOG_LEVEL).intValue()
-                && exception == null) {
-            return listener.log(level, Debug.values(Config.getString(key), objs), null);
+        if (level.num.intValue() > Config.getInteger(CONFIG_TRACELOG_LEVEL).intValue()) {
+            return listener.log(level, Debug.values(message, objs), null);
         } else {
             final StackTraceElement[] trace = Thread.currentThread().getStackTrace();
             int i = 0;
@@ -331,11 +338,8 @@ public class Log {
                     break;
                 }
             }
-            final boolean ret = listener.log(level, Debug.values(Config.getString(key), objs),
+            final boolean ret = listener.log(level, Debug.values(message, objs),
                     (StackTraceElement[]) Arrays.copyOfRange(trace, i, trace.length));
-            if (exception != null) {
-                throw new RuntimeException(exception);
-            }
             return ret;
         }
     }
@@ -356,5 +360,25 @@ public class Log {
          * @return
          */
         public boolean log(Level level, String message, StackTraceElement[] stack);
+    }
+
+    /**
+     * converts an stacktrace to an string
+     * 
+     * @param stack
+     * @param lines
+     *            max number of lines from stack
+     * @return
+     */
+    public static String printStack(final StackTraceElement[] stack, final int lines) {
+        final StringBuilder res = new StringBuilder();
+        for (int i = 0; i < stack.length && i < lines; i++) {
+            if (i > 0) {
+                res.append("\n");
+            }
+            final StackTraceElement stackTraceElement = stack[i];
+            res.append(stackTraceElement.toString());
+        }
+        return res.toString();
     }
 }

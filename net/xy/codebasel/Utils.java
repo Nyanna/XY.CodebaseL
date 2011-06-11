@@ -62,4 +62,16 @@ public class Utils {
         });
         return fields;
     }
+
+    /**
+     * convience method add and returns the given object
+     * 
+     * @param obj
+     * @param list
+     * @return
+     */
+    public static Object returnAdd(final Object obj, final List list) {
+        list.add(obj);
+        return obj;
+    }
 }
