@@ -52,8 +52,8 @@ public class SerialContext {
                     }
                     pcl = cl.getSuperclass();
                 }
-                throw new IllegalArgumentException(Debug.values("Class doesn't implements serializable",
-                        new Object[] { cl }));
+                throw new IllegalArgumentException(Debug.values(
+                        "Class doesn't implements serializable", new Object[] { cl }));
             }
         }
         Collections.sort(list, new Comparator() {
@@ -111,8 +111,8 @@ public class SerialContext {
      * @throws IllegalArgumentException
      * @throws IllegalAccessException
      */
-    private void write(final DataOutputStream out, final Object target) throws IOException, IllegalArgumentException,
-            IllegalAccessException {
+    private void write(final DataOutputStream out, final Object target) throws IOException,
+            IllegalArgumentException, IllegalAccessException {
         final int eid = getEid(target.getClass());
         out.writeShort(eid); // write type idendifier
         switch (eid) {
@@ -190,7 +190,8 @@ public class SerialContext {
             final List fields = Utils.getFields(target.getClass());
             for (final Iterator iterator = fields.iterator(); iterator.hasNext();) {
                 final Field field = (Field) iterator.next();
-                if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
+                if (!Modifier.isStatic(field.getModifiers())
+                        && !Modifier.isTransient(field.getModifiers())) {
                     field.setAccessible(true);
                     write(out, field.get(target));
                     field.setAccessible(false);
@@ -211,8 +212,8 @@ public class SerialContext {
      * @throws InstantiationException
      * @throws ClassNotFoundException
      */
-    private Object read(final DataInputStream in) throws IllegalArgumentException, IllegalAccessException, IOException,
-            InstantiationException, ClassNotFoundException {
+    private Object read(final DataInputStream in) throws IllegalArgumentException,
+            IllegalAccessException, IOException, InstantiationException, ClassNotFoundException {
         final short type;
         try {
             type = in.readShort();
@@ -284,12 +285,14 @@ public class SerialContext {
             final List fields = Utils.getFields(cl);
             for (final Iterator iterator = fields.iterator(); iterator.hasNext();) {
                 final Field field = (Field) iterator.next();
-                if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
+                if (!Modifier.isStatic(field.getModifiers())
+                        && !Modifier.isTransient(field.getModifiers())) {
                     field.setAccessible(true);
                     if (!field.isEnumConstant()) {
                         field.set(target, read(in));
                     } else {
-                        throw new UnsupportedOperationException("Readind of enums actually not implemented");
+                        throw new UnsupportedOperationException(
+                                "Readind of enums actually not implemented");
                     }
                     field.setAccessible(false);
                 }
@@ -338,6 +341,7 @@ public class SerialContext {
             }
             c++;
         }
-        throw new IllegalStateException(Debug.values("Class not in context", new Object[] { clazz }));
+        throw new IllegalStateException(
+                Debug.values("Class not in context", new Object[] { clazz }));
     }
 }
