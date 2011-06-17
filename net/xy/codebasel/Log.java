@@ -14,8 +14,8 @@ package net.xy.codebasel;
 
 import java.util.Arrays;
 
-import net.xy.codebasel.config.Config;
-import net.xy.codebasel.config.Config.ConfigKey;
+import net.xy.codebasel.config.Cfg;
+import net.xy.codebasel.config.Cfg.Config;
 
 /**
  * wrapper for various logging solutions
@@ -27,56 +27,56 @@ public class Log {
     /**
      * application reaches broken code
      */
-    public static final Level LVL_FATTAL = new Level(1, Config.registerValues("debug.lvl.name.1",
+    public static final Level LVL_FATTAL = new Level(1, Cfg.register("debug.lvl.name.1",
             "FATA"));
     /**
      * db connection abborted using cached images
      */
-    public static final Level LVL_CRITICAL = new Level(2, Config.registerValues("debug.lvl.name.2",
+    public static final Level LVL_CRITICAL = new Level(2, Cfg.register("debug.lvl.name.2",
             "CRIT"));
     /**
      * failure on loading 1 image
      */
-    public static final Level LVL_ERROR = new Level(3, Config.registerValues("debug.lvl.name.3",
+    public static final Level LVL_ERROR = new Level(3, Cfg.register("debug.lvl.name.3",
             "EROR"));
     /**
      * error in parsing image aspects
      */
-    public static final Level LVL_WARNING = new Level(4, Config.registerValues("debug.lvl.name.4",
+    public static final Level LVL_WARNING = new Level(4, Cfg.register("debug.lvl.name.4",
             "WARN"));
     /**
      * image aspect got recalculates
      */
-    public static final Level LVL_NOTICE = new Level(5, Config.registerValues("debug.lvl.name.5",
+    public static final Level LVL_NOTICE = new Level(5, Cfg.register("debug.lvl.name.5",
             "NOTI"));
     /**
      * parsing of 22 pics successful
      */
-    public static final Level LVL_COMMENT = new Level(6, Config.registerValues("debug.lvl.name.6",
+    public static final Level LVL_COMMENT = new Level(6, Cfg.register("debug.lvl.name.6",
             "COMM"));
     /**
      * image loader with tiff and jped support loaded in version
      */
-    public static final Level LVL_TRACE = new Level(7, Config.registerValues("debug.lvl.name.7",
+    public static final Level LVL_TRACE = new Level(7, Cfg.register("debug.lvl.name.7",
             "TRAC"));
     /**
      * starting image parsing at byte with speed
      */
-    public static final Level LVL_MISC = new Level(8, Config.registerValues("debug.lvl.name.8",
+    public static final Level LVL_MISC = new Level(8, Cfg.register("debug.lvl.name.8",
             "MISC"));
     /**
      * application starts or ends
      */
-    public static final Level LVL_ALL = new Level(9, Config.registerValues("debug.lvl.name.9",
+    public static final Level LVL_ALL = new Level(9, Cfg.register("debug.lvl.name.9",
             "ALLL"));
     /**
      * config keys
      */
-    private static final ConfigKey CONFIG_TRACELOG_LEVEL = Config.registerValues(
+    private static final Config CONFIG_TRACELOG_LEVEL = Cfg.register(
             "debug.tracelog.level", LVL_WARNING.num);
-    private static final ConfigKey CONFIG_ERROROUT_LEVEL = Config.registerValues(
+    private static final Config CONFIG_ERROROUT_LEVEL = Cfg.register(
             "debug.stout.errorout.level", LVL_WARNING.num);
-    private static final ConfigKey CONFIG_DEF_LOGLEVEL = Config.registerValues(
+    private static final Config CONFIG_DEF_LOGLEVEL = Cfg.register(
             "debug.default.level", LVL_COMMENT.num);
 
     /**
@@ -87,9 +87,9 @@ public class Log {
      */
     public static class Level {
         private final Integer num;
-        private final ConfigKey name;
+        private final Config name;
 
-        private Level(final int num, final ConfigKey name) {
+        private Level(final int num, final Config name) {
             this.num = Integer.valueOf(num);
             this.name = name;
         }
@@ -100,12 +100,12 @@ public class Log {
      */
     public static ILogListener listener = new ILogListener() {
         public boolean log(final Level level, final String message, final StackTraceElement[] stack) {
-            if (level.num.intValue() > Config.getInteger(CONFIG_DEF_LOGLEVEL).intValue()) {
+            if (level.num.intValue() > Cfg.integer(CONFIG_DEF_LOGLEVEL).intValue()) {
                 return false;
             }
-            final String messageLine = new StringBuilder("[").append(Config.getString(level.name))
+            final String messageLine = new StringBuilder("[").append(Cfg.string(level.name))
                     .append("] ").append(message).toString();
-            if (level.num.intValue() > Config.getInteger(CONFIG_ERROROUT_LEVEL).intValue()) {
+            if (level.num.intValue() > Cfg.integer(CONFIG_ERROROUT_LEVEL).intValue()) {
                 System.out.println(messageLine);
             } else {
                 System.err.println(messageLine);
@@ -121,7 +121,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean fattal(final ConfigKey key) {
+    public static final boolean fattal(final Config key) {
         return fattal(key, null);
     }
 
@@ -132,7 +132,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean fattal(final ConfigKey key, final Object[] objs) {
+    public static final boolean fattal(final Config key, final Object[] objs) {
         return log(LVL_FATTAL, key, objs);
     }
 
@@ -143,7 +143,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean critical(final ConfigKey key) {
+    public static final boolean critical(final Config key) {
         return critical(key, null);
     }
 
@@ -154,7 +154,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean critical(final ConfigKey key, final Object[] objs) {
+    public static final boolean critical(final Config key, final Object[] objs) {
         return log(LVL_CRITICAL, key, objs);
     }
 
@@ -165,7 +165,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean error(final ConfigKey key) {
+    public static final boolean error(final Config key) {
         return error(key, null);
     }
 
@@ -176,7 +176,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean error(final ConfigKey key, final Object[] objs) {
+    public static final boolean error(final Config key, final Object[] objs) {
         return log(LVL_ERROR, key, objs);
     }
 
@@ -187,7 +187,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean warning(final ConfigKey key) {
+    public static final boolean warning(final Config key) {
         return warning(key, null);
     }
 
@@ -198,7 +198,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean warning(final ConfigKey key, final Object[] objs) {
+    public static final boolean warning(final Config key, final Object[] objs) {
         return log(LVL_WARNING, key, objs);
     }
 
@@ -209,7 +209,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean notice(final ConfigKey key) {
+    public static final boolean notice(final Config key) {
         return notice(key, null);
     }
 
@@ -220,7 +220,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean notice(final ConfigKey key, final Object[] objs) {
+    public static final boolean notice(final Config key, final Object[] objs) {
         return log(LVL_NOTICE, key, objs);
     }
 
@@ -231,7 +231,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean comment(final ConfigKey key) {
+    public static final boolean comment(final Config key) {
         return comment(key, null);
     }
 
@@ -242,7 +242,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean comment(final ConfigKey key, final Object[] objs) {
+    public static final boolean comment(final Config key, final Object[] objs) {
         return log(LVL_COMMENT, key, objs);
     }
 
@@ -253,7 +253,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean trace(final ConfigKey key) {
+    public static final boolean trace(final Config key) {
         return trace(key, null);
     }
 
@@ -264,7 +264,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean trace(final ConfigKey key, final Object[] objs) {
+    public static final boolean trace(final Config key, final Object[] objs) {
         return log(LVL_TRACE, key, objs);
     }
 
@@ -275,7 +275,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean misc(final ConfigKey key) {
+    public static final boolean misc(final Config key) {
         return misc(key, null);
     }
 
@@ -286,7 +286,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean misc(final ConfigKey key, final Object[] objs) {
+    public static final boolean misc(final Config key, final Object[] objs) {
         return log(LVL_MISC, key, objs);
     }
 
@@ -297,7 +297,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean all(final ConfigKey key) {
+    public static final boolean all(final Config key) {
         return all(key, null);
     }
 
@@ -308,7 +308,7 @@ public class Log {
      *            message key to ask config for
      * @return
      */
-    public static final boolean all(final ConfigKey key, final Object[] objs) {
+    public static final boolean all(final Config key, final Object[] objs) {
         return log(LVL_ALL, key, objs);
     }
 
@@ -320,8 +320,8 @@ public class Log {
      * @param objs
      * @return
      */
-    private static final boolean log(final Level level, final ConfigKey key, final Object[] objs) {
-        return log(level, Config.getString(key), objs);
+    private static final boolean log(final Level level, final Config key, final Object[] objs) {
+        return log(level, Cfg.string(key), objs);
     }
 
     /**
@@ -340,7 +340,7 @@ public class Log {
             return false;
         }
 
-        if (level.num.intValue() > Config.getInteger(CONFIG_TRACELOG_LEVEL).intValue()) {
+        if (level.num.intValue() > Cfg.integer(CONFIG_TRACELOG_LEVEL).intValue()) {
             return listener.log(level, Debug.values(message, objs), null);
         } else {
             final StackTraceElement[] trace = Thread.currentThread().getStackTrace();

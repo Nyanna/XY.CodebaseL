@@ -15,7 +15,7 @@ package net.xy.codebasel.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.xy.codebasel.config.Config.IConfigRetriever;
+import net.xy.codebasel.config.Cfg.IConfigRetriever;
 
 /**
  * retrieves values from the initial commandline

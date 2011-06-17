@@ -1,12 +1,13 @@
 /**
  * This file is part of XY.Codebase, Copyright 2011 (C) Xyan Kruse, Xyan@gmx.net, Xyan.kilu.de
- * 
- * XY.Codebase is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+ *
+ * XY.Codebase is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+ * License
  * as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * 
+ *
  * XY.Codebase is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with XY.Codebase. If not, see
  * <http://www.gnu.org/licenses/>.
  */
@@ -27,7 +28,7 @@ import net.xy.codebasel.Debug;
  * @author xyan
  * 
  */
-public class Config {
+public class Cfg {
     /**
      * data indices
      */
@@ -39,8 +40,7 @@ public class Config {
     private static final Map objects = new HashMap();
     private static final Map lists = new HashMap();
     private static final Map maps = new HashMap();
-    private static final Map[] index = new Map[] { strings, integers, floats, doubles, booleans,
-            objects, lists, maps };
+    private static final Map[] index = new Map[] { strings, integers, floats, doubles, booleans, objects, lists, maps };
     /**
      * retrieverlist
      */
@@ -83,7 +83,7 @@ public class Config {
             final Map map = index[i];
             for (final Iterator iterator = map.entrySet().iterator(); iterator.hasNext();) {
                 final Entry entry = (Entry) iterator.next();
-                readValue((ConfigKey) entry.getKey(), entry.getValue());
+                readValue((Config) entry.getKey(), entry.getValue());
             }
         }
     }
@@ -97,8 +97,8 @@ public class Config {
      * @param defaultValue
      * @return returns the generated key
      */
-    public static ConfigKey registerValues(final String key, final Object defaultValue) {
-        final ConfigKey keyo = new ConfigKey(key);
+    public static Config register(final String key, final Object defaultValue) {
+        final Config keyo = new Config(key, defaultValue.getClass());
         if (isRegistered(keyo, defaultValue != null ? defaultValue.getClass() : Object.class)) {
             throw new IllegalArgumentException(Debug.values("Configkey already registered",
                     new Object[] { key, defaultValue }));
@@ -114,7 +114,7 @@ public class Config {
      * @param keyo
      * @param defaultValue
      */
-    private static void readValue(final ConfigKey keyo, final Object defaultValue) {
+    private static void readValue(final Config keyo, final Object defaultValue) {
         Object value = null;
         for (final Iterator iterator = retriever.iterator(); iterator.hasNext();) {
             final IConfigRetriever retriever = (IConfigRetriever) iterator.next();
@@ -124,9 +124,8 @@ public class Config {
             }
         }
         if (value != null && defaultValue != null && value.getClass() != defaultValue.getClass()) {
-            throw new IllegalStateException(Debug.values(
-                    "Default value and retrieved values have differing types", new Object[] {
-                            keyo.backup, defaultValue, value }));
+            throw new IllegalStateException(Debug.values("Default value and retrieved values have differing types",
+                    new Object[] { keyo.backup, defaultValue, value }));
         }
         setValueInner(keyo, value != null ? value : defaultValue);
     }
@@ -137,7 +136,7 @@ public class Config {
      * @param key
      * @return
      */
-    public static String getString(final ConfigKey key) {
+    public static String string(final Config key) {
         return (String) strings.get(key);
     }
 
@@ -147,7 +146,7 @@ public class Config {
      * @param key
      * @return
      */
-    public static Integer getInteger(final ConfigKey key) {
+    public static Integer integer(final Config key) {
         return (Integer) integers.get(key);
     }
 
@@ -157,7 +156,7 @@ public class Config {
      * @param key
      * @return
      */
-    public static Float getFloat(final ConfigKey key) {
+    public static Float floatt(final Config key) {
         return (Float) floats.get(key);
     }
 
@@ -167,7 +166,7 @@ public class Config {
      * @param key
      * @return
      */
-    public static Double getDouble(final ConfigKey key) {
+    public static Double doublet(final Config key) {
         return (Double) doubles.get(key);
     }
 
@@ -177,7 +176,7 @@ public class Config {
      * @param key
      * @return
      */
-    public static Boolean getBoolean(final ConfigKey key) {
+    public static Boolean booleant(final Config key) {
         return (Boolean) booleans.get(key);
     }
 
@@ -187,7 +186,7 @@ public class Config {
      * @param key
      * @return
      */
-    public static Object getObject(final ConfigKey key) {
+    public static Object object(final Config key) {
         return objects.get(key);
     }
 
@@ -197,7 +196,7 @@ public class Config {
      * @param key
      * @return
      */
-    public static List getList(final ConfigKey key) {
+    public static List list(final Config key) {
         return (List) lists.get(key);
     }
 
@@ -207,8 +206,34 @@ public class Config {
      * @param key
      * @return
      */
-    public static Map getMap(final ConfigKey key) {
+    public static Map map(final Config key) {
         return (Map) maps.get(key);
+    }
+
+    /**
+     * gets an value of unknown type
+     * 
+     * @param key
+     * @return
+     */
+    public static Object get(final Config key) {
+        if (key.type.isAssignableFrom(String.class)) {
+            return strings.get(key);
+        } else if (key.type.isAssignableFrom(Integer.class)) {
+            return integers.get(key);
+        } else if (key.type.isAssignableFrom(Float.class)) {
+            return floats.get(key);
+        } else if (key.type.isAssignableFrom(Double.class)) {
+            return doubles.get(key);
+        } else if (key.type.isAssignableFrom(Boolean.class)) {
+            return booleans.get(key);
+        } else if (key.type.isAssignableFrom(List.class)) {
+            return lists.get(key);
+        } else if (key.type.isAssignableFrom(Map.class)) {
+            return maps.get(key);
+        } else {
+            return objects.get(key);
+        }
     }
 
     /**
@@ -218,14 +243,24 @@ public class Config {
      * @param valueType
      * @return
      */
-    public static boolean isRegistered(final ConfigKey key, final Class valueType) {
-        for (int i = 0; i < index.length; i++) {
-            final Map map = index[i];
-            if (map.containsKey(key)) {
-                return true;
-            }
+    public static boolean isRegistered(final Config key, final Class valueType) {
+        if (valueType.isAssignableFrom(String.class)) {
+            return strings.containsKey(key);
+        } else if (valueType.isAssignableFrom(Integer.class)) {
+            return integers.containsKey(key);
+        } else if (valueType.isAssignableFrom(Float.class)) {
+            return floats.containsKey(key);
+        } else if (valueType.isAssignableFrom(Double.class)) {
+            return doubles.containsKey(key);
+        } else if (valueType.isAssignableFrom(Boolean.class)) {
+            return booleans.containsKey(key);
+        } else if (valueType.isAssignableFrom(List.class)) {
+            return lists.containsKey(key);
+        } else if (valueType.isAssignableFrom(Map.class)) {
+            return maps.containsKey(key);
+        } else {
+            return objects.containsKey(key);
         }
-        return false;
     }
 
     /**
@@ -234,12 +269,12 @@ public class Config {
      * @param key
      * @param value
      */
-    public static void setValue(final ConfigKey key, final Object value) {
+    public static void setValue(final Config key, final Object value) {
         if (isRegistered(key, value.getClass())) {
             setValueInner(key, value);
+            return;
         }
-        throw new IllegalArgumentException(Debug.values("Configkey not registered", new Object[] {
-                key, value }));
+        throw new IllegalArgumentException(Debug.values("Configkey not registered", new Object[] { key, value }));
     }
 
     /**
@@ -248,7 +283,7 @@ public class Config {
      * @param key
      * @param value
      */
-    private static void setValueInner(final ConfigKey key, final Object value) {
+    private static void setValueInner(final Config key, final Object value) {
         if (value instanceof String) {
             strings.put(key, value);
         } else if (value instanceof Integer) {
@@ -274,7 +309,7 @@ public class Config {
      * @param retriever
      */
     public static void addRetriever(final IConfigRetriever retriever) {
-        Config.retriever.add(retriever);
+        Cfg.retriever.add(retriever);
     }
 
     /**
@@ -283,14 +318,14 @@ public class Config {
      * @param retriever
      */
     public static void removeRetriever(final IConfigRetriever retriever) {
-        Config.retriever.remove(retriever);
+        Cfg.retriever.remove(retriever);
     }
 
     /**
      * removes all retrievers but reinits defaults if previously were init
      */
     public static void removeAllRetriever() {
-        Config.retriever.clear();
+        Cfg.retriever.clear();
         if (includeDefaults) {
             addDefaultRetrievers(null);
         }
@@ -318,20 +353,23 @@ public class Config {
      * @author xyan
      * 
      */
-    public static class ConfigKey {
+    public static class Config {
         // holds the initial hashcode
         private final Integer hashkey;
         // backup of the key string for internal use
         private final String backup;
+        // type class of this value
+        public final Class type;
 
         /**
          * private constructor
          * 
          * @param key
          */
-        public ConfigKey(final String key) {
+        public Config(final String key, final Class type) {
             backup = key;
             hashkey = Integer.valueOf(key.hashCode());
+            this.type = type;
         }
 
         public int hashCode() {
@@ -344,6 +382,9 @@ public class Config {
             }
             return hashkey == (Integer) obj;
         }
+
+        public String toString() {
+            return backup;
+        }
     }
-    // TODO look after string to type converter scheme
 }

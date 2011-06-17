@@ -12,8 +12,8 @@
  */
 package net.xy.codebasel;
 
-import net.xy.codebasel.config.Config;
-import net.xy.codebasel.config.Config.ConfigKey;
+import net.xy.codebasel.config.Cfg;
+import net.xy.codebasel.config.Cfg.Config;
 
 /**
  * exception connected to the logging system
@@ -29,8 +29,8 @@ public abstract class LogException extends Error {
      * 
      * @param messageKey
      */
-    public LogException(final ConfigKey messageKey) {
-        super(Config.getString(messageKey));
+    public LogException(final Config messageKey) {
+        super(Cfg.string(messageKey));
     }
 
     /**
@@ -39,8 +39,8 @@ public abstract class LogException extends Error {
      * @param messageKey
      * @param cause
      */
-    public LogException(final ConfigKey messageKey, final Throwable cause) {
-        super(Config.getString(messageKey), cause);
+    public LogException(final Config messageKey, final Throwable cause) {
+        super(Cfg.string(messageKey), cause);
         setStackTrace(cause.getStackTrace());
     }
 
@@ -51,8 +51,8 @@ public abstract class LogException extends Error {
      * @param cause
      * @param additional
      */
-    public LogException(final ConfigKey messageKey, final Throwable cause, final Object[] additional) {
-        super(Debug.values(Config.getString(messageKey), additional), cause);
+    public LogException(final Config messageKey, final Throwable cause, final Object[] additional) {
+        super(Debug.values(Cfg.string(messageKey), additional), cause);
         setStackTrace(cause.getStackTrace());
     }
 
@@ -62,8 +62,8 @@ public abstract class LogException extends Error {
      * @param messageKey
      * @param additional
      */
-    public LogException(final ConfigKey messageKey, final Object[] additional) {
-        super(Debug.values(Config.getString(messageKey), additional));
+    public LogException(final Config messageKey, final Object[] additional) {
+        super(Debug.values(Cfg.string(messageKey), additional));
     }
 
     public String toString() {

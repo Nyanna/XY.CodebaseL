@@ -12,7 +12,7 @@
  */
 package net.xy.codebasel.config;
 
-import net.xy.codebasel.config.Config.IConfigRetriever;
+import net.xy.codebasel.config.Cfg.IConfigRetriever;
 
 /**
  * retrieves config from local environment vars

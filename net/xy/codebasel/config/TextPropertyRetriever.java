@@ -21,7 +21,7 @@ import java.io.Reader;
 import java.util.Properties;
 
 import net.xy.codebasel.TypeConverter;
-import net.xy.codebasel.config.Config.IConfigRetriever;
+import net.xy.codebasel.config.Cfg.IConfigRetriever;
 
 /**
  * implements the retriever for text properties

@@ -12,7 +12,7 @@
  */
 package net.xy.codebasel;
 
-import net.xy.codebasel.config.Config.ConfigKey;
+import net.xy.codebasel.config.Cfg.Config;
 
 public class LogCritical extends LogException {
     private static final long serialVersionUID = -6122183209120976824L;
@@ -22,7 +22,7 @@ public class LogCritical extends LogException {
      * 
      * @param messageKey
      */
-    public LogCritical(final ConfigKey messageKey) {
+    public LogCritical(final Config messageKey) {
         super(messageKey);
         Log.critical(messageKey);
     }
@@ -33,7 +33,7 @@ public class LogCritical extends LogException {
      * @param messageKey
      * @param cause
      */
-    public LogCritical(final ConfigKey messageKey, final Throwable cause) {
+    public LogCritical(final Config messageKey, final Throwable cause) {
         super(messageKey, cause);
         Log.log(Log.LVL_CRITICAL, toString(), null);
     }
@@ -45,7 +45,7 @@ public class LogCritical extends LogException {
      * @param cause
      * @param additional
      */
-    public LogCritical(final ConfigKey messageKey, final Throwable cause, final Object[] additional) {
+    public LogCritical(final Config messageKey, final Throwable cause, final Object[] additional) {
         super(messageKey, cause, additional);
         Log.log(Log.LVL_CRITICAL, toString(), additional);
     }
@@ -56,7 +56,7 @@ public class LogCritical extends LogException {
      * @param messageKey
      * @param additional
      */
-    public LogCritical(final ConfigKey messageKey, final Object[] additional) {
+    public LogCritical(final Config messageKey, final Object[] additional) {
         super(messageKey, additional);
         Log.log(Log.LVL_CRITICAL, toString(), additional);
     }

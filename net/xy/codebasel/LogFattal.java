@@ -12,7 +12,7 @@
  */
 package net.xy.codebasel;
 
-import net.xy.codebasel.config.Config.ConfigKey;
+import net.xy.codebasel.config.Cfg.Config;
 
 public class LogFattal extends LogException {
     private static final long serialVersionUID = 3389979592493914382L;
@@ -22,7 +22,7 @@ public class LogFattal extends LogException {
      * 
      * @param messageKey
      */
-    public LogFattal(final ConfigKey messageKey) {
+    public LogFattal(final Config messageKey) {
         super(messageKey);
         Log.fattal(messageKey);
     }
@@ -33,7 +33,7 @@ public class LogFattal extends LogException {
      * @param messageKey
      * @param cause
      */
-    public LogFattal(final ConfigKey messageKey, final Throwable cause) {
+    public LogFattal(final Config messageKey, final Throwable cause) {
         super(messageKey, cause);
         Log.log(Log.LVL_FATTAL, toString(), null);
     }
@@ -45,7 +45,7 @@ public class LogFattal extends LogException {
      * @param cause
      * @param additional
      */
-    public LogFattal(final ConfigKey messageKey, final Throwable cause, final Object[] additional) {
+    public LogFattal(final Config messageKey, final Throwable cause, final Object[] additional) {
         super(messageKey, cause, additional);
         Log.log(Log.LVL_FATTAL, toString(), additional);
     }
@@ -56,7 +56,7 @@ public class LogFattal extends LogException {
      * @param messageKey
      * @param additional
      */
-    public LogFattal(final ConfigKey messageKey, final Object[] additional) {
+    public LogFattal(final Config messageKey, final Object[] additional) {
         super(messageKey, additional);
         Log.log(Log.LVL_FATTAL, toString(), additional);
     }

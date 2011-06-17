@@ -12,7 +12,7 @@
  */
 package net.xy.codebasel;
 
-import net.xy.codebasel.config.Config.ConfigKey;
+import net.xy.codebasel.config.Cfg.Config;
 
 public class LogWarning extends LogException {
     private static final long serialVersionUID = 4654414387748808062L;
@@ -22,7 +22,7 @@ public class LogWarning extends LogException {
      * 
      * @param messageKey
      */
-    public LogWarning(final ConfigKey messageKey) {
+    public LogWarning(final Config messageKey) {
         super(messageKey);
         Log.warning(messageKey);
     }
@@ -33,7 +33,7 @@ public class LogWarning extends LogException {
      * @param messageKey
      * @param cause
      */
-    public LogWarning(final ConfigKey messageKey, final Throwable cause) {
+    public LogWarning(final Config messageKey, final Throwable cause) {
         super(messageKey, cause);
         Log.log(Log.LVL_WARNING, toString(), null);
     }
@@ -45,7 +45,7 @@ public class LogWarning extends LogException {
      * @param cause
      * @param additional
      */
-    public LogWarning(final ConfigKey messageKey, final Throwable cause, final Object[] additional) {
+    public LogWarning(final Config messageKey, final Throwable cause, final Object[] additional) {
         super(messageKey, cause, additional);
         Log.log(Log.LVL_WARNING, toString(), additional);
     }
@@ -56,7 +56,7 @@ public class LogWarning extends LogException {
      * @param messageKey
      * @param additional
      */
-    public LogWarning(final ConfigKey messageKey, final Object[] additional) {
+    public LogWarning(final Config messageKey, final Object[] additional) {
         super(messageKey, additional);
         Log.log(Log.LVL_WARNING, toString(), additional);
     }
