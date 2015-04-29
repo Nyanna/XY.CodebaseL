@@ -106,6 +106,7 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 			elements[i] = null;
 		}
 		rewind();
+		reset();
 	}
 
 	/**
@@ -116,6 +117,7 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 			elements[i] = null;
 		}
 		rewind();
+		reset();
 	}
 
 	/**
