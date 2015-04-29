@@ -13,11 +13,15 @@
  */
 package net.xy.codebase.cfg;
 
-import java.util.ArrayList;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import net.xy.codebase.collection.Array;
 
 /**
  * utility mainly for string to type conversion
@@ -25,7 +29,7 @@ import java.util.regex.Pattern;
  * @author Xyan
  *
  */
-public class TypeConverter {
+public class Typeparser {
 	private final int MOD = Pattern.CASE_INSENSITIVE;
 	/**
 	 * if true disable implecite relaxed checking
@@ -33,6 +37,8 @@ public class TypeConverter {
 	public boolean STRICT = false;
 	// stricts
 	private final Pattern PT_STRICT_STRING = Pattern.compile("(.*):String", MOD);
+	private final Pattern PT_STRICT_BYTE = Pattern.compile("([0-9\\-]{1,3}):Byte", MOD);
+	private final Pattern PT_STRICT_SHORT = Pattern.compile("([0-9\\-]{1,5}):Short", MOD);
 	private final Pattern PT_STRICT_INT = Pattern.compile("([0-9\\-]{1,10}):Integer", MOD);
 	private final Pattern PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,19}):Long", MOD);
 	private final Pattern PT_STRICT_FLOAT = Pattern.compile("([0-9,\\-f]+):Float", MOD);
@@ -40,6 +46,8 @@ public class TypeConverter {
 	private final Pattern PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD);
 	private final Pattern PT_STRICT_CHAR = Pattern.compile("(.{1}):Char", MOD);
 	private final Pattern PT_STRING = Pattern.compile("(\".*\")", MOD);
+	private final Pattern PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD);
+	private final Pattern PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD);
 	private final Pattern PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD);
 	private final Pattern PT_LONG = Pattern.compile("([0-9\\-l]{1,19})", MOD);
 	private final Pattern PT_FLOAT = Pattern.compile("([0-9.,\\-f]+)", MOD);
@@ -47,16 +55,14 @@ public class TypeConverter {
 	private final Pattern PT_BOOL = Pattern.compile("(true|false)", MOD);
 	private final Pattern PT_CHAR = Pattern.compile("('.{1}')", MOD);
 	// calls an converter like factory method accepting string returning object
-	// private final Pattern PT_CONVERTER =
-	// Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD);
+	private final Pattern PT_CONVERTER = Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD);
 	// creates via reflection an instance with an string constructor
-	// private final Pattern PT_CUSTOM =
-	// Pattern.compile("(.*):([a-zA-Z0-9.$]+)", MOD);
+	private final Pattern PT_CUSTOM = Pattern.compile("(.*):([a-zA-Z0-9]+)", MOD);
 	// returns as lists
-	// TODO implement converters and custom type support
-	// TODO [9] support for string maps, check XY.Cms
 	private final Pattern PT_ARRAY_STRING_SIMPLE = Pattern.compile("\\{(.*)\\}", MOD);
 	private final Pattern PT_ARRAY_STRING = Pattern.compile("\\{(.*)\\}:String", MOD);
+	private final Pattern PT_ARRAY_BYTE = Pattern.compile("\\{(.*)\\}:Byte", MOD);
+	private final Pattern PT_ARRAY_SHORT = Pattern.compile("\\{(.*)\\}:Short", MOD);
 	private final Pattern PT_ARRAY_INT = Pattern.compile("\\{(.*)\\}:Integer", MOD);
 	private final Pattern PT_ARRAY_LONG = Pattern.compile("\\{(.*)\\}:Long", MOD);
 	private final Pattern PT_ARRAY_FLOAT = Pattern.compile("\\{(.*)\\}:Float", MOD);
@@ -66,6 +72,7 @@ public class TypeConverter {
 	// calls an converter accepting string array returning object list
 	// private final Pattern PT_ARRAY_CONVERTER =
 	// Pattern.compile("\\{(.*)\\}:([a-zA-Z0-9.$]+)", MOD);
+	public final Map<String, ITypeConverter> customConverters = new HashMap<>();
 
 	/**
 	 * delegate without converter and custom type support
@@ -77,20 +84,29 @@ public class TypeConverter {
 	public Object string2type(final String string) {
 		try {
 			return string2type(string, null);
-		} catch (final ClassNotFoundException e) {
+		} catch (final ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
+				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 		}
 		return null;
 	}
 
 	/**
-	 * Converts an string to its java counterpart TODO remove from XY.Jcms
+	 * Converts an string to its java counterpart
 	 *
 	 * @param loader
 	 *            for custom types
 	 * @throws ClassNotFoundException
 	 *             if custom type could not be found
+	 * @throws SecurityException
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 * @throws IllegalArgumentException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
 	 */
-	public Object string2type(String string, final ClassLoader loader) throws ClassNotFoundException {
+	public Object string2type(String string, final ClassLoader loader) throws ClassNotFoundException,
+	NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
 		if (string == null) {
 			return null;
 		}
@@ -99,6 +115,14 @@ public class TypeConverter {
 		match = PT_STRICT_STRING.matcher(string);
 		if (match.matches()) {
 			return match.group(1);
+		}
+		match = PT_STRICT_BYTE.matcher(string);
+		if (match.matches()) {
+			return Byte.valueOf(match.group(1));
+		}
+		match = PT_STRICT_SHORT.matcher(string);
+		if (match.matches()) {
+			return Short.valueOf(match.group(1));
 		}
 		match = PT_STRICT_INT.matcher(string);
 		if (match.matches()) {
@@ -124,10 +148,31 @@ public class TypeConverter {
 		if (match.matches()) {
 			return Character.valueOf(match.group(1).charAt(0));
 		}
+		match = PT_CUSTOM.matcher(string);
+		if (match.matches()) {
+			final ITypeConverter conv = customConverters.get(match.group(2));
+			if (conv != null) {
+				return conv.parse(match.group(1));
+			}
+		}
+		match = PT_CONVERTER.matcher(string);
+		if (match.matches()) {
+			final Class<?> clazz = loader.loadClass(match.group(2));
+			final Constructor<?> con = clazz.getConstructor(String.class);
+			return con.newInstance(match.group(1));
+		}
 		if (!STRICT) {
 			match = PT_STRING.matcher(string);
 			if (match.matches()) {
 				return match.group(1);
+			}
+			match = PT_BYTE.matcher(string);
+			if (match.matches()) {
+				return Byte.valueOf(match.group(1));
+			}
+			match = PT_SHORT.matcher(string);
+			if (match.matches()) {
+				return Short.valueOf(match.group(1));
 			}
 			match = PT_INT.matcher(string);
 			if (match.matches()) {
@@ -162,10 +207,28 @@ public class TypeConverter {
 		if (match.matches()) {
 			return Arrays.asList(match.group(1).split(";"));
 		}
+		match = PT_ARRAY_BYTE.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(";");
+			final Array<Byte> res = new Array<>(Byte.class, vals.length);
+			for (final String val : vals) {
+				res.add(Byte.valueOf(val.trim()));
+			}
+			return res;
+		}
+		match = PT_ARRAY_SHORT.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(";");
+			final Array<Short> res = new Array<>(Short.class, vals.length);
+			for (final String val : vals) {
+				res.add(Short.valueOf(val.trim()));
+			}
+			return res;
+		}
 		match = PT_ARRAY_INT.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
-			final List<Integer> res = new ArrayList<>();
+			final Array<Integer> res = new Array<>(Integer.class, vals.length);
 			for (final String val : vals) {
 				res.add(Integer.valueOf(val.trim()));
 			}
@@ -174,7 +237,7 @@ public class TypeConverter {
 		match = PT_ARRAY_LONG.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
-			final List<Long> res = new ArrayList<>();
+			final Array<Long> res = new Array<>(Long.class, vals.length);
 			for (final String val : vals) {
 				res.add(Long.valueOf(val.trim()));
 			}
@@ -183,7 +246,7 @@ public class TypeConverter {
 		match = PT_ARRAY_FLOAT.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
-			final List<Float> res = new ArrayList<>();
+			final Array<Float> res = new Array<>(Float.class, vals.length);
 			for (final String val : vals) {
 				res.add(Float.valueOf(val.trim()));
 			}
@@ -192,7 +255,7 @@ public class TypeConverter {
 		match = PT_ARRAY_DOUBLE.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
-			final List<Double> res = new ArrayList<>();
+			final Array<Double> res = new Array<>(Double.class, vals.length);
 			for (final String val : vals) {
 				res.add(Double.valueOf(val.trim()));
 			}
@@ -201,7 +264,7 @@ public class TypeConverter {
 		match = PT_ARRAY_BOOL.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
-			final List<Boolean> res = new ArrayList<>();
+			final Array<Boolean> res = new Array<>(Boolean.class, vals.length);
 			for (final String val : vals) {
 				res.add(Boolean.valueOf(val.trim()));
 			}
@@ -285,5 +348,21 @@ public class TypeConverter {
 				return value.toString();
 			}
 		}
+	}
+
+	/**
+	 * custom type converts without back transscription support
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public static interface ITypeConverter {
+		/**
+		 * gets an string has to deliver an object
+		 *
+		 * @param str
+		 * @return
+		 */
+		public Object parse(String str);
 	}
 }
