@@ -29,9 +29,9 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 	 * @param e
 	 * @return
 	 */
-	public boolean add(final E e) {
+	public int add(final E e) {
 		elements[++maxIdx] = e;
-		return true;
+		return maxIdx;
 	}
 
 	/**
@@ -41,9 +41,8 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 	 */
 	public void ensureAdd(final int amount) {
 		final int minCapacity = size() + amount;
-		if (minCapacity - elements.length > 0) {
+		if (minCapacity - elements.length > 0)
 			grow(minCapacity);
-		}
 	}
 
 	/**
@@ -51,7 +50,7 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 	 *
 	 * @param amount
 	 */
-	public boolean addEnsured(final E e) {
+	public int addChecked(final E e) {
 		ensureCapacity(size() + 1);
 		return add(e);
 	}
@@ -62,18 +61,16 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 	 * @param minCapacity
 	 */
 	public void ensureCapacity(final int minCapacity) {
-		if (minCapacity - elements.length > 0) {
+		if (minCapacity - elements.length > 0)
 			grow(minCapacity);
-		}
 	}
 
 	private void grow(final int minCapacity) {
 		// overflow-conscious code
 		final int oldCapacity = elements.length;
 		int newCapacity = oldCapacity + oldCapacity / 3 + 64;
-		if (newCapacity - minCapacity < 0) {
+		if (newCapacity - minCapacity < 0)
 			newCapacity = minCapacity;
-		}
 		// minCapacity is usually close to size, so this is a win:
 		elements = Arrays.copyOf(elements, newCapacity);
 	}
@@ -102,9 +99,8 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 	 * nulls all field in the array
 	 */
 	public void clear() {
-		for (int i = 0; i < elements.length; i++) {
+		for (int i = 0; i < elements.length; i++)
 			elements[i] = null;
-		}
 		rewind();
 		reset();
 	}
@@ -113,9 +109,8 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 	 * nulls all fields up to the current maximum element
 	 */
 	public void clean() {
-		for (int i = 0; i <= maxIdx; i++) {
+		for (int i = 0; i <= maxIdx; i++)
 			elements[i] = null;
-		}
 		rewind();
 		reset();
 	}
@@ -168,11 +163,9 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 
 	public boolean contains(final E value) {
 		int i = maxIdx;
-		while (i >= 0) {
-			if (elements[i--] == value) {
+		while (i >= 0)
+			if (elements[i--] == value)
 				return true;
-			}
-		}
 		return false;
 	}
 
@@ -180,28 +173,23 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 		int i = maxIdx;
 		while (i >= 0) {
 			E res;
-			if (value.equals(res = elements[i--])) {
+			if (value.equals(res = elements[i--]))
 				return res;
-			}
 		}
 		return null;
 	}
 
 	public int indexOf(final E value) {
-		for (int i = 0; i <= maxIdx; i++) {
-			if (elements[i--] == value) {
+		for (int i = 0; i <= maxIdx; i++)
+			if (elements[i--] == value)
 				return i;
-			}
-		}
 		return -1;
 	}
 
 	public int indexOfEquals(final E value) {
-		for (int i = 0; i <= maxIdx; i++) {
-			if (value.equals(elements[i--])) {
+		for (int i = 0; i <= maxIdx; i++)
+			if (value.equals(elements[i--]))
 				return i;
-			}
-		}
 		return -1;
 	}
 
@@ -239,9 +227,8 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 	}
 
 	public E[] shrink() {
-		if (elements.length != size()) {
+		if (elements.length != size())
 			return resize(size());
-		}
 		return elements;
 	}
 
@@ -254,15 +241,18 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 
 	@Override
 	public Iterator<E> iterator() {
-		if (itIdx != -1) {
+		if (itIdx != -1)
 			throw new IllegalStateException("Iterator not reseted or used twice");
-		}
 		return this;
 	}
 
 	@Override
 	public boolean hasNext() {
-		return itIdx < maxIdx;
+		final boolean res = itIdx < maxIdx;
+		// autoreset after last call
+		if (!res)
+			reset();
+		return res;
 	}
 
 	@Override
@@ -280,25 +270,21 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 
 	@Override
 	public boolean equals(final Object object) {
-		if (object == this) {
+		if (object == this)
 			return true;
-		}
-		if (!(object instanceof Array)) {
+		if (!(object instanceof Array))
 			return false;
-		}
 		final Array<?> array = (Array<?>) object;
 		final int n = maxIdx;
-		if (n != array.maxIdx) {
+		if (n != array.maxIdx)
 			return false;
-		}
 		final Object[] items1 = this.elements;
 		final Object[] items2 = array.elements;
 		for (int i = 0; i < n; i++) {
 			final Object o1 = items1[i];
 			final Object o2 = items2[i];
-			if (!(o1 == null ? o2 == null : o1.equals(o2))) {
+			if (!(o1 == null ? o2 == null : o1.equals(o2)))
 				return false;
-			}
 		}
 		return true;
 	}
