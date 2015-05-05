@@ -47,8 +47,8 @@ public class Config {
 	public boolean parse(final String[] args) {
 		for (final String arg : args) {
 			final String[] pair = arg.split("=", 2);
-			final String key = pair[0];
-			final Object val = parser.string2type(pair[1]);
+			final String key = pair[0].trim();
+			final Object val = parser.string2type(pair[1].trim());
 			values.put(key, val);
 		}
 		return true;
@@ -62,8 +62,8 @@ public class Config {
 	 */
 	public boolean parse(final Properties props) {
 		for (final Entry<Object, Object> entry : props.entrySet()) {
-			final String key = (String) entry.getKey();
-			final Object val = parser.string2type((String) entry.getValue());
+			final String key = ((String) entry.getKey()).trim();
+			final Object val = parser.string2type(((String) entry.getValue()).trim());
 			values.put(key, val);
 		}
 		return true;
