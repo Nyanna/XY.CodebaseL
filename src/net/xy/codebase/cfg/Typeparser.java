@@ -76,7 +76,7 @@ public class Typeparser {
 
 	/**
 	 * adds an custom type parser
-	 * 
+	 *
 	 * @param name
 	 * @param parser
 	 */
@@ -96,6 +96,7 @@ public class Typeparser {
 			return string2type(string, null);
 		} catch (final ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
 				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -115,8 +116,8 @@ public class Typeparser {
 	 * @throws InstantiationException
 	 */
 	public Object string2type(String string, final ClassLoader loader) throws ClassNotFoundException,
-	NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
+			NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
+	IllegalArgumentException, InvocationTargetException {
 		if (string == null)
 			return null;
 		Matcher match;
@@ -175,7 +176,7 @@ public class Typeparser {
 				return Integer.valueOf(match.group(1));
 			match = PT_LONG.matcher(string);
 			if (match.matches())
-				return Long.valueOf(match.group(1));
+				return Long.valueOf(match.group(1).substring(0, match.group(1).length() - 1));
 			match = PT_FLOAT.matcher(string);
 			if (match.matches())
 				return Float.valueOf(match.group(1).replace(",", ".").replace("f", ""));
