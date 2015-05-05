@@ -72,7 +72,17 @@ public class Typeparser {
 	// calls an converter accepting string array returning object list
 	// private final Pattern PT_ARRAY_CONVERTER =
 	// Pattern.compile("\\{(.*)\\}:([a-zA-Z0-9.$]+)", MOD);
-	public final Map<String, ITypeConverter> customConverters = new HashMap<>();
+	private final Map<String, ITypeConverter<?>> customConverters = new HashMap<>();
+
+	/**
+	 * adds an custom type parser
+	 * 
+	 * @param name
+	 * @param parser
+	 */
+	public void add(final String name, final ITypeConverter<?> parser) {
+		customConverters.put(name, parser);
+	}
 
 	/**
 	 * delegate without converter and custom type support
@@ -107,53 +117,42 @@ public class Typeparser {
 	public Object string2type(String string, final ClassLoader loader) throws ClassNotFoundException,
 	NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
-		if (string == null) {
+		if (string == null)
 			return null;
-		}
 		Matcher match;
 		string = string.trim();
 		match = PT_STRICT_STRING.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return match.group(1);
-		}
 		match = PT_STRICT_BYTE.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Byte.valueOf(match.group(1));
-		}
 		match = PT_STRICT_SHORT.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Short.valueOf(match.group(1));
-		}
 		match = PT_STRICT_INT.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Integer.valueOf(match.group(1));
-		}
 		match = PT_STRICT_LONG.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Long.valueOf(match.group(1));
-		}
 		match = PT_STRICT_FLOAT.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Float.valueOf(match.group(1).replace(",", ".").replace("f", ""));
-		}
 		match = PT_STRICT_DOUBLE.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Double.valueOf(match.group(1).replace(",", "."));
-		}
 		match = PT_STRICT_BOOL.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Boolean.valueOf(match.group(1));
-		}
 		match = PT_STRICT_CHAR.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Character.valueOf(match.group(1).charAt(0));
-		}
 		match = PT_CUSTOM.matcher(string);
 		if (match.matches()) {
-			final ITypeConverter conv = customConverters.get(match.group(2));
-			if (conv != null) {
+			final ITypeConverter<?> conv = customConverters.get(match.group(2));
+			if (conv != null)
 				return conv.parse(match.group(1));
-			}
 		}
 		match = PT_CONVERTER.matcher(string);
 		if (match.matches()) {
@@ -163,111 +162,93 @@ public class Typeparser {
 		}
 		if (!STRICT) {
 			match = PT_STRING.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return match.group(1);
-			}
 			match = PT_BYTE.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Byte.valueOf(match.group(1));
-			}
 			match = PT_SHORT.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Short.valueOf(match.group(1));
-			}
 			match = PT_INT.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Integer.valueOf(match.group(1));
-			}
 			match = PT_LONG.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Long.valueOf(match.group(1));
-			}
 			match = PT_FLOAT.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Float.valueOf(match.group(1).replace(",", ".").replace("f", ""));
-			}
 			match = PT_DOUBLE.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Double.valueOf(match.group(1).replace(",", "."));
-			}
 			match = PT_BOOL.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Boolean.valueOf(match.group(1));
-			}
 			match = PT_CHAR.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Character.valueOf(match.group(1).charAt(0));
-			}
 			match = PT_ARRAY_STRING_SIMPLE.matcher(string);
-			if (match.matches()) {
+			if (match.matches())
 				return Arrays.asList(match.group(1).split(","));
-			}
 		}
 		match = PT_ARRAY_STRING.matcher(string);
-		if (match.matches()) {
+		if (match.matches())
 			return Arrays.asList(match.group(1).split(";"));
-		}
 		match = PT_ARRAY_BYTE.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
 			final Array<Byte> res = new Array<>(Byte.class, vals.length);
-			for (final String val : vals) {
+			for (final String val : vals)
 				res.add(Byte.valueOf(val.trim()));
-			}
 			return res;
 		}
 		match = PT_ARRAY_SHORT.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
 			final Array<Short> res = new Array<>(Short.class, vals.length);
-			for (final String val : vals) {
+			for (final String val : vals)
 				res.add(Short.valueOf(val.trim()));
-			}
 			return res;
 		}
 		match = PT_ARRAY_INT.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
 			final Array<Integer> res = new Array<>(Integer.class, vals.length);
-			for (final String val : vals) {
+			for (final String val : vals)
 				res.add(Integer.valueOf(val.trim()));
-			}
 			return res;
 		}
 		match = PT_ARRAY_LONG.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
 			final Array<Long> res = new Array<>(Long.class, vals.length);
-			for (final String val : vals) {
+			for (final String val : vals)
 				res.add(Long.valueOf(val.trim()));
-			}
 			return res;
 		}
 		match = PT_ARRAY_FLOAT.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
 			final Array<Float> res = new Array<>(Float.class, vals.length);
-			for (final String val : vals) {
+			for (final String val : vals)
 				res.add(Float.valueOf(val.trim()));
-			}
 			return res;
 		}
 		match = PT_ARRAY_DOUBLE.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
 			final Array<Double> res = new Array<>(Double.class, vals.length);
-			for (final String val : vals) {
+			for (final String val : vals)
 				res.add(Double.valueOf(val.trim()));
-			}
 			return res;
 		}
 		match = PT_ARRAY_BOOL.matcher(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(";");
 			final Array<Boolean> res = new Array<>(Boolean.class, vals.length);
-			for (final String val : vals) {
+			for (final String val : vals)
 				res.add(Boolean.valueOf(val.trim()));
-			}
 			return res;
 		}
 		return string;
@@ -284,70 +265,62 @@ public class Typeparser {
 		if (value.getClass().isArray()) {
 			final StringBuilder res = new StringBuilder("{");
 			for (int i = 0; i < ((Object[]) value).length; i++) {
-				if (i > 0) {
+				if (i > 0)
 					res.append(";");
-				}
 				res.append(((Object[]) value)[i]);
 			}
 			res.append("}");
 			final Class<?> clazz = value.getClass().getComponentType();
-			if (clazz.isAssignableFrom(String.class)) {
+			if (clazz.isAssignableFrom(String.class))
 				res.append(":String");
-			} else if (clazz.isAssignableFrom(Integer.class)) {
+			else if (clazz.isAssignableFrom(Integer.class))
 				res.append(":Integer");
-			} else if (clazz.isAssignableFrom(Long.class)) {
+			else if (clazz.isAssignableFrom(Long.class))
 				res.append(":Long");
-			} else if (clazz.isAssignableFrom(Float.class)) {
+			else if (clazz.isAssignableFrom(Float.class))
 				res.append(":Float");
-			} else if (clazz.isAssignableFrom(Double.class)) {
+			else if (clazz.isAssignableFrom(Double.class))
 				res.append(":Double");
-			} else if (clazz.isAssignableFrom(Boolean.class)) {
+			else if (clazz.isAssignableFrom(Boolean.class))
 				res.append(":Boolean");
-			}
 			return res.toString();
 		} else if (STRICT) {
-			if (value instanceof String) {
+			if (value instanceof String)
 				return new StringBuilder("'").append(value).append(":String'").toString();
-			} else if (value instanceof Integer) {
+			else if (value instanceof Integer)
 				return new StringBuilder("'").append(value).append(":Integer'").toString();
-			} else if (value instanceof Long) {
+			else if (value instanceof Long)
 				return new StringBuilder("").append(value).append(":Long").toString();
-			} else if (value instanceof Float) {
+			else if (value instanceof Float)
 				return new StringBuilder("").append(value).append(":Float").toString();
-			} else if (value instanceof Double) {
+			else if (value instanceof Double)
 				return new StringBuilder("").append(value).append(":Double").toString();
-			} else if (value instanceof Boolean) {
-				if (((Boolean) value).booleanValue()) {
+			else if (value instanceof Boolean) {
+				if (((Boolean) value).booleanValue())
 					return "true:Boolean";
-				}
 				return "false:Boolean";
-			} else if (value instanceof Character) {
+			} else if (value instanceof Character)
 				return new StringBuilder().append(value).append(":Char").toString();
-			} else {
+			else
 				return value.toString();
-			}
-		} else {
-			if (value instanceof String) {
-				return (String) value;
-			} else if (value instanceof Integer) {
-				return ((Integer) value).toString();
-			} else if (value instanceof Long) {
-				return new StringBuilder("").append(value).append("l").toString();
-			} else if (value instanceof Float) {
-				return new StringBuilder("").append(value).append("f").toString();
-			} else if (value instanceof Double) {
-				return new StringBuilder("").append(value).append("d").toString();
-			} else if (value instanceof Boolean) {
-				if (((Boolean) value).booleanValue()) {
-					return "true";
-				}
-				return "false";
-			} else if (value instanceof Character) {
-				return new StringBuilder("'").append(value).append("'").toString();
-			} else {
-				return value.toString();
-			}
-		}
+		} else if (value instanceof String)
+			return (String) value;
+		else if (value instanceof Integer)
+			return ((Integer) value).toString();
+		else if (value instanceof Long)
+			return new StringBuilder("").append(value).append("l").toString();
+		else if (value instanceof Float)
+			return new StringBuilder("").append(value).append("f").toString();
+		else if (value instanceof Double)
+			return new StringBuilder("").append(value).append("d").toString();
+		else if (value instanceof Boolean) {
+			if (((Boolean) value).booleanValue())
+				return "true";
+			return "false";
+		} else if (value instanceof Character)
+			return new StringBuilder("'").append(value).append("'").toString();
+		else
+			return value.toString();
 	}
 
 	/**
@@ -356,13 +329,13 @@ public class Typeparser {
 	 * @author Xyan
 	 *
 	 */
-	public static interface ITypeConverter {
+	public static interface ITypeConverter<T> {
 		/**
 		 * gets an string has to deliver an object
 		 *
 		 * @param str
 		 * @return
 		 */
-		public Object parse(String str);
+		public T parse(String str);
 	}
 }
