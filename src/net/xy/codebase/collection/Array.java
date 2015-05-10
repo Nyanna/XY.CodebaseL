@@ -1,11 +1,13 @@
 package net.xy.codebase.collection;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 
-public class Array<E> implements Iterable<E>, Iterator<E> {
+public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
+	private static final long serialVersionUID = -4019349541696506832L;
 	private int maxIdx = -1;
-	private int itIdx = -1;
+	private transient int itIdx = 0;
 	private E[] elements;
 
 	public Array(final Class<?> clazz) {
@@ -119,7 +121,7 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 	 * resets the iterator
 	 */
 	public void reset() {
-		itIdx = -1;
+		itIdx = 0;
 	}
 
 	public E get(final int index) {
@@ -241,14 +243,14 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 
 	@Override
 	public Iterator<E> iterator() {
-		if (itIdx != -1)
+		if (itIdx != 0)
 			throw new IllegalStateException("Iterator not reseted or used twice");
 		return this;
 	}
 
 	@Override
 	public boolean hasNext() {
-		final boolean res = itIdx < maxIdx;
+		final boolean res = itIdx <= maxIdx;
 		// autoreset after last call
 		if (!res)
 			reset();
@@ -257,7 +259,7 @@ public class Array<E> implements Iterable<E>, Iterator<E> {
 
 	@Override
 	public E next() {
-		final E res = elements[++itIdx];
+		final E res = elements[itIdx++];
 		return res;
 	}
 
