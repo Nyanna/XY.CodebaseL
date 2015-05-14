@@ -5,13 +5,14 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
+	public static int MIN_GROWTH = 32;
 	private static final long serialVersionUID = -4019349541696506832L;
 	private int maxIdx = -1;
 	private transient int itIdx = 0;
 	private E[] elements;
 
 	public Array(final Class<?> clazz) {
-		this(clazz, 0);
+		this(clazz, MIN_GROWTH);
 	}
 
 	public Array(final Class<?> clazz, final int capacity) {
@@ -70,7 +71,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	private void grow(final int minCapacity) {
 		// overflow-conscious code
 		final int oldCapacity = elements.length;
-		int newCapacity = oldCapacity + oldCapacity / 3 + 64;
+		int newCapacity = oldCapacity + ((oldCapacity / 2 - 1) / MIN_GROWTH + 1) * MIN_GROWTH;
 		if (newCapacity - minCapacity < 0)
 			newCapacity = minCapacity;
 		// minCapacity is usually close to size, so this is a win:
@@ -84,6 +85,13 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	 */
 	public int size() {
 		return maxIdx + 1;
+	}
+
+	/**
+	 * @return actual capacity of backend array
+	 */
+	public int capacity() {
+		return elements.length;
 	}
 
 	public boolean isEmpty() {
@@ -129,10 +137,6 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	}
 
 	public void set(final int index, final E value) {
-		if (value == null) {
-			removeIndex(index);
-			return;
-		}
 		elements[index] = value;
 	}
 
