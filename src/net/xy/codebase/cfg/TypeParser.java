@@ -23,13 +23,17 @@ import java.util.regex.Pattern;
 
 import net.xy.codebase.collection.Array;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * utility mainly for string to type conversion
  *
  * @author Xyan
  *
  */
-public class Typeparser {
+public class TypeParser {
+	private static final Logger LOG = LoggerFactory.getLogger(TypeParser.class);
 	private final int MOD = Pattern.CASE_INSENSITIVE;
 	/**
 	 * if true disable implecite relaxed checking
@@ -96,7 +100,7 @@ public class Typeparser {
 			return string2type(string, null);
 		} catch (final ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
 				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			e.printStackTrace();
+			LOG.error(e.getMessage(), e);
 		}
 		return null;
 	}
@@ -116,8 +120,8 @@ public class Typeparser {
 	 * @throws InstantiationException
 	 */
 	public Object string2type(String string, final ClassLoader loader) throws ClassNotFoundException,
-			NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
-	IllegalArgumentException, InvocationTargetException {
+	NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
 		if (string == null)
 			return null;
 		Matcher match;

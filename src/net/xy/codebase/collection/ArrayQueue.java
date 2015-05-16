@@ -2,7 +2,11 @@ package net.xy.codebase.collection;
 
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ArrayQueue<E> {
+	private static final Logger LOG = LoggerFactory.getLogger(ArrayQueue.class);
 	protected final Array<E> elements;
 	protected int putIdx = 0;
 	protected int getIdx = 0;
@@ -22,8 +26,9 @@ public class ArrayQueue<E> {
 		if (count >= elements.capacity()) {
 			elements.ensureCapacity(elements.capacity() + 1);
 			final E[] raw = elements.getElements();
-			System.out.println("Increased queue to [" + raw.getClass().getComponentType().getSimpleName() + "]["
-					+ raw.length + "]");
+			if (LOG.isDebugEnabled())
+				LOG.debug("Increased queue to [" + raw.getClass().getComponentType().getSimpleName() + "]["
+						+ raw.length + "]");
 
 			if (putIdx <= getIdx) {
 				final int copylength = Math.min(raw.length - count, putIdx);

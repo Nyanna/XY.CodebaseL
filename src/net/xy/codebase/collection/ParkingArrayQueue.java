@@ -4,7 +4,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ParkingArrayQueue<E> extends ArrayQueue<E> {
+	private static final Logger LOG = LoggerFactory.getLogger(ParkingArrayQueue.class);
 
 	private final ReentrantLock lock;
 	private final Condition added;
@@ -34,7 +38,7 @@ public class ParkingArrayQueue<E> extends ArrayQueue<E> {
 			added.await(waitMillis, TimeUnit.MILLISECONDS);
 			return take();
 		} catch (final InterruptedException e) {
-			e.printStackTrace();
+			LOG.error(e.getMessage(), e);
 		} finally {
 			lock.unlock();
 		}

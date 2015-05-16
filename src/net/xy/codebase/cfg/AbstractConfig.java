@@ -2,7 +2,10 @@ package net.xy.codebase.cfg;
 
 import java.util.Map;
 
-import net.xy.codebase.cfg.Typeparser.ITypeConverter;
+import net.xy.codebase.cfg.TypeParser.ITypeConverter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * configuration object build for different config sources. uses an type parser
@@ -12,6 +15,7 @@ import net.xy.codebase.cfg.Typeparser.ITypeConverter;
  *
  */
 public class AbstractConfig<Key, Value> {
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractConfig.class);
 	/**
 	 * value store map
 	 */
@@ -23,7 +27,7 @@ public class AbstractConfig<Key, Value> {
 	/**
 	 * this typeparser instance
 	 */
-	protected final Typeparser parser = new Typeparser();
+	protected final TypeParser parser = new TypeParser();
 
 	/**
 	 * adds an custom type parser
@@ -57,8 +61,8 @@ public class AbstractConfig<Key, Value> {
 		T res = null;
 		try {
 			res = (T) values.get(key);
-		} catch (final ClassCastException ex) {
-			ex.printStackTrace();
+		} catch (final ClassCastException e) {
+			LOG.error(e.getMessage(), e);
 		}
 		if (res == null && parent != null)
 			res = parent.getValue(key, def);
