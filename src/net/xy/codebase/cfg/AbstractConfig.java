@@ -4,9 +4,6 @@ import java.util.Map;
 
 import net.xy.codebase.cfg.TypeParser.ITypeConverter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * configuration object build for different config sources. uses an type parser
  * for pre converting the values.
@@ -15,7 +12,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class AbstractConfig<Key, Value> {
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractConfig.class);
 	/**
 	 * value store map
 	 */
@@ -62,7 +58,7 @@ public class AbstractConfig<Key, Value> {
 		try {
 			res = (T) values.get(key);
 		} catch (final ClassCastException e) {
-			LOG.error(e.getMessage(), e);
+			new RuntimeException(e);
 		}
 		if (res == null && parent != null)
 			res = parent.getValue(key, def);

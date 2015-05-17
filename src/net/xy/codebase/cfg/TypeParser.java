@@ -23,9 +23,6 @@ import java.util.regex.Pattern;
 
 import net.xy.codebase.collection.Array;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * utility mainly for string to type conversion
  *
@@ -33,7 +30,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class TypeParser {
-	private static final Logger LOG = LoggerFactory.getLogger(TypeParser.class);
 	private final int MOD = Pattern.CASE_INSENSITIVE;
 	/**
 	 * if true disable implecite relaxed checking
@@ -100,9 +96,8 @@ public class TypeParser {
 			return string2type(string, null);
 		} catch (final ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
 				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			LOG.error(e.getMessage(), e);
+			throw new IllegalArgumentException("Error parsing string to value", e);
 		}
-		return null;
 	}
 
 	/**
