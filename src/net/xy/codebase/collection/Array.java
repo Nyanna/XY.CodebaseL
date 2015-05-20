@@ -5,8 +5,15 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
-	public static int MIN_GROWTH = 32;
 	private static final long serialVersionUID = -4019349541696506832L;
+	public static int MIN_GROWTH = 32;
+	public static final Array<?> EMPTY = new EmptyArray<>(Object.class);
+
+	@SuppressWarnings("unchecked")
+	public static <T> Array<T> empty() {
+		return (Array<T>) EMPTY;
+	}
+
 	private int maxIdx = -1;
 	private transient int itIdx = 0;
 	private E[] elements;
@@ -68,7 +75,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 			grow(minCapacity);
 	}
 
-	private void grow(final int minCapacity) {
+	protected void grow(final int minCapacity) {
 		// overflow-conscious code
 		final int oldCapacity = elements.length;
 		int newCapacity = oldCapacity + ((oldCapacity / 2 - 1) / MIN_GROWTH + 1) * MIN_GROWTH;
@@ -211,6 +218,19 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 		elements[maxIdx] = null;
 		maxIdx--;
 		return value;
+	}
+
+	/**
+	 * convenience method for finding and removing the index
+	 *
+	 * @param elem
+	 * @return
+	 */
+	public E remove(final E elem) {
+		final int index = indexOf(elem);
+		if (index != -1)
+			return removeIndex(index);
+		return null;
 	}
 
 	public E cutIndex(final int index) {
