@@ -52,13 +52,25 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	public void ensureAdd(final int amount) {
 		final int minCapacity = size() + amount;
 		if (minCapacity - elements.length > 0)
-			grow(minCapacity);
+			grow(minCapacity, true);
+	}
+
+	/**
+	 * increases the capacity by an fixed amount
+	 *
+	 * @param amount
+	 */
+	public void increase(final int amount) {
+		final int minCapacity = size() + amount;
+		if (minCapacity - elements.length > 0)
+			grow(minCapacity, false);
 	}
 
 	/**
 	 * adds with size check and growth
 	 *
 	 * @param amount
+	 * @return added index
 	 */
 	public int addChecked(final E e) {
 		ensureCapacity(size() + 1);
@@ -72,13 +84,17 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	 */
 	public void ensureCapacity(final int minCapacity) {
 		if (minCapacity - elements.length > 0)
-			grow(minCapacity);
+			grow(minCapacity, true);
 	}
 
-	protected void grow(final int minCapacity) {
+	protected void grow(final int minCapacity, final boolean minGrowth) {
 		// overflow-conscious code
 		final int oldCapacity = elements.length;
-		int newCapacity = oldCapacity + ((oldCapacity / 2 - 1) / MIN_GROWTH + 1) * MIN_GROWTH;
+		int newCapacity;
+		if (minGrowth)
+			newCapacity = oldCapacity + ((oldCapacity / 2 - 1) / MIN_GROWTH + 1) * MIN_GROWTH;
+		else
+			newCapacity = minCapacity;
 		if (newCapacity - minCapacity < 0)
 			newCapacity = minCapacity;
 		// minCapacity is usually close to size, so this is a win:
@@ -194,14 +210,14 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 
 	public int indexOf(final E value) {
 		for (int i = 0; i <= maxIdx; i++)
-			if (elements[i--] == value)
+			if (elements[i] == value)
 				return i;
 		return -1;
 	}
 
 	public int indexOfEquals(final E value) {
 		for (int i = 0; i <= maxIdx; i++)
-			if (value.equals(elements[i--]))
+			if (value.equals(elements[i]))
 				return i;
 		return -1;
 	}

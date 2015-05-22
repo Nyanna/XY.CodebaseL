@@ -12,7 +12,7 @@ public class EmptyArray<T> extends Array<T> {
 
 	/**
 	 * default 0 size
-	 * 
+	 *
 	 * @param clazz
 	 */
 	public EmptyArray(final Class<?> clazz) {
@@ -25,7 +25,7 @@ public class EmptyArray<T> extends Array<T> {
 	}
 
 	@Override
-	protected void grow(final int minCapacity) {
+	protected void grow(final int minCapacity, final boolean minGrowth) {
 		throw new IllegalArgumentException("Constant empty array");
 	}
 }
