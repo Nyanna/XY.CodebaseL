@@ -46,10 +46,10 @@ public class TimeoutQueue {
 	 * @param t
 	 */
 	public void add(final ITask t) {
-		System.out.println("add task [" + t + "]");
+		if (LOG.isTraceEnabled())
+			LOG.trace("add task [" + t + "]");
 		queue.add(t);
 		if (queue.peek() == t)
-			// System.out.println("Add new first task");
 			monitor.release();
 	}
 
@@ -88,19 +88,13 @@ public class TimeoutQueue {
 				try {
 					nt = tq.queue.peek();
 					if (nt == null) {
-						// System.out.println("Waiting for next job");
 						tq.monitor.acquire();
-						// System.out.println("Waiting for next job ended");
 						continue;
 					}
 
 					final long waitTime = nt.nextRun() - System.currentTimeMillis();
-					System.out.println("Waiting for timeout [" + waitTime + "]");
 					if (!tq.monitor.tryAcquire(waitTime, TimeUnit.MILLISECONDS))
-						// System.out.println("Waiting for timeout ended");
 						timedOut(nt);
-					else
-						System.out.println("New item on head recalculating");
 				} catch (final InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -115,10 +109,8 @@ public class TimeoutQueue {
 		private void timedOut(final ITask nt) {
 			final ITask t = tq.queue.poll();
 			run(t);
-			if (t.isRecurring()) {
-				System.out.println("Readded recurring [" + t + "]");
+			if (t.isRecurring())
 				tq.add(t);
-			}
 		}
 
 		/**
@@ -128,7 +120,8 @@ public class TimeoutQueue {
 		 */
 		private void run(final ITask t) {
 			try {
-				System.out.println("firing task [" + t + "]");
+				if (LOG.isTraceEnabled())
+					LOG.trace("firing task [" + t + "]");
 				t.run();
 			} catch (final Exception e) {
 				LOG.error("Error running task", e);

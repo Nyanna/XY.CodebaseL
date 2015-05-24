@@ -57,13 +57,13 @@ public class ExecutionThrottler {
 	 */
 	public void run() {
 		while (true) {
-			final long runs = lastUpdate.get();
-			final long now = System.currentTimeMillis();
-			if (runs != 0 && lastUpdate.compareAndSet(runs, now))
+			long runs = lastUpdate.get();
+			if (runs != 0 && lastUpdate.compareAndSet(runs, ++runs))
 				return;
-			else if (lastUpdate.compareAndSet(0, now)) {
+			else if (lastUpdate.compareAndSet(0, 1)) {
 				// start runnable
 				if (interval > 0) {
+					final long now = System.currentTimeMillis();
 					final long nextStart = now + interval - (now - lastStart);
 					capsule.setNextRun(Math.max(nextStart, now));
 				}
@@ -84,11 +84,11 @@ public class ExecutionThrottler {
 
 		@Override
 		public void run() {
+			final long wish = lastUpdate.get();
 			final long now = System.currentTimeMillis();
 			lastStart = now;
 			runnable.run();
-			final long wish = lastUpdate.get();
-			if (wish < now && lastUpdate.compareAndSet(wish, 0))
+			if (lastUpdate.compareAndSet(wish, 0))
 				return;
 			else {
 				// update in future or has changed

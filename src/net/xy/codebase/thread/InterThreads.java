@@ -122,22 +122,18 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		 */
 		public InterThreadTimeoutable(final E thread, final Runnable run) {
 			super(thread, run);
-			System.out.println("InterThreadTimeoutable created");
 		}
 
 		@Override
 		public void schedule(final ITask capsule) {
-			if (capsule.nextRun() <= 0) {
-				System.out.println("Firing direct");
+			if (capsule.nextRun() <= 0)
 				capsule.run();
-			} else
-				// System.out.println("Scheduling capsule");
+			else
 				InterThreads.this.tque.add(capsule);
 		}
 
 		@Override
 		public void run() {
-			// System.out.println("Task fired submitting capsule for execution");
 			InterThreads.this.put(thread, run);
 		}
 	}
