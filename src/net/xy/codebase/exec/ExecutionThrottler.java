@@ -2,6 +2,8 @@ package net.xy.codebase.exec;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import net.xy.codebase.collection.TimeoutQueue.ITask;
+
 /**
  * throttler to execute an runnable not more than every interval. ensures that
  * no run call would be missed.
@@ -31,7 +33,7 @@ public class ExecutionThrottler {
 	/**
 	 * with 0 intervall ensures only that not 2 runnable are scheduled at the
 	 * same time
-	 * 
+	 *
 	 * @param runnable
 	 */
 	public ExecutionThrottler(final ScheduleRunnable runnable) {
@@ -62,10 +64,10 @@ public class ExecutionThrottler {
 			else if (lastUpdate.compareAndSet(0, now)) {
 				// start runnable
 				if (interval > 0) {
-					final long nextStart = interval - (now - lastStart);
-					runnable.schedule(capsule, (int) Math.max(nextStart, 0));
-				} else
-					runnable.schedule(capsule, 0);
+					final long nextStart = now + interval - (now - lastStart);
+					capsule.setNextRun(Math.max(nextStart, now));
+				}
+				runnable.schedule(capsule);
 				return;
 			}
 		}
@@ -77,7 +79,9 @@ public class ExecutionThrottler {
 	 * @author Xyan
 	 *
 	 */
-	public class ThrottledRunnable implements Runnable {
+	public class ThrottledRunnable implements ITask {
+		private long nextRun;
+
 		@Override
 		public void run() {
 			final long now = System.currentTimeMillis();
@@ -86,9 +90,26 @@ public class ExecutionThrottler {
 			final long wish = lastUpdate.get();
 			if (wish < now && lastUpdate.compareAndSet(wish, 0))
 				return;
-			else
+			else {
 				// update in future or has changed
-				runnable.schedule(this, interval);
+				if (interval > 0)
+					nextRun = now + interval;
+				runnable.schedule(this);
+			}
+		}
+
+		@Override
+		public boolean isRecurring() {
+			return false;
+		}
+
+		public void setNextRun(final long nextRun) {
+			this.nextRun = nextRun;
+		}
+
+		@Override
+		public long nextRun() {
+			return nextRun;
 		}
 	}
 
@@ -105,6 +126,6 @@ public class ExecutionThrottler {
 		 * @param run
 		 * @param delay
 		 */
-		public void schedule(Runnable run, int delay);
+		public void schedule(ITask run);
 	}
 }

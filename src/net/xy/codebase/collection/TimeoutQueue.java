@@ -5,6 +5,9 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * timeout queue implementation threadsafe based on task objects which must
  * decouple itself
@@ -12,11 +15,12 @@ import java.util.concurrent.TimeUnit;
  * @author Xyan
  *
  */
-public class TimeOutQueue {
+public class TimeoutQueue {
+	private static final Logger LOG = LoggerFactory.getLogger(TimeoutQueue.class);
 	/**
 	 * ordered task queue
 	 */
-	private final PriorityBlockingQueue<Task> queue;
+	private final PriorityBlockingQueue<ITask> queue;
 	/**
 	 * monitor for queue head update checks
 	 */
@@ -29,10 +33,10 @@ public class TimeOutQueue {
 	/**
 	 * default
 	 */
-	public TimeOutQueue() {
+	public TimeoutQueue(final String name) {
 		queue = new PriorityBlockingQueue<>(100, new TaskComparator());
 		monitor = new Semaphore(0);
-		timer = new QueueTimer(this);
+		timer = new QueueTimer(this, name);
 		timer.start();
 	}
 
@@ -41,9 +45,11 @@ public class TimeOutQueue {
 	 *
 	 * @param t
 	 */
-	public void add(final Task t) {
+	public void add(final ITask t) {
+		System.out.println("add task [" + t + "]");
 		queue.add(t);
 		if (queue.peek() == t)
+			// System.out.println("Add new first task");
 			monitor.release();
 	}
 
@@ -61,70 +67,72 @@ public class TimeOutQueue {
 		/**
 		 * ref to parent queue
 		 */
-		private final TimeOutQueue tq;
+		private final TimeoutQueue tq;
 
 		/**
 		 * default
 		 *
 		 * @param queue
+		 * @param name
 		 */
-		public QueueTimer(final TimeOutQueue queue) {
+		public QueueTimer(final TimeoutQueue queue, final String name) {
 			tq = queue;
-			setName(TimeOutQueue.class.getName() + ++COUNTER);
+			setName(name + " " + TimeoutQueue.class.getName() + "-" + ++COUNTER);
 			setDaemon(true);
 		}
 
 		@Override
 		public void run() {
-			Task nt = null;
+			ITask nt = null;
 			while (true)
 				try {
-					if (nt == null)
-						nt = tq.queue.peek();
-					final long waitTime = getWaitTime(nt);
-					if (waitTime > 0)
-						tq.monitor.tryAcquire(waitTime, TimeUnit.MILLISECONDS);
-					else if (waitTime == 0)
+					nt = tq.queue.peek();
+					if (nt == null) {
+						// System.out.println("Waiting for next job");
 						tq.monitor.acquire();
+						// System.out.println("Waiting for next job ended");
+						continue;
+					}
 
-					nt = runNext(nt);
+					final long waitTime = nt.nextRun() - System.currentTimeMillis();
+					System.out.println("Waiting for timeout [" + waitTime + "]");
+					if (!tq.monitor.tryAcquire(waitTime, TimeUnit.MILLISECONDS))
+						// System.out.println("Waiting for timeout ended");
+						timedOut(nt);
+					else
+						System.out.println("New item on head recalculating");
 				} catch (final InterruptedException e) {
 					e.printStackTrace();
 				}
 		}
 
 		/**
-		 * check and try to run the next tast
+		 * check and try to run the next task
 		 *
 		 * @param nt
-		 * @return null on success or the new qeue head
+		 * @return null on success or the new queue head
 		 */
-		private Task runNext(final Task nt) {
-			final Task t = tq.queue.peek();
-			if (t != nt)
-				return t;
-
-			if (t.isRecurring())
+		private void timedOut(final ITask nt) {
+			final ITask t = tq.queue.poll();
+			run(t);
+			if (t.isRecurring()) {
+				System.out.println("Readded recurring [" + t + "]");
 				tq.add(t);
-			t.run();
-			return null;
+			}
 		}
 
 		/**
-		 * calculate time tor wait for next tast execution
+		 * catches the run
 		 *
 		 * @param t
-		 * @return
 		 */
-		private long getWaitTime(final Task t) {
-			if (t == null)
-				return 0;
-
-			final long nextRun = t.nextRun();
-			final long wait = nextRun - System.currentTimeMillis();
-			if (wait <= 0)
-				return -1;
-			return wait;
+		private void run(final ITask t) {
+			try {
+				System.out.println("firing task [" + t + "]");
+				t.run();
+			} catch (final Exception e) {
+				LOG.error("Error running task", e);
+			}
 		}
 	}
 
@@ -134,7 +142,7 @@ public class TimeOutQueue {
 	 * @author Xyan
 	 *
 	 */
-	public interface Task extends Runnable {
+	public interface ITask extends Runnable {
 
 		/**
 		 * @return when this job should automaticly readded for further
@@ -150,13 +158,13 @@ public class TimeOutQueue {
 
 	/**
 	 * comparator for task ordering
-	 * 
+	 *
 	 * @author Xyan
 	 *
 	 */
-	public static class TaskComparator implements Comparator<Task> {
+	public static class TaskComparator implements Comparator<ITask> {
 		@Override
-		public int compare(final Task t1, final Task t2) {
+		public int compare(final ITask t1, final ITask t2) {
 			return Long.compare(t1.nextRun(), t2.nextRun());
 		}
 	}
