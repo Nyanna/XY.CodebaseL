@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * performance counter implementation
- * 
+ *
  * @author Xyan
  *
  */
@@ -41,7 +41,10 @@ public class PerfCounter implements IPerfCounter {
 
 	@Override
 	public long getAvrLoopTime() {
-		return TimeUnit.NANOSECONDS.toMicros(avr);
+		if (measureStart > System.nanoTime() - TimeUnit.SECONDS.toNanos(1))
+			return TimeUnit.NANOSECONDS.toMicros(avr);
+		else
+			return 0l;
 	}
 
 	@Override
