@@ -18,16 +18,38 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	private transient int itIdx = 0;
 	private E[] elements;
 
+	/**
+	 * empty, use as convenience container
+	 */
+	public Array() {
+	}
+
+	/**
+	 * with initial default capacity
+	 *
+	 * @param clazz
+	 */
 	public Array(final Class<?> clazz) {
 		this(clazz, MIN_GROWTH);
 	}
 
+	/**
+	 * default with given initial capacity
+	 *
+	 * @param clazz
+	 * @param capacity
+	 */
 	public Array(final Class<?> clazz, final int capacity) {
 		@SuppressWarnings("unchecked")
 		final E[] arr = (E[]) java.lang.reflect.Array.newInstance(clazz, capacity);
 		elements = arr;
 	}
 
+	/**
+	 * use array as convenience frontent for an array
+	 *
+	 * @param elementData
+	 */
 	public Array(final E[] elementData) {
 		this.elements = elementData;
 		maxIdx = elementData.length - 1;
@@ -308,6 +330,16 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	 */
 	public E[] getElements() {
 		return elements;
+	}
+
+	/**
+	 * for container usage set element data
+	 *
+	 * @param elements
+	 */
+	public void setElements(final E[] elements) {
+		this.elements = elements;
+		maxIdx = elements != null ? elements.length - 1 : -1;
 	}
 
 	@Override
