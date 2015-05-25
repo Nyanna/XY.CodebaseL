@@ -5,6 +5,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import net.xy.codebase.thread.RecurringTaskCapsule;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,18 @@ public class TimeoutQueue {
 		queue.add(t);
 		if (queue.peek() == t)
 			monitor.release();
+	}
+
+	/**
+	 * convenience mehtod supporting lamda syntax for creating recurring tasks
+	 *
+	 * @param intervall
+	 * @param run
+	 */
+	public RecurringTaskCapsule add(final int intervall, final Runnable run) {
+		final RecurringTaskCapsule cap = new RecurringTaskCapsule(intervall, run);
+		add(cap);
+		return cap;
 	}
 
 	/**
