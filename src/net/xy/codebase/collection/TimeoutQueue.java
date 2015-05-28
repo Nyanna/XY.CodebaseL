@@ -91,7 +91,7 @@ public class TimeoutQueue {
 		 */
 		public QueueTimer(final TimeoutQueue queue, final String name) {
 			tq = queue;
-			setName(name + " " + TimeoutQueue.class.getName() + "-" + ++COUNTER);
+			setName(name + " " + TimeoutQueue.class.getSimpleName() + "-" + ++COUNTER);
 			setDaemon(true);
 		}
 
