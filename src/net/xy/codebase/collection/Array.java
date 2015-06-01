@@ -181,6 +181,16 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 		return elements[index];
 	}
 
+	/**
+	 * checks array size
+	 * 
+	 * @param index
+	 * @return element at index or null
+	 */
+	public E getChecked(final int index) {
+		return index < elements.length ? elements[index] : null;
+	}
+
 	public void set(final int index, final E value) {
 		elements[index] = value;
 	}
