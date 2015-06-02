@@ -35,7 +35,10 @@ public class ParkingArrayQueue<E> extends ArrayQueue<E> {
 	public E take(final long waitMillis) {
 		try {
 			lock.lockInterruptibly();
-			added.await(waitMillis, TimeUnit.MILLISECONDS);
+			if (waitMillis < 0)
+				added.await();
+			else
+				added.await(waitMillis, TimeUnit.MILLISECONDS);
 			return take();
 		} catch (final InterruptedException e) {
 			LOG.error(e.getMessage(), e);

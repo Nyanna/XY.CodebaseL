@@ -22,9 +22,10 @@ public abstract class RecurringTask implements ITask {
 	}
 
 	private void calcNextRun() {
+		final long now = System.currentTimeMillis();
 		if (nextRun == 0)
-			nextRun = System.currentTimeMillis();
-		nextRun += intervallMs;
+			nextRun = now;
+		nextRun += ((now - nextRun) / intervallMs + 1) * intervallMs;
 	}
 
 	@Override
