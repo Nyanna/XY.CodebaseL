@@ -98,12 +98,19 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 		@Override
 		public void schedule(final ITask run) {
+			if (LOG.isTraceEnabled())
+				LOG.trace("insert in threadqueue no schedule [" + this + "]");
 			InterThreads.this.put(thread, run);
 		}
 
 		@Override
 		public void run() {
 			run.run();
+		}
+
+		@Override
+		public String toString() {
+			return "Inter [" + run.getClass().getSimpleName() + "]";
 		}
 	}
 
@@ -126,15 +133,27 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 		@Override
 		public void schedule(final ITask capsule) {
-			if (capsule.nextRun() <= 0)
+			if (capsule.nextRun() <= 0) {
+				if (LOG.isTraceEnabled())
+					LOG.trace("Schedule directly [" + this + "]");
 				capsule.run();
-			else
+			} else {
+				if (LOG.isTraceEnabled())
+					LOG.trace("Schedule queued [" + this + "]");
 				InterThreads.this.tque.add(capsule);
+			}
 		}
 
 		@Override
 		public void run() {
+			if (LOG.isTraceEnabled())
+				LOG.trace("Insert in threadqueue [" + this + "]");
 			InterThreads.this.put(thread, run);
+		}
+
+		@Override
+		public String toString() {
+			return "Inter [" + run.getClass().getSimpleName() + "]";
 		}
 	}
 }

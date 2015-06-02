@@ -14,7 +14,7 @@ public class RecurringTaskCapsule extends RecurringTask {
 
 	/**
 	 * default
-	 * 
+	 *
 	 * @param intervallMs
 	 * @param run
 	 */
@@ -26,5 +26,10 @@ public class RecurringTaskCapsule extends RecurringTask {
 	@Override
 	protected void innerRun() {
 		run.run();
+	}
+
+	@Override
+	public String toString() {
+		return "RTCapsule " + run.toString();
 	}
 }

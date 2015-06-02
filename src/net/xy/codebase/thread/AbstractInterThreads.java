@@ -20,7 +20,7 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 		if (measure != null)
 			measure.stopMeasure();
 
-		for (Runnable job = next(target, -1); job != null; job = next(target, -1)) {
+		for (Runnable job = next(target); job != null; job = next(target)) {
 			if (measure != null)
 				measure.startMeasure();
 

@@ -4,6 +4,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import net.xy.codebase.collection.TimeoutQueue.ITask;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * throttler to execute an runnable not more than every interval. ensures that
  * no run call would be missed.
@@ -12,6 +15,7 @@ import net.xy.codebase.collection.TimeoutQueue.ITask;
  *
  */
 public class ExecutionThrottler {
+	private static final Logger LOG = LoggerFactory.getLogger(ExecutionThrottler.class);
 	/**
 	 * last update wish time or 0 in case of not running
 	 */
@@ -58,15 +62,19 @@ public class ExecutionThrottler {
 	public void run() {
 		while (true) {
 			long runs = lastUpdate.get();
-			if (runs != 0 && lastUpdate.compareAndSet(runs, ++runs))
+			if (runs != 0 && lastUpdate.compareAndSet(runs, ++runs)) {
+				if (LOG.isTraceEnabled())
+					LOG.trace("Request throttled run [" + interval + "][" + runnable + "]");
 				return;
-			else if (lastUpdate.compareAndSet(0, 1)) {
+			} else if (lastUpdate.compareAndSet(0, 1)) {
 				// start runnable
 				if (interval > 0) {
 					final long now = System.currentTimeMillis();
 					final long nextStart = now + interval - (now - lastStart);
 					capsule.setNextRun(Math.max(nextStart, now));
 				}
+				if (LOG.isTraceEnabled())
+					LOG.trace("Start throttled [" + interval + "][" + runnable + "]");
 				runnable.schedule(capsule);
 				return;
 			}
@@ -87,13 +95,19 @@ public class ExecutionThrottler {
 			final long wish = lastUpdate.get();
 			final long now = System.currentTimeMillis();
 			lastStart = now;
+			if (LOG.isTraceEnabled())
+				LOG.trace("Run throttled [" + interval + "][" + this + "]");
 			runnable.run();
-			if (lastUpdate.compareAndSet(wish, 0))
+			if (lastUpdate.compareAndSet(wish, 0)) {
+				if (LOG.isTraceEnabled())
+					LOG.trace("Terminate throttled run [" + interval + "][" + this + "]");
 				return;
-			else {
+			} else {
 				// update in future or has changed
 				if (interval > 0)
 					nextRun = now + interval;
+				if (LOG.isTraceEnabled())
+					LOG.trace("Schedule throttled run [" + interval + "][" + this + "]");
 				runnable.schedule(this);
 			}
 		}
@@ -110,6 +124,11 @@ public class ExecutionThrottler {
 		@Override
 		public long nextRun() {
 			return nextRun;
+		}
+
+		@Override
+		public String toString() {
+			return runnable.toString();
 		}
 	}
 

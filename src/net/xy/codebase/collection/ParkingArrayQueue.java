@@ -21,25 +21,30 @@ public class ParkingArrayQueue<E> extends ArrayQueue<E> {
 
 	@Override
 	public boolean add(final E elem) {
-		final boolean res = super.add(elem);
-		if (res)
-			try {
-				lock.lock();
+		boolean res = false;
+		try {
+			lock.lock();
+			res = super.add(elem);
+			if (res)
 				added.signal();
-			} finally {
-				lock.unlock();
-			}
+		} finally {
+			lock.unlock();
+		}
 		return res;
 	}
 
 	public E take(final long waitMillis) {
 		try {
 			lock.lockInterruptibly();
-			if (waitMillis < 0)
-				added.await();
-			else
-				added.await(waitMillis, TimeUnit.MILLISECONDS);
-			return take();
+			E elem = take();
+			if (elem == null) {
+				if (waitMillis < 0)
+					added.await();
+				else
+					added.await(waitMillis, TimeUnit.MILLISECONDS);
+				elem = take();
+			}
+			return elem;
 		} catch (final InterruptedException e) {
 			LOG.error(e.getMessage(), e);
 		} finally {
