@@ -6,6 +6,7 @@ import net.xy.codebase.collection.ParkingArrayQueue;
 import net.xy.codebase.collection.TimeoutQueue;
 import net.xy.codebase.collection.TimeoutQueue.ITask;
 import net.xy.codebase.exec.ExecutionThrottler;
+import net.xy.codebase.exec.TimeoutRunnable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +77,50 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 	@Override
 	public ExecutionThrottler getThrottler(final E thread, final Runnable run, final int intervallMs) {
-		return new ExecutionThrottler(new InterThreadTimeoutable(thread, run), intervallMs);
+		return new ExecutionThrottler(new InterThreadSchedulable(thread, run), intervallMs);
+	}
+
+	@Override
+	public InterThreadTimeoutable runLater(final E thread, final Runnable run, final int timeout) {
+		final InterThreadTimeoutable res = new InterThreadTimeoutable(thread, timeout, run);
+		tque.add(res);
+		return res;
+	}
+
+	/**
+	 * implementation which supports single run timeouts to the referenced
+	 * timeoutqueue
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public class InterThreadTimeoutable extends TimeoutRunnable {
+		/**
+		 * target thread
+		 */
+		private final E thread;
+		/**
+		 * real runnable
+		 */
+		private final Runnable run;
+
+		/**
+		 * default
+		 *
+		 * @param thread
+		 * @param timeoutMs
+		 * @param run
+		 */
+		public InterThreadTimeoutable(final E thread, final long timeoutMs, final Runnable run) {
+			super(timeoutMs);
+			this.run = run;
+			this.thread = thread;
+		}
+
+		@Override
+		public void run() {
+			InterThreads.this.put(thread, run);
+		}
 	}
 
 	/**
@@ -115,19 +159,20 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	}
 
 	/**
-	 * implementation which supports timeouts to an referenced timeoutqueue
+	 * implementation which supports intervall timeouts to an referenced
+	 * timeoutqueue
 	 *
 	 * @author Xyan
 	 *
 	 */
-	public class InterThreadTimeoutable extends AbstractInterThreadRunnable {
+	public class InterThreadSchedulable extends AbstractInterThreadRunnable {
 		/**
 		 * default
 		 *
 		 * @param thread
 		 * @param run
 		 */
-		public InterThreadTimeoutable(final E thread, final Runnable run) {
+		public InterThreadSchedulable(final E thread, final Runnable run) {
 			super(thread, run);
 		}
 

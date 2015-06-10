@@ -1,6 +1,7 @@
 package net.xy.codebase.thread;
 
 import net.xy.codebase.exec.ExecutionThrottler;
+import net.xy.codebase.exec.TimeoutRunnable;
 
 /**
  * interface for cross thread execution factories
@@ -61,11 +62,21 @@ public interface IInterThreads<E extends Enum<E>> {
 
 	/**
 	 * gets an bounded throtler for the target thread at an specific intervall
-	 * 
+	 *
 	 * @param thread
 	 * @param run
 	 * @param intervallMs
 	 * @return
 	 */
 	public ExecutionThrottler getThrottler(E thread, Runnable run, int intervallMs);
+
+	/**
+	 * enques an runnable for later execution
+	 * 
+	 * @param thread
+	 * @param run
+	 * @param timeout
+	 * @return
+	 */
+	public TimeoutRunnable runLater(E thread, Runnable run, int timeout);
 }
