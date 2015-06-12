@@ -75,6 +75,13 @@ public class TypeParser {
 	private final Map<String, ITypeConverter<?>> customConverters = new HashMap<>();
 
 	/**
+	 * default, with extended converters
+	 */
+	public TypeParser() {
+		add("Mapping", new MappingConverter<Object, Object>(this));
+	}
+
+	/**
 	 * adds an custom type parser
 	 *
 	 * @param name
