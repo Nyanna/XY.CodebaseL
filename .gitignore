@@ -439,3 +439,6 @@
 /bin/
 /bin/
 /bin/
+/nbproject/private/
+/build/
+/dist/
