@@ -46,6 +46,17 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	}
 
 	/**
+	 * copy constructor
+	 *
+	 * @param clazz
+	 * @param copy
+	 */
+	public Array(final Array<E> copy) {
+		this(copy.elements.getClass().getComponentType(), copy.size());
+		addAll(copy);
+	}
+
+	/**
 	 * use array as convenience frontent for an array
 	 *
 	 * @param elementData
@@ -183,7 +194,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 
 	/**
 	 * checks array size
-	 * 
+	 *
 	 * @param index
 	 * @return element at index or null
 	 */
