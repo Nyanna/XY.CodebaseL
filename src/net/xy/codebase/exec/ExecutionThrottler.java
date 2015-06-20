@@ -77,7 +77,8 @@ public class ExecutionThrottler {
 					LOG.trace("Start throttled [" + interval + "][" + runnable + "]");
 				runnable.schedule(capsule);
 				return;
-			}
+			} else if (LOG.isTraceEnabled())
+				LOG.trace("Inefficient loop repeat [" + interval + "][" + runnable + "]");
 		}
 	}
 
@@ -97,7 +98,7 @@ public class ExecutionThrottler {
 			lastStart = now;
 			if (LOG.isTraceEnabled())
 				LOG.trace("Run throttled [" + interval + "][" + this + "]");
-			runnable.run();
+			runGuarded();
 			if (lastUpdate.compareAndSet(wish, 0)) {
 				if (LOG.isTraceEnabled())
 					LOG.trace("Terminate throttled run [" + interval + "][" + this + "]");
@@ -107,8 +108,16 @@ public class ExecutionThrottler {
 				if (interval > 0)
 					nextRun = now + interval;
 				if (LOG.isTraceEnabled())
-					LOG.trace("Schedule throttled run [" + interval + "][" + this + "]");
+					LOG.trace("Rerun throttled run [" + interval + "][" + this + "]");
 				runnable.schedule(this);
+			}
+		}
+
+		private void runGuarded() {
+			try {
+				runnable.run();
+			} catch (final Exception e) {
+				LOG.error("Error running throttled", e);
 			}
 		}
 
