@@ -43,6 +43,19 @@ public class TimeoutQueue {
 	}
 
 	/**
+	 * for external provided thread
+	 *
+	 * @param thread
+	 */
+	public TimeoutQueue(final QueueTimer thread) {
+		queue = new PriorityBlockingQueue<>(100, new TaskComparator());
+		monitor = new Semaphore(0);
+		timer = thread;
+		timer.setQueue(this);
+		timer.start();
+	}
+
+	/**
 	 * adds an task for scheduling
 	 *
 	 * @param t
@@ -81,7 +94,16 @@ public class TimeoutQueue {
 		/**
 		 * ref to parent queue
 		 */
-		private final TimeoutQueue tq;
+		private TimeoutQueue tq;
+
+		/**
+		 * to get post initialized by extern queue
+		 *
+		 * @param name
+		 */
+		public QueueTimer(final String name) {
+			this(null, name);
+		}
 
 		/**
 		 * default
@@ -90,9 +112,18 @@ public class TimeoutQueue {
 		 * @param name
 		 */
 		public QueueTimer(final TimeoutQueue queue, final String name) {
-			tq = queue;
+			setQueue(queue);
 			setName(name + " " + TimeoutQueue.class.getSimpleName() + "-" + ++COUNTER);
 			setDaemon(true);
+		}
+
+		/**
+		 * relocates to antoher queue
+		 *
+		 * @param tq
+		 */
+		public void setQueue(final TimeoutQueue tq) {
+			this.tq = tq;
 		}
 
 		@Override
@@ -100,6 +131,7 @@ public class TimeoutQueue {
 			ITask nt = null;
 			while (true)
 				try {
+					final TimeoutQueue tq = this.tq;
 					nt = tq.queue.peek();
 					if (nt == null) {
 						tq.monitor.acquire();
