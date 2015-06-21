@@ -5,20 +5,54 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * an unboundet self expanding queue up to an maximum. synchronized.
+ *
+ * @author Xyan
+ *
+ * @param <E>
+ */
 public class ArrayQueue<E> {
 	private static final Logger LOG = LoggerFactory.getLogger(ArrayQueue.class);
+	/**
+	 * backing array container
+	 */
 	protected final Array<E> elements;
+	/**
+	 * idx to put next element in
+	 */
 	protected int putIdx = 0;
+	/**
+	 * actues index to get an element from
+	 */
 	protected int getIdx = 0;
+	/**
+	 * number of elements in queue
+	 */
 	protected int count = 0;
+	/**
+	 * maximum allowed element count
+	 */
 	protected final int maxCount;
 
+	/**
+	 * default
+	 *
+	 * @param clazz
+	 * @param maxCount
+	 */
 	public ArrayQueue(final Class<E> clazz, final int maxCount) {
 		elements = new Array<E>(clazz);
 		this.maxCount = maxCount;
 		clear();
 	}
 
+	/**
+	 * adds an element as long as the maximum size is not reached
+	 *
+	 * @param elem
+	 * @return true on success
+	 */
 	public synchronized boolean add(final E elem) {
 		if (count >= maxCount)
 			return false;
@@ -50,6 +84,11 @@ public class ArrayQueue<E> {
 		return true;
 	}
 
+	/**
+	 * take and remove top element or return null.
+	 *
+	 * @return
+	 */
 	public synchronized E take() {
 		E res = null;
 		if (count > 0) {
@@ -64,6 +103,9 @@ public class ArrayQueue<E> {
 		return res;
 	}
 
+	/**
+	 * @return top element without removing
+	 */
 	public E peek() {
 		E res = null;
 		if (count > 0)
@@ -76,6 +118,9 @@ public class ArrayQueue<E> {
 		return Arrays.toString(elements.getElements());
 	}
 
+	/**
+	 * clears the queue
+	 */
 	public void clear() {
 		elements.clear();
 		putIdx = 0;
