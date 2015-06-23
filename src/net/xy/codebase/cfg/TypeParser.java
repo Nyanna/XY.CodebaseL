@@ -124,7 +124,7 @@ public class TypeParser {
 	public Object string2type(String string, final ClassLoader loader) throws ClassNotFoundException,
 			NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
 	IllegalArgumentException, InvocationTargetException {
-		if (string == null)
+		if (string == null || string.length() == 0)
 			return null;
 		Matcher match;
 		string = string.trim();
