@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 
-public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
+import net.xy.codebase.clone.Cloneable;
+
+public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneable<Array<E>> {
 	private static final long serialVersionUID = -4019349541696506832L;
 	public static int MIN_GROWTH = 32;
 	public static final Array<?> EMPTY = new EmptyArray<>(Object.class);
@@ -64,6 +66,21 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 	public Array(final E[] elementData) {
 		this.elements = elementData;
 		maxIdx = elementData.length - 1;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Array<E> cloneDeep() {
+		final Array<E> res = new Array<>(elements.getClass().getComponentType(), size());
+		for (int i = 0; i < size(); i++) {
+			final E elem = get(i);
+			if (elem instanceof Cloneable)
+				res.set(i, ((Cloneable<E>) elem).cloneDeep());
+			else
+				res.set(i, elem);
+		}
+		res.maxIdx = maxIdx;
+		return res;
 	}
 
 	/**
@@ -382,5 +399,10 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable {
 				return false;
 		}
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s,%s,%s", maxIdx, itIdx, Arrays.toString(elements));
 	}
 }
