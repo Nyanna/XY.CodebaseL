@@ -392,7 +392,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 			return false;
 		final Object[] items1 = this.elements;
 		final Object[] items2 = array.elements;
-		for (int i = 0; i < n; i++) {
+		for (int i = 0; i <= n; i++) {
 			final Object o1 = items1[i];
 			final Object o2 = items2[i];
 			if (!(o1 == null ? o2 == null : o1.equals(o2)))
