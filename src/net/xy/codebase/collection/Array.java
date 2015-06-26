@@ -106,6 +106,16 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	}
 
 	/**
+	 * adds an element and ensures an maximum growth of one
+	 *
+	 * @param e
+	 */
+	public void ensureAdd(final E e) {
+		ensureAdd(1);
+		add(e);
+	}
+
+	/**
 	 * increases the capacity by an fixed amount
 	 *
 	 * @param amount
@@ -216,7 +226,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	 * @return element at index or null
 	 */
 	public E getChecked(final int index) {
-		return index < elements.length ? elements[index] : null;
+		return index < elements.length && index >= 0 ? elements[index] : null;
 	}
 
 	public void set(final int index, final E value) {
