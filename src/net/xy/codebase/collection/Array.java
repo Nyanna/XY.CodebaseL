@@ -353,8 +353,10 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 
 	@Override
 	public Iterator<E> iterator() {
-		if (itIdx != 0)
-			throw new IllegalStateException("Iterator not reseted or used twice");
+		if (itIdx != 0) {
+			reset();
+			System.out.println("Iterator not reseted or used twice");
+		}
 		return this;
 	}
 
