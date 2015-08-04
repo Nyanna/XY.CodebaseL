@@ -319,6 +319,20 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 		return null;
 	}
 
+	/**
+	 * convenience method for finding and removing the index using object
+	 * comparison
+	 *
+	 * @param elem
+	 * @return
+	 */
+	public E removeEquals(final E elem) {
+		final int index = indexOfEquals(elem);
+		if (index != -1)
+			return removeIndex(index);
+		return null;
+	}
+
 	public E cutIndex(final int index) {
 		final E value = elements[index];
 		System.arraycopy(elements, index + 1, elements, index, size() - index);
