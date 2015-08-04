@@ -103,7 +103,7 @@ public class TypeParser {
 			return string2type(string, null);
 		} catch (final ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
 				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			throw new IllegalArgumentException("Error parsing string to value", e);
+			throw new IllegalArgumentException("Error parsing string to value [" + string + "]", e);
 		}
 	}
 
@@ -122,8 +122,8 @@ public class TypeParser {
 	 * @throws InstantiationException
 	 */
 	public Object string2type(String string, final ClassLoader loader) throws ClassNotFoundException,
-			NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
-	IllegalArgumentException, InvocationTargetException {
+	NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
 		if (string == null || string.length() == 0)
 			return null;
 		Matcher match;
