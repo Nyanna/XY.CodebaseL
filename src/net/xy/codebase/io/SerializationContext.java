@@ -144,8 +144,12 @@ public class SerializationContext {
 	 * @throws IllegalArgumentException
 	 */
 	public void serialize(final DataOutputStream out, final Object target) throws IOException,
-			IllegalArgumentException, IllegalAccessException {
-		write(out, target);
+	IllegalArgumentException, IllegalAccessException {
+		try {
+			write(out, target);
+		} catch (final IllegalStateException ex) {
+			LOG.error("Error serialiting object [" + ex.getMessage() + "]");
+		}
 	}
 
 	/**
@@ -203,7 +207,7 @@ public class SerializationContext {
 	 * @throws IllegalAccessException
 	 */
 	private void write(final DataOutputStream out, final Object target) throws IOException, IllegalArgumentException,
-			IllegalAccessException {
+	IllegalAccessException {
 		final byte eid = getEid(target != null ? target.getClass() : null, target);
 		out.writeByte(eid); // write type idendifier
 		write(out, target, eid);
@@ -220,7 +224,7 @@ public class SerializationContext {
 	 * @throws IllegalAccessException
 	 */
 	private void write(final DataOutputStream out, final Object target, final byte eid) throws IOException,
-	IllegalArgumentException, IllegalAccessException {
+			IllegalArgumentException, IllegalAccessException {
 		switch (eid) {
 		case nullEid:
 		case boolTrueEid:
@@ -332,8 +336,10 @@ public class SerializationContext {
 	 */
 	private byte getClassEid(final Class<?> clazz) {
 		final Byte res = classesToIdx.get(clazz);
-		if (res == null)
-			throw new IllegalStateException("Class not in context [" + clazz.getTypeName() + "]");
+		if (res == null) {
+			LOG.error("Class not in context [" + clazz.getTypeName() + "]");
+			return -1;
+		}
 		return res;
 	}
 
@@ -353,7 +359,7 @@ public class SerializationContext {
 	 * @throws InvocationTargetException
 	 */
 	private Object read(final DataInputStream in) throws IllegalArgumentException, IllegalAccessException, IOException,
-			InstantiationException, ClassNotFoundException, SecurityException, InvocationTargetException {
+	InstantiationException, ClassNotFoundException, SecurityException, InvocationTargetException {
 		final byte type;
 		try {
 			type = in.readByte();
@@ -379,8 +385,8 @@ public class SerializationContext {
 	 * @throws InvocationTargetException
 	 */
 	private Object read(final DataInputStream in, final byte type) throws IllegalArgumentException,
-	IllegalAccessException, IOException, InstantiationException, ClassNotFoundException, SecurityException,
-	InvocationTargetException {
+			IllegalAccessException, IOException, InstantiationException, ClassNotFoundException, SecurityException,
+			InvocationTargetException {
 		switch (type) {
 		case nullEid:
 			return null;
@@ -418,10 +424,19 @@ public class SerializationContext {
 		case arrayEid:
 			final byte atype = in.readByte();
 			final Class<?> comp = idxToClasses.get(atype);
+			if (comp == null) {
+				LOG.error("Error array component class id not in Serialization context");
+				return null;
+			}
 			return readArray(in, atype, comp);
+		case -1:
+			throw new IllegalStateException("Unknown Error on serializing object");
 		default:
 			final Class<?> cl = idxToClasses.get(type);
-			if (cl.isEnum())
+			if (cl == null) {
+				LOG.error("Error class id not in Serialization context");
+				return null;
+			} else if (cl.isEnum())
 				return cl.getEnumConstants()[in.readByte()];
 			else {
 				// recursive object
@@ -439,7 +454,11 @@ public class SerializationContext {
 					if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
 						if (!Modifier.isPublic(field.getModifiers()))
 							field.setAccessible(true);
-						field.set(target, read(in));
+						try {
+							field.set(target, read(in));
+						} catch (final IllegalStateException ex) {
+							LOG.error("Error read deffect field [" + field + "][" + ex.getMessage() + "]");
+						}
 					}
 				return target;
 			}
@@ -460,7 +479,7 @@ public class SerializationContext {
 	 * @throws InvocationTargetException
 	 */
 	private Object readArray(final DataInputStream in, final byte atype, final Class<?> comp) throws IOException,
-	IllegalAccessException, InstantiationException, ClassNotFoundException, InvocationTargetException {
+			IllegalAccessException, InstantiationException, ClassNotFoundException, InvocationTargetException {
 		final boolean same = in.readBoolean();
 		final int alength = in.readInt();
 		if (alength == 0)

@@ -220,6 +220,22 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	}
 
 	/**
+	 * convenience method to get first element of the given class or null
+	 *
+	 * @param clazz
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T get(final Class<T> clazz) {
+		for (int i = 0; i < size(); i++) {
+			final E obj = get(i);
+			if (clazz.isInstance(obj))
+				return (T) obj;
+		}
+		return null;
+	}
+
+	/**
 	 * checks array size
 	 *
 	 * @param index
