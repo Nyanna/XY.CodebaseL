@@ -164,7 +164,7 @@ public class SerializationContext {
 			serialize(out, target);
 			return true;
 		} catch (IllegalArgumentException | IllegalAccessException | IOException e) {
-			LOG.error("Error serialiting object", e);
+			LOG.error("Error serialiting object [" + target + "]", e);
 		}
 		return false;
 	}
@@ -268,6 +268,8 @@ public class SerializationContext {
 		case arrayEid:
 			final Class<?> compClass = target.getClass().getComponentType();
 			final byte aeid = getClassEid(compClass);
+			if (aeid < 0)
+				throw new UnserializableException(target);
 			out.writeByte(aeid); // write type idendifier
 			writeArray(out, target, aeid, compClass);
 			break;
@@ -281,7 +283,12 @@ public class SerializationContext {
 				for (final Field field : fields)
 					if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
 						field.setAccessible(true);
-						write(out, field.get(target));
+						try {
+							write(out, field.get(target));
+						} catch (final UnserializableException ex) {
+							ex.addTarget(target);
+							throw ex;
+						}
 					}
 			}
 		}
@@ -341,6 +348,30 @@ public class SerializationContext {
 			return -1;
 		}
 		return res;
+	}
+
+	/**
+	 * custom exception to determine not serializable objects in structures
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public class UnserializableException extends IllegalArgumentException {
+		private static final long serialVersionUID = 4275041442173875029L;
+		private final List<Object> targets = new ArrayList<Object>();
+
+		public UnserializableException(final Object target) {
+			addTarget(target);
+		}
+
+		public void addTarget(final Object target) {
+			targets.add(targets);
+		}
+
+		@Override
+		public String getMessage() {
+			return "Object not serializable [" + targets + "]";
+		}
 	}
 
 	/**
@@ -460,9 +491,19 @@ public class SerializationContext {
 							LOG.error("Error read deffect field [" + field + "][" + ex.getMessage() + "]");
 						}
 					}
-				return target;
+				return filter(target);
 			}
 		}
+	}
+
+	/**
+	 * to support class filter overloading
+	 *
+	 * @param target
+	 * @return
+	 */
+	protected Object filter(final Object target) {
+		return target;
 	}
 
 	/**
@@ -507,7 +548,7 @@ public class SerializationContext {
 	}
 
 	/**
-	 * gets all declared fields of an class and its super in alphabetical order
+	 * gets all declared fields of an class and its super
 	 *
 	 * @param cl
 	 * @return
