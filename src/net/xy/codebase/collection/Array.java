@@ -245,6 +245,12 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 		return index < elements.length && index >= 0 ? elements[index] : null;
 	}
 
+	public void setChecked(final int index, final E value) {
+		if (index + 1 - elements.length > 0)
+			grow(index + 1, false);
+		elements[index] = value;
+	}
+
 	public void set(final int index, final E value) {
 		elements[index] = value;
 	}

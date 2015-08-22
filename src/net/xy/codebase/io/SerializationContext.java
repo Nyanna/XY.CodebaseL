@@ -70,7 +70,7 @@ public class SerializationContext {
 	private static final byte pDoubleEid = 20;
 	private static final byte pCharEid = 21;
 
-	// tis method compresses 1/3 better than java serialization but 2x slower
+	// this method compresses 1/3 better than java serialization but 2x slower
 
 	/**
 	 * constructs the class index
@@ -85,20 +85,37 @@ public class SerializationContext {
 
 		byte idx = defCount;
 		for (final Class<?>[] clSet : classes)
-			classes: for (final Class<?> cl : clSet) {
-				addClass(cl, idx++);
-				if (!cl.isInterface() && !cl.isInstance(Serializable.class)) {
-					Class<?> pcl = cl.getSuperclass();
-					while (pcl != null) {
-						if (pcl.isInstance(Serializable.class) || cl == Serializable.class)
-							continue classes;
-						pcl = pcl.getSuperclass();
-					}
+			for (final Class<?> cl : clSet) {
+				if (cl.isInstance(Serializable.class))
 					throw new IllegalArgumentException("Class doesn't implements serializable [" + cl + "]");
-				}
+				addClass(cl, idx++);
 			}
 	}
 
+	/**
+	 * @return intern id to class mapping
+	 */
+	public Map<Byte, Class<?>> getClassMap() {
+		return idxToClasses;
+	}
+
+	/**
+	 * method for directly setting a mapping
+	 *
+	 * @param eid
+	 * @param clazz
+	 */
+	public void setClass(final byte eid, final Class<?> clazz) {
+		addClass(clazz, eid);
+	}
+
+	/**
+	 * directly add an mapping
+	 *
+	 * @param clazz
+	 * @param eid
+	 * @return
+	 */
 	private byte addClass(final Class<?> clazz, final byte eid) {
 		classesToIdx.put(clazz, eid);
 		idxToClasses.put(eid, clazz);
