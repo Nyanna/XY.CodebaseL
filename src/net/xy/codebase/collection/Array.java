@@ -253,6 +253,8 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 
 	public void set(final int index, final E value) {
 		elements[index] = value;
+		if (maxIdx < index)
+			maxIdx = index;
 	}
 
 	// public void insert (int index, T value)
