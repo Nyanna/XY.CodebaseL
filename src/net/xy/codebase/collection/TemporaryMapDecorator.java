@@ -22,9 +22,9 @@ public class TemporaryMapDecorator<Key, Value> implements Map<Key, Value> {
 		this.obs = obs;
 	}
 
-	public void checkExpire(final int recheck) {
+	public void checkExpire(final int recheckTimeMs) {
 		final int creationOff = (int) (System.currentTimeMillis() - creationTime);
-		if (lastCheck + recheck > creationOff)
+		if (lastCheck + recheckTimeMs > creationOff)
 			return;
 		lastCheck = creationOff;
 
