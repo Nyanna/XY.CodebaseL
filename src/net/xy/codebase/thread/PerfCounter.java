@@ -14,6 +14,14 @@ public class PerfCounter implements IPerfCounter {
 	 */
 	private long lastLoop;
 	/**
+	 * last loop time
+	 */
+	private long lastInterval;
+	/**
+	 * last loop time
+	 */
+	private long lastEndLoop;
+	/**
 	 * measure startet at
 	 */
 	private long measureStart;
@@ -22,17 +30,29 @@ public class PerfCounter implements IPerfCounter {
 	 */
 	private long measureSum;
 	/**
-	 * average values
+	 * sum values
 	 */
-	private int avr;
+	private double sum;
 	/**
-	 * numer of measures for avr
+	 * sum values
 	 */
-	private int count = 1;
+	private double intvalSum;
 	/**
-	 * amount of measures to target the average
+	 * numer of measures for sum
 	 */
-	private final int frame = 180;
+	private double count;
+	/**
+	 * exponential frame for average
+	 */
+	private final double frame;
+
+	/**
+	 * @param decay
+	 *            exponential frame
+	 */
+	public PerfCounter(final double decay) {
+		frame = 1d - decay;
+	}
 
 	@Override
 	public long getLastLoopTime() {
@@ -40,11 +60,18 @@ public class PerfCounter implements IPerfCounter {
 	}
 
 	@Override
+	public long getLastIntervall() {
+		return TimeUnit.NANOSECONDS.toMicros(lastInterval);
+	}
+
+	@Override
 	public long getAvrLoopTime() {
-		if (measureStart > System.nanoTime() - TimeUnit.SECONDS.toNanos(1))
-			return TimeUnit.NANOSECONDS.toMicros(avr);
-		else
-			return 0l;
+		return count > 0 ? TimeUnit.NANOSECONDS.toMicros((long) (sum / count)) : 0l;
+	}
+
+	@Override
+	public long getAvrLoopIntervalTime() {
+		return count > 0 ? TimeUnit.NANOSECONDS.toMicros((long) (intvalSum / (count + 1))) : 0l;
 	}
 
 	@Override
@@ -54,12 +81,17 @@ public class PerfCounter implements IPerfCounter {
 
 	@Override
 	public void startMeasure() {
+		if (measureStart != 0)
+			throw new IllegalStateException("Started measure twice");
 		measureStart = System.nanoTime();
 	}
 
 	@Override
 	public void stopMeasure() {
-		measureSum += System.nanoTime() - measureStart;
+		if (measureStart > 0) {
+			measureSum += System.nanoTime() - measureStart;
+			measureStart = 0;
+		}
 	}
 
 	@Override
@@ -67,9 +99,23 @@ public class PerfCounter implements IPerfCounter {
 		stopMeasure();
 		lastLoop = measureSum;
 		measureSum = 0;
-		int frame = this.frame;
-		if (count < frame)
-			frame = count++;
-		avr = (int) ((avr * frame + lastLoop) / (frame + 1));
+
+		intvalSum *= frame;
+		sum *= frame;
+		count *= frame;
+
+		final long now = System.nanoTime();
+		lastInterval = now - lastEndLoop;
+		if (lastInterval != now)
+			intvalSum += lastInterval;
+		lastEndLoop = now;
+
+		sum += lastLoop;
+		count++;
+	}
+
+	@Override
+	public String toString() {
+		return getAvrLoopTime() + " avr " + getLastLoopTime() + " mc";
 	}
 }

@@ -36,4 +36,20 @@ public interface IPerfCounter {
 	 * end the loop measure and calculate the average
 	 */
 	public void endLoop();
+
+	/**
+	 * average time from one call to loop end to the next one, called intervall
+	 * time
+	 *
+	 * @return
+	 */
+	public long getAvrLoopIntervalTime();
+
+	/**
+	 * last time from one call to loop end to the next one, called intervall
+	 * time
+	 *
+	 * @return
+	 */
+	public long getLastIntervall();
 }
