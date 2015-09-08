@@ -81,8 +81,10 @@ public class PerfCounter implements IPerfCounter {
 
 	@Override
 	public void startMeasure() {
-		if (measureStart != 0)
+		if (measureStart != 0) {
+			measureStart = 0;
 			throw new IllegalStateException("Started measure twice");
+		}
 		measureStart = System.nanoTime();
 	}
 
