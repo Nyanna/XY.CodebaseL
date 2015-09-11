@@ -21,7 +21,7 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 
 	/**
 	 * default
-	 * 
+	 *
 	 * @param clazz
 	 * @param maxCount
 	 */
@@ -42,5 +42,9 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 		if (elem != null)
 			set.remove(elem);
 		return elem;
+	}
+
+	public int size() {
+		return set.size();
 	}
 }
