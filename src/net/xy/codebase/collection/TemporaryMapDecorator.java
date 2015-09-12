@@ -43,7 +43,6 @@ public class TemporaryMapDecorator<Key, Value> implements Map<Key, Value> {
 
 	@Override
 	public int size() {
-		checkExpire(timeout);
 		return delegate.size();
 	}
 
@@ -64,11 +63,22 @@ public class TemporaryMapDecorator<Key, Value> implements Map<Key, Value> {
 
 	@Override
 	public Value get(final Object key) {
+		return get(key, false);
+	}
+
+	@SuppressWarnings("unchecked")
+	public Value get(final Object key, final boolean expired) {
 		final int creationOff = (int) (System.currentTimeMillis() - creationTime);
 
 		final TemporaryValue<Value> res = delegate.get(key);
-		if (res == null || res.getCreationOff() + timeout < creationOff)
+		if (res == null)
 			return null;
+		if (!expired && res.getCreationOff() + timeout < creationOff) {
+			delegate.remove(key);
+			if (obs != null)
+				obs.removed((Key) key, res.getValue());
+			return null;
+		}
 
 		res.setCreationOff(creationOff);
 		return res.getValue();
