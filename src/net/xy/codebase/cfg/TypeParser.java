@@ -21,8 +21,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.xy.codebase.collection.Array;
-
 /**
  * utility mainly for string to type conversion
  *
@@ -30,7 +28,8 @@ import net.xy.codebase.collection.Array;
  *
  */
 public class TypeParser {
-	private final int MOD = Pattern.CASE_INSENSITIVE;
+	private static final int MOD = Pattern.CASE_INSENSITIVE;
+	private static final String ARRAY_DELIMITER = ",";
 	/**
 	 * if true disable implecite relaxed checking
 	 */
@@ -121,13 +120,72 @@ public class TypeParser {
 	 * @throws IllegalAccessException
 	 * @throws InstantiationException
 	 */
-	public Object string2type(String string, final ClassLoader loader) throws ClassNotFoundException,
-	NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
+	public Object string2type(String string, final ClassLoader loader)
+			throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		if (string == null || string.length() == 0)
 			return null;
 		Matcher match;
 		string = string.trim();
+		match = PT_ARRAY_STRING.matcher(string);
+		if (match.matches())
+			return match.group(1).split(ARRAY_DELIMITER);
+		match = PT_ARRAY_BYTE.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
+			final byte[] res = new byte[vals.length];
+			for (int i = 0; i < res.length; i++)
+				res[i] = Byte.valueOf(vals[i].trim());
+			return res;
+		}
+		match = PT_ARRAY_SHORT.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
+			final short[] res = new short[vals.length];
+			for (int i = 0; i < res.length; i++)
+				res[i] = Short.valueOf(vals[i].trim());
+			return res;
+		}
+		match = PT_ARRAY_INT.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
+			final int[] res = new int[vals.length];
+			for (int i = 0; i < res.length; i++)
+				res[i] = Integer.valueOf(vals[i].trim());
+			return res;
+		}
+		match = PT_ARRAY_LONG.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
+			final long[] res = new long[vals.length];
+			for (int i = 0; i < res.length; i++)
+				res[i] = Long.valueOf(vals[i].trim());
+			return res;
+		}
+		match = PT_ARRAY_FLOAT.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
+			final float[] res = new float[vals.length];
+			for (int i = 0; i < res.length; i++)
+				res[i] = Float.valueOf(vals[i].trim());
+			return res;
+		}
+		match = PT_ARRAY_DOUBLE.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
+			final double[] res = new double[vals.length];
+			for (int i = 0; i < res.length; i++)
+				res[i] = Double.valueOf(vals[i].trim());
+			return res;
+		}
+		match = PT_ARRAY_BOOL.matcher(string);
+		if (match.matches()) {
+			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
+			final boolean[] res = new boolean[vals.length];
+			for (int i = 0; i < res.length; i++)
+				res[i] = Boolean.valueOf(vals[i].trim());
+			return res;
+		}
 		match = PT_STRICT_STRING.matcher(string);
 		if (match.matches())
 			return match.group(1);
@@ -145,10 +203,10 @@ public class TypeParser {
 			return Long.valueOf(match.group(1));
 		match = PT_STRICT_FLOAT.matcher(string);
 		if (match.matches())
-			return Float.valueOf(match.group(1).replace(",", ".").replace("f", ""));
+			return Float.valueOf(match.group(1).replace(ARRAY_DELIMITER, ".").replace("f", ""));
 		match = PT_STRICT_DOUBLE.matcher(string);
 		if (match.matches())
-			return Double.valueOf(match.group(1).replace(",", "."));
+			return Double.valueOf(match.group(1).replace(ARRAY_DELIMITER, "."));
 		match = PT_STRICT_BOOL.matcher(string);
 		if (match.matches())
 			return Boolean.valueOf(match.group(1));
@@ -185,10 +243,10 @@ public class TypeParser {
 				return Long.valueOf(match.group(1).substring(0, match.group(1).length() - 1));
 			match = PT_FLOAT.matcher(string);
 			if (match.matches())
-				return Float.valueOf(match.group(1).replace(",", ".").replace("f", ""));
+				return Float.valueOf(match.group(1).replace(ARRAY_DELIMITER, ".").replace("f", ""));
 			match = PT_DOUBLE.matcher(string);
 			if (match.matches())
-				return Double.valueOf(match.group(1).replace(",", "."));
+				return Double.valueOf(match.group(1).replace(ARRAY_DELIMITER, "."));
 			match = PT_BOOL.matcher(string);
 			if (match.matches())
 				return Boolean.valueOf(match.group(1));
@@ -197,66 +255,7 @@ public class TypeParser {
 				return Character.valueOf(match.group(1).charAt(0));
 			match = PT_ARRAY_STRING_SIMPLE.matcher(string);
 			if (match.matches())
-				return Arrays.asList(match.group(1).split(","));
-		}
-		match = PT_ARRAY_STRING.matcher(string);
-		if (match.matches())
-			return Arrays.asList(match.group(1).split(";"));
-		match = PT_ARRAY_BYTE.matcher(string);
-		if (match.matches()) {
-			final String[] vals = match.group(1).split(";");
-			final Array<Byte> res = new Array<>(Byte.class, vals.length);
-			for (final String val : vals)
-				res.add(Byte.valueOf(val.trim()));
-			return res;
-		}
-		match = PT_ARRAY_SHORT.matcher(string);
-		if (match.matches()) {
-			final String[] vals = match.group(1).split(";");
-			final Array<Short> res = new Array<>(Short.class, vals.length);
-			for (final String val : vals)
-				res.add(Short.valueOf(val.trim()));
-			return res;
-		}
-		match = PT_ARRAY_INT.matcher(string);
-		if (match.matches()) {
-			final String[] vals = match.group(1).split(";");
-			final Array<Integer> res = new Array<>(Integer.class, vals.length);
-			for (final String val : vals)
-				res.add(Integer.valueOf(val.trim()));
-			return res;
-		}
-		match = PT_ARRAY_LONG.matcher(string);
-		if (match.matches()) {
-			final String[] vals = match.group(1).split(";");
-			final Array<Long> res = new Array<>(Long.class, vals.length);
-			for (final String val : vals)
-				res.add(Long.valueOf(val.trim()));
-			return res;
-		}
-		match = PT_ARRAY_FLOAT.matcher(string);
-		if (match.matches()) {
-			final String[] vals = match.group(1).split(";");
-			final Array<Float> res = new Array<>(Float.class, vals.length);
-			for (final String val : vals)
-				res.add(Float.valueOf(val.trim()));
-			return res;
-		}
-		match = PT_ARRAY_DOUBLE.matcher(string);
-		if (match.matches()) {
-			final String[] vals = match.group(1).split(";");
-			final Array<Double> res = new Array<>(Double.class, vals.length);
-			for (final String val : vals)
-				res.add(Double.valueOf(val.trim()));
-			return res;
-		}
-		match = PT_ARRAY_BOOL.matcher(string);
-		if (match.matches()) {
-			final String[] vals = match.group(1).split(";");
-			final Array<Boolean> res = new Array<>(Boolean.class, vals.length);
-			for (final String val : vals)
-				res.add(Boolean.valueOf(val.trim()));
-			return res;
+				return Arrays.asList(match.group(1).split(ARRAY_DELIMITER));
 		}
 		return string;
 	}

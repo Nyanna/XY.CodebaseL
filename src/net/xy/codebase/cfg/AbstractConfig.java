@@ -57,8 +57,11 @@ public class AbstractConfig<Key, Value> {
 		T res = null;
 		try {
 			res = (T) values.get(key);
+			if (def != null && res != null && !def.getClass().isInstance(res))
+				throw new RuntimeException(
+						"Error wrong type requested [" + def.getClass() + "][" + res.getClass() + "]");
 		} catch (final ClassCastException e) {
-			new RuntimeException(e);
+			throw new RuntimeException(e);
 		}
 		if (res == null && parent != null)
 			res = parent.getValue(key, def);

@@ -63,7 +63,8 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	 *
 	 * @param elementData
 	 */
-	public Array(final E[] elementData) {
+	@SafeVarargs
+	public Array(final E... elementData) {
 		this.elements = elementData;
 		maxIdx = elementData.length - 1;
 	}
@@ -232,6 +233,23 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 			if (clazz.isInstance(obj))
 				return (T) obj;
 		}
+		return null;
+	}
+
+	public int getIdx(final Class<?> clazz) {
+		for (int i = 0; i < size(); i++) {
+			final E obj = get(i);
+			if (clazz.isInstance(obj))
+				return i;
+		}
+		return -1;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T remove(final Class<T> clazz) {
+		final int index = getIdx(clazz);
+		if (index != -1)
+			return (T) removeIndex(index);
 		return null;
 	}
 

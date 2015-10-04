@@ -160,12 +160,13 @@ public class SerializationContext {
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 */
-	public void serialize(final DataOutputStream out, final Object target) throws IOException,
-	IllegalArgumentException, IllegalAccessException {
+	public void serialize(final DataOutputStream out, final Object target)
+			throws IOException, IllegalArgumentException, IllegalAccessException {
 		try {
 			write(out, target);
 		} catch (final IllegalStateException ex) {
 			LOG.error("Error serialiting object [" + ex.getMessage() + "]");
+			throw ex;
 		}
 	}
 
@@ -223,8 +224,8 @@ public class SerializationContext {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private void write(final DataOutputStream out, final Object target) throws IOException, IllegalArgumentException,
-	IllegalAccessException {
+	private void write(final DataOutputStream out, final Object target)
+			throws IOException, IllegalArgumentException, IllegalAccessException {
 		final byte eid = getEid(target != null ? target.getClass() : null, target);
 		out.writeByte(eid); // write type idendifier
 		write(out, target, eid);
@@ -240,8 +241,8 @@ public class SerializationContext {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private void write(final DataOutputStream out, final Object target, final byte eid) throws IOException,
-			IllegalArgumentException, IllegalAccessException {
+	private void write(final DataOutputStream out, final Object target, final byte eid)
+			throws IOException, IllegalArgumentException, IllegalAccessException {
 		switch (eid) {
 		case nullEid:
 		case boolTrueEid:
@@ -407,7 +408,7 @@ public class SerializationContext {
 	 * @throws InvocationTargetException
 	 */
 	private Object read(final DataInputStream in) throws IllegalArgumentException, IllegalAccessException, IOException,
-	InstantiationException, ClassNotFoundException, SecurityException, InvocationTargetException {
+			InstantiationException, ClassNotFoundException, SecurityException, InvocationTargetException {
 		final byte type;
 		try {
 			type = in.readByte();
@@ -432,9 +433,9 @@ public class SerializationContext {
 	 * @throws NoSuchMethodException
 	 * @throws InvocationTargetException
 	 */
-	private Object read(final DataInputStream in, final byte type) throws IllegalArgumentException,
-			IllegalAccessException, IOException, InstantiationException, ClassNotFoundException, SecurityException,
-			InvocationTargetException {
+	private Object read(final DataInputStream in, final byte type)
+			throws IllegalArgumentException, IllegalAccessException, IOException, InstantiationException,
+			ClassNotFoundException, SecurityException, InvocationTargetException {
 		switch (type) {
 		case nullEid:
 			return null;
