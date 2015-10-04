@@ -477,6 +477,8 @@ public class SerializationContext {
 				LOG.error("Error array component class id not in Serialization context");
 				return null;
 			}
+			if (atype == nullEid)
+				return null;
 			return readArray(in, atype, comp);
 		case -1:
 			throw new IllegalStateException("Unknown Error on serializing object");
@@ -507,6 +509,7 @@ public class SerializationContext {
 							field.set(target, read(in));
 						} catch (final IllegalStateException ex) {
 							LOG.error("Error read deffect field [" + field + "][" + ex.getMessage() + "]");
+							throw ex;
 						}
 					}
 				return filter(target);
