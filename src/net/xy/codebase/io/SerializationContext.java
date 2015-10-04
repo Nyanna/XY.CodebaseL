@@ -286,8 +286,6 @@ public class SerializationContext {
 		case arrayEid:
 			final Class<?> compClass = target.getClass().getComponentType();
 			final byte aeid = getClassEid(compClass);
-			if (aeid < 0)
-				throw new UnserializableException(target);
 			out.writeByte(aeid); // write type idendifier
 			writeArray(out, target, aeid, compClass);
 			break;
@@ -361,10 +359,8 @@ public class SerializationContext {
 	 */
 	private byte getClassEid(final Class<?> clazz) {
 		final Byte res = classesToIdx.get(clazz);
-		if (res == null) {
-			LOG.error("Class not in context [" + clazz.getTypeName() + "]");
-			return -1;
-		}
+		if (res == null)
+			throw new IllegalArgumentException("Class not in context [" + clazz.getTypeName() + "]");
 		return res;
 	}
 
@@ -378,7 +374,7 @@ public class SerializationContext {
 		private static final long serialVersionUID = 4275041442173875029L;
 		private final List<Object> targets = new ArrayList<Object>();
 
-		public UnserializableException(final Object target) {
+		public UnserializableException(final Object target, final String message) {
 			addTarget(target);
 		}
 
