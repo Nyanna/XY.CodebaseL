@@ -499,6 +499,9 @@ public class SerializationContext {
 				final List<Field> fields = getFields(cl);
 				for (final Field field : fields)
 					if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
+						if (field.getAnnotation(IgnoreRead.class) != null)
+							continue;
+
 						if (!Modifier.isPublic(field.getModifiers()))
 							field.setAccessible(true);
 						try {
