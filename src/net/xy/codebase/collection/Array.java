@@ -349,6 +349,18 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	}
 
 	/**
+	 * inserts by placing the indexed element on tail
+	 *
+	 * @param index
+	 * @param elem
+	 */
+	public void insertAt(final int index, final E elem) {
+		final E value = elements[index];
+		elements[index] = elem;
+		addChecked(value);
+	}
+
+	/**
 	 * convenience method for finding and removing the index
 	 *
 	 * @param elem
