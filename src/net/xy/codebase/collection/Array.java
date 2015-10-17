@@ -485,4 +485,64 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	public String toString() {
 		return String.format("%s,%s,%s", maxIdx, itIdx, Arrays.toString(elements));
 	}
+
+	/**
+	 * fill the given array with values from this array
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public int[] asArray(final int[] array) {
+		for (int i = 0; i < size(); i++)
+			array[i] = ((Number) get(i)).intValue();
+		return array;
+	}
+
+	/**
+	 * fill the given array with values from this array
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public double[] asArray(final double[] array) {
+		for (int i = 0; i < size(); i++)
+			array[i] = ((Number) get(i)).doubleValue();
+		return array;
+	}
+
+	/**
+	 * fill the given array with values from this array
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public short[] asArray(final short[] array) {
+		for (int i = 0; i < size(); i++)
+			array[i] = ((Number) get(i)).shortValue();
+		return array;
+	}
+
+	/**
+	 * fill the given array with values from this array
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public byte[] asArray(final byte[] array) {
+		for (int i = 0; i < size(); i++)
+			array[i] = ((Number) get(i)).byteValue();
+		return array;
+	}
+
+	/**
+	 * fill the given array with values from this array
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public float[] asArray(final float[] array) {
+		for (int i = 0; i < size(); i++)
+			array[i] = ((Number) get(i)).floatValue();
+		return array;
+	}
 }
