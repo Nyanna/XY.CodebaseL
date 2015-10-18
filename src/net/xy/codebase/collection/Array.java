@@ -229,7 +229,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	@SuppressWarnings("unchecked")
 	public <T> T get(final Class<T> clazz) {
 		for (int i = 0; i < size(); i++) {
-			final E obj = get(i);
+			final E obj = getChecked(i);
 			if (clazz.isInstance(obj))
 				return (T) obj;
 		}
@@ -488,7 +488,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 
 	/**
 	 * fill the given array with values from this array
-	 * 
+	 *
 	 * @param array
 	 * @return
 	 */
@@ -500,7 +500,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 
 	/**
 	 * fill the given array with values from this array
-	 * 
+	 *
 	 * @param array
 	 * @return
 	 */
@@ -512,7 +512,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 
 	/**
 	 * fill the given array with values from this array
-	 * 
+	 *
 	 * @param array
 	 * @return
 	 */
@@ -524,7 +524,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 
 	/**
 	 * fill the given array with values from this array
-	 * 
+	 *
 	 * @param array
 	 * @return
 	 */
@@ -536,7 +536,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 
 	/**
 	 * fill the given array with values from this array
-	 * 
+	 *
 	 * @param array
 	 * @return
 	 */
