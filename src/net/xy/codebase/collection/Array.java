@@ -91,7 +91,8 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	 * @return
 	 */
 	public int add(final E e) {
-		elements[++maxIdx] = e;
+		elements[maxIdx + 1] = e;
+		++maxIdx;
 		return maxIdx;
 	}
 
