@@ -2,10 +2,10 @@ package net.xy.codebase.exec;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import net.xy.codebase.collection.TimeoutQueue.ITask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.xy.codebase.collection.TimeoutQueue.ITask;
 
 /**
  * throttler to execute an runnable not more than every interval. ensures that
