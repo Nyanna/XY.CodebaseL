@@ -61,8 +61,8 @@ public class ArrayQueue<E> {
 			elements.ensureCapacity(elements.capacity() + 1);
 			final E[] raw = elements.getElements();
 			if (LOG.isDebugEnabled())
-				LOG.debug("Increased queue to [" + raw.getClass().getComponentType().getSimpleName() + "]["
-						+ raw.length + "]");
+				LOG.debug("Increased queue to [" + raw.getClass().getComponentType().getSimpleName() + "][" + raw.length
+						+ "]");
 
 			if (putIdx <= getIdx) {
 				final int copylength = Math.min(raw.length - count, putIdx);
@@ -111,6 +111,14 @@ public class ArrayQueue<E> {
 		if (count > 0)
 			res = elements.get(getIdx);
 		return res;
+	}
+
+	public int size() {
+		return count;
+	}
+
+	public boolean isEmpty() {
+		return size() > 0;
 	}
 
 	@Override

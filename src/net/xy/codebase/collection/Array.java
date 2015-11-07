@@ -350,6 +350,22 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	}
 
 	/**
+	 * reduces and shifts all following elements
+	 *
+	 * @param index
+	 * @return
+	 */
+	public E shift(final int index) {
+		final E value = elements[index];
+
+		for (int i = index; i < size() - 1; i++)
+			elements[i] = elements[i + 1];
+
+		elements[maxIdx--] = null;
+		return value;
+	}
+
+	/**
 	 * inserts by placing the indexed element on tail
 	 *
 	 * @param index
