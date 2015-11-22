@@ -470,7 +470,7 @@ public class SerializationContext {
 			final byte atype = in.readByte();
 			final Class<?> comp = idxToClasses.get(atype);
 			if (comp == null) {
-				LOG.error("Error array component class id not in Serialization context");
+				LOG.error("Error array component class id not in Serialization context [" + atype + "]");
 				return null;
 			}
 			if (atype == nullEid)
@@ -481,7 +481,7 @@ public class SerializationContext {
 		default:
 			final Class<?> cl = idxToClasses.get(type);
 			if (cl == null) {
-				LOG.error("Error class id not in Serialization context");
+				LOG.error("Error class id not in Serialization context [" + type + "]");
 				return null;
 			} else if (cl.isEnum())
 				return cl.getEnumConstants()[in.readByte()];
