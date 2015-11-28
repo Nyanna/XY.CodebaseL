@@ -12,11 +12,13 @@ public class ParkingArrayQueue<E> extends ArrayQueue<E> {
 
 	private final ReentrantLock lock;
 	private final Condition added;
+	private final Condition empty;
 
 	public ParkingArrayQueue(final Class<E> clazz, final int maxCount) {
 		super(clazz, maxCount);
 		lock = new ReentrantLock(false);
 		added = lock.newCondition();
+		empty = lock.newCondition();
 	}
 
 	@Override
@@ -33,11 +35,18 @@ public class ParkingArrayQueue<E> extends ArrayQueue<E> {
 		return res;
 	}
 
+	/**
+	 * waits until an element is takable
+	 *
+	 * @param waitMillis
+	 * @return
+	 */
 	public E take(final long waitMillis) {
 		try {
 			lock.lockInterruptibly();
 			E elem = take();
 			if (elem == null) {
+				empty.signalAll();
 				if (waitMillis < 0)
 					added.await();
 				else
@@ -51,5 +60,19 @@ public class ParkingArrayQueue<E> extends ArrayQueue<E> {
 			lock.unlock();
 		}
 		return null;
+	}
+
+	/**
+	 * waits until the last queue element was aquiered
+	 */
+	public void waitEmpty() {
+		try {
+			lock.lock();
+			empty.await();
+		} catch (final InterruptedException e) {
+			LOG.trace(e.getMessage(), e);
+		} finally {
+			lock.unlock();
+		}
 	}
 }
