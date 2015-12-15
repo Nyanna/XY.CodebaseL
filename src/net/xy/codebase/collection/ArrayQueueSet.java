@@ -31,8 +31,12 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 
 	@Override
 	public synchronized boolean add(final E elem) {
-		if (set.put(elem, elem) == null)
-			return super.add(elem);
+		if (set.put(elem, elem) == null) {
+			final boolean added = super.add(elem);
+			if (!added)
+				set.remove(elem);
+			return added;
+		}
 		return true;
 	}
 
@@ -44,6 +48,7 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 		return elem;
 	}
 
+	@Override
 	public int size() {
 		return set.size();
 	}

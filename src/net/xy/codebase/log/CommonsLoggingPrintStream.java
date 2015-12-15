@@ -133,10 +133,14 @@ public class CommonsLoggingPrintStream extends PrintStream {
 			// because
 			// we created the PrintStream with the autoFlush option turned on.
 			// If a byte array is written it may contain multiple lines
-			final String[] logMessages = this.toString().split("\n");
+			final String[] logMessages = this.toString().split("\r\n");
 
-			for (final String message : logMessages)
-				LoggerFactory.getLogger(currentCallerName).info(message.trim());
+			for (final String message : logMessages) {
+				final String msg = message.trim();
+				if (msg.length() > 0)
+					LoggerFactory.getLogger(currentCallerName).info(msg);
+			}
+			reset();
 		}
 
 		void setNameOfCaller() {

@@ -42,8 +42,8 @@ public class SerializationContext {
 	/**
 	 * class index for numerical enumeration
 	 */
-	private final Map<Class<?>, Byte> classesToIdx = new HashMap<>();
-	private final Map<Byte, Class<?>> idxToClasses = new HashMap<>();
+	private final Map<Class<?>, Short> classesToIdx = new HashMap<>();
+	private final Map<Short, Class<?>> idxToClasses = new HashMap<>();
 	/*
 	 * primitive type constants
 	 */
@@ -83,7 +83,7 @@ public class SerializationContext {
 		if (defCount + classes.length > 254)
 			throw new IllegalArgumentException("Contexts class limit exceeded");
 
-		byte idx = defCount;
+		short idx = defCount;
 		for (final Class<?>[] clSet : classes)
 			for (final Class<?> cl : clSet) {
 				if (cl.isInstance(Serializable.class))
@@ -95,7 +95,7 @@ public class SerializationContext {
 	/**
 	 * @return intern id to class mapping
 	 */
-	public Map<Byte, Class<?>> getClassMap() {
+	public Map<Short, Class<?>> getClassMap() {
 		return idxToClasses;
 	}
 
@@ -105,7 +105,7 @@ public class SerializationContext {
 	 * @param eid
 	 * @param clazz
 	 */
-	public void setClass(final byte eid, final Class<?> clazz) {
+	public void setClass(final short eid, final Class<?> clazz) {
 		addClass(clazz, eid);
 	}
 
@@ -116,10 +116,9 @@ public class SerializationContext {
 	 * @param eid
 	 * @return
 	 */
-	private byte addClass(final Class<?> clazz, final byte eid) {
+	private void addClass(final Class<?> clazz, final short eid) {
 		classesToIdx.put(clazz, eid);
 		idxToClasses.put(eid, clazz);
-		return eid;
 	}
 
 	/**
@@ -358,10 +357,10 @@ public class SerializationContext {
 	 * @return
 	 */
 	private byte getClassEid(final Class<?> clazz) {
-		final Byte res = classesToIdx.get(clazz);
+		final Short res = classesToIdx.get(clazz);
 		if (res == null)
 			throw new IllegalArgumentException("Class not in context [" + clazz.getTypeName() + "]");
-		return res;
+		return res.byteValue();
 	}
 
 	/**
@@ -468,9 +467,10 @@ public class SerializationContext {
 			return new Object();
 		case arrayEid:
 			final byte atype = in.readByte();
-			final Class<?> comp = idxToClasses.get(atype);
+			final short atypei = (short) (atype & 0xff);
+			final Class<?> comp = idxToClasses.get(atypei);
 			if (comp == null) {
-				LOG.error("Error array component class id not in Serialization context [" + atype + "]");
+				LOG.error("Error array component class id not in Serialization context [" + atypei + "]");
 				return null;
 			}
 			if (atype == nullEid)
@@ -479,9 +479,10 @@ public class SerializationContext {
 		case -1:
 			throw new IllegalStateException("Unknown Error on serializing object");
 		default:
-			final Class<?> cl = idxToClasses.get(type);
+			final short typei = (short) (type & 0xff);
+			final Class<?> cl = idxToClasses.get(typei);
 			if (cl == null) {
-				LOG.error("Error class id not in Serialization context [" + type + "]");
+				LOG.error("Error class id not in Serialization context [" + typei + "]");
 				return null;
 			} else if (cl.isEnum())
 				return cl.getEnumConstants()[in.readByte()];
