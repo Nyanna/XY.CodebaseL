@@ -36,7 +36,7 @@ public class TimeoutQueue {
 	 * default
 	 */
 	public TimeoutQueue(final String name) {
-		queue = new PriorityBlockingQueue<>(100, new TaskComparator());
+		queue = new PriorityBlockingQueue<ITask>(100, new TaskComparator());
 		monitor = new Semaphore(0);
 		timer = new QueueTimer(this, name);
 		timer.start();
@@ -48,7 +48,7 @@ public class TimeoutQueue {
 	 * @param thread
 	 */
 	public TimeoutQueue(final QueueTimer thread) {
-		queue = new PriorityBlockingQueue<>(100, new TaskComparator());
+		queue = new PriorityBlockingQueue<ITask>(100, new TaskComparator());
 		monitor = new Semaphore(0);
 		timer = thread;
 		timer.setQueue(this);

@@ -42,8 +42,8 @@ public class SerializationContext {
 	/**
 	 * class index for numerical enumeration
 	 */
-	private final Map<Class<?>, Short> classesToIdx = new HashMap<>();
-	private final Map<Short, Class<?>> idxToClasses = new HashMap<>();
+	private final Map<Class<?>, Short> classesToIdx = new HashMap<Class<?>, Short>();
+	private final Map<Short, Class<?>> idxToClasses = new HashMap<Short, Class<?>>();
 	/*
 	 * primitive type constants
 	 */
@@ -180,7 +180,11 @@ public class SerializationContext {
 		try {
 			serialize(out, target);
 			return true;
-		} catch (IllegalArgumentException | IllegalAccessException | IOException e) {
+		} catch (final IOException e) {
+			LOG.error("Error serialiting object [" + target + "]", e);
+		} catch (final IllegalArgumentException e) {
+			LOG.error("Error serialiting object [" + target + "]", e);
+		} catch (final IllegalAccessException e) {
 			LOG.error("Error serialiting object [" + target + "]", e);
 		}
 		return false;

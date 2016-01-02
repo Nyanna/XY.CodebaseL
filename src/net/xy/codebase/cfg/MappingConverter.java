@@ -16,7 +16,7 @@ public class MappingConverter<KT, VT> implements ITypeConverter<Array<Entry<KT, 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Array<Entry<KT, VT>> parse(final String str) {
-		final Array<Entry<KT, VT>> res = new Array<>(Entry.class);
+		final Array<Entry<KT, VT>> res = new Array<Entry<KT, VT>>(Entry.class);
 
 		final String[] pairs = str.split(",");
 		for (final String pair : pairs) {

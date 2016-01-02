@@ -17,7 +17,7 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 	/**
 	 * backed set
 	 */
-	private final Map<E, E> set = new HashMap<>();
+	private final Map<E, E> set = new HashMap<E, E>();
 
 	/**
 	 * default

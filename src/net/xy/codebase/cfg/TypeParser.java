@@ -71,7 +71,7 @@ public class TypeParser {
 	// calls an converter accepting string array returning object list
 	// private final Pattern PT_ARRAY_CONVERTER =
 	// Pattern.compile("\\{(.*)\\}:([a-zA-Z0-9.$]+)", MOD);
-	private final Map<String, ITypeConverter<?>> customConverters = new HashMap<>();
+	private final Map<String, ITypeConverter<?>> customConverters = new HashMap<String, ITypeConverter<?>>();
 
 	/**
 	 * default, with extended converters
@@ -100,8 +100,7 @@ public class TypeParser {
 	public Object string2type(final String string) {
 		try {
 			return string2type(string, null);
-		} catch (final ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException
-				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (final Exception e) {
 			throw new IllegalArgumentException("Error parsing string to value [" + string + "]", e);
 		}
 	}

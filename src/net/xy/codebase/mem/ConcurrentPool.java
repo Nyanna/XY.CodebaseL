@@ -3,7 +3,7 @@ package net.xy.codebase.mem;
 import net.xy.codebase.collection.ArrayQueue;
 
 public abstract class ConcurrentPool<R> {
-	private final ArrayQueue<Object> pool = new ArrayQueue<>(Object.class, 1024 * 10);
+	private final ArrayQueue<Object> pool = new ArrayQueue<Object>(Object.class, 1024 * 10);
 
 	abstract protected R newObject();
 

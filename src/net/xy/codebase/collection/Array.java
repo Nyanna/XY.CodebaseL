@@ -9,7 +9,7 @@ import net.xy.codebase.clone.Cloneable;
 public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneable<Array<E>> {
 	private static final long serialVersionUID = -4019349541696506832L;
 	public static int MIN_GROWTH = 32;
-	public static final Array<?> EMPTY = new EmptyArray<>(Object.class);
+	public static final Array<?> EMPTY = new EmptyArray<Object>(Object.class);
 
 	@SuppressWarnings("unchecked")
 	public static <T> Array<T> empty() {
@@ -72,7 +72,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	@SuppressWarnings("unchecked")
 	@Override
 	public Array<E> cloneDeep() {
-		final Array<E> res = new Array<>(elements.getClass().getComponentType(), size());
+		final Array<E> res = new Array<E>(elements.getClass().getComponentType(), size());
 		for (int i = 0; i < size(); i++) {
 			final E elem = get(i);
 			if (elem instanceof Cloneable)
