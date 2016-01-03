@@ -63,7 +63,6 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	 *
 	 * @param elementData
 	 */
-	@SafeVarargs
 	public Array(final E... elementData) {
 		this.elements = elementData;
 		maxIdx = elementData.length - 1;
@@ -458,6 +457,11 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 	public E next() {
 		final E res = elements[itIdx++];
 		return res;
+	}
+
+	@Override
+	public void remove() {
+		removeIndex(itIdx);
 	}
 
 	/**

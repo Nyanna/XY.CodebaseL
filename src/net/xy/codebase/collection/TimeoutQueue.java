@@ -5,10 +5,11 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import net.xy.codebase.thread.RecurringTaskCapsule;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.xy.codebase.Primitive;
+import net.xy.codebase.thread.RecurringTaskCapsule;
 
 /**
  * timeout queue implementation threadsafe based on task objects which must
@@ -204,7 +205,7 @@ public class TimeoutQueue {
 	public static class TaskComparator implements Comparator<ITask> {
 		@Override
 		public int compare(final ITask t1, final ITask t2) {
-			return Long.compare(t1.nextRun(), t2.nextRun());
+			return Primitive.compare(t1.nextRun(), t2.nextRun());
 		}
 	}
 }

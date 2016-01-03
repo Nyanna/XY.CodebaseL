@@ -33,6 +33,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.xy.codebase.Primitive;
+
 /**
  * main class for efficient serialization with minimal overhead
  *
@@ -367,14 +369,14 @@ public class SerializationContext {
 	private byte getClassEid(final Class<?> clazz) {
 		final Short res = classesToIdx.get(clazz);
 		if (res == null)
-			throw new IllegalArgumentException("Class not in context [" + clazz.getTypeName() + "]");
+			throw new IllegalArgumentException("Class not in context [" + clazz.getName() + "]");
 		return res.byteValue();
 	}
 
 	public static class FieldComperator implements Comparator<Field> {
 		@Override
 		public int compare(final Field arg0, final Field arg1) {
-			return Integer.compare(arg0.getName().hashCode(), arg1.getName().hashCode());
+			return Primitive.compare(arg0.getName().hashCode(), arg1.getName().hashCode());
 		}
 	}
 
@@ -507,7 +509,7 @@ public class SerializationContext {
 				try {
 					con = cl.getDeclaredConstructor();
 				} catch (final NoSuchMethodException e) {
-					throw new IllegalStateException("Cant find constructor for class [" + cl.getTypeName() + "]");
+					throw new IllegalStateException("Cant find constructor for class [" + cl.getName() + "]");
 				}
 				if (!Modifier.isPublic(con.getModifiers()))
 					con.setAccessible(true);
