@@ -24,6 +24,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +71,8 @@ public class SerializationContext {
 	private static final byte pFloatEid = 19;
 	private static final byte pDoubleEid = 20;
 	private static final byte pCharEid = 21;
+
+	private static final FieldComperator fieldComparator = new FieldComperator();
 
 	// this method compresses 1/3 better than java serialization but 2x slower
 
@@ -367,6 +371,13 @@ public class SerializationContext {
 		return res.byteValue();
 	}
 
+	public static class FieldComperator implements Comparator<Field> {
+		@Override
+		public int compare(final Field arg0, final Field arg1) {
+			return Integer.compare(arg0.getName().hashCode(), arg1.getName().hashCode());
+		}
+	}
+
 	/**
 	 * custom exception to determine not serializable objects in structures
 	 *
@@ -585,6 +596,8 @@ public class SerializationContext {
 			fields.addAll(Arrays.asList(pcl.getDeclaredFields()));
 			pcl = pcl.getSuperclass(); // next
 		}
+		// order difference between at least oracle and android
+		Collections.sort(fields, fieldComparator);
 		return fields;
 	}
 
