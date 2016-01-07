@@ -707,7 +707,7 @@ public class SerializationContext {
 
 	/**
 	 * interface for custom serializable objects
-	 * 
+	 *
 	 * @author Xyan
 	 *
 	 */
@@ -719,7 +719,7 @@ public class SerializationContext {
 
 	/**
 	 * convenience wrapper for bytebuffer and deserialization
-	 * 
+	 *
 	 * @author Xyan
 	 *
 	 */
