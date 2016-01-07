@@ -72,11 +72,21 @@ public interface IInterThreads<E extends Enum<E>> {
 
 	/**
 	 * enques an runnable for later execution
-	 * 
+	 *
 	 * @param thread
 	 * @param run
 	 * @param timeout
 	 * @return
 	 */
 	public TimeoutRunnable runLater(E thread, Runnable run, int timeout);
+
+	/**
+	 * starts an intervall regulary dilivering runnables to target thread
+	 *
+	 * @param thread
+	 * @param run
+	 * @param intervall
+	 * @return
+	 */
+	public RecurringTask start(E thread, Runnable run, int intervall);
 }

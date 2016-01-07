@@ -49,7 +49,7 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 			// final long start = System.currentTimeMillis();
 			job.run();
 			// final long tok = System.currentTimeMillis() - start;
-			// if (Thread.currentThread().getName().equals("PreRender"))
+			// if (Thread.currentThread().getName().equals("Game") && tok > 2)
 			// System.out.println("Running job [" + start + "][" + tok + "][" +
 			// job + "]");
 

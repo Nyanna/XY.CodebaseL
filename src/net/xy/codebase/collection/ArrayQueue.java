@@ -118,7 +118,7 @@ public class ArrayQueue<E> {
 	}
 
 	public boolean isEmpty() {
-		return size() > 0;
+		return size() == 0;
 	}
 
 	@Override

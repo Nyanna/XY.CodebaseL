@@ -2,14 +2,14 @@ package net.xy.codebase.thread;
 
 import java.util.EnumMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.xy.codebase.collection.ParkingArrayQueue;
 import net.xy.codebase.collection.TimeoutQueue;
 import net.xy.codebase.collection.TimeoutQueue.ITask;
 import net.xy.codebase.exec.ExecutionThrottler;
 import net.xy.codebase.exec.TimeoutRunnable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * implementation for inter thread job execution
@@ -87,6 +87,13 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		return res;
 	}
 
+	@Override
+	public RecurringTask start(final E thread, final Runnable run, final int intervall) {
+		final InterThreadIntervall res = new InterThreadIntervall(thread, intervall, run);
+		tque.add(res);
+		return res;
+	}
+
 	/**
 	 * implementation which supports single run timeouts to the referenced
 	 * timeoutqueue
@@ -120,6 +127,46 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		@Override
 		public void run() {
 			InterThreads.this.put(thread, run);
+		}
+	}
+
+	/**
+	 * interthread intervall
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public class InterThreadIntervall extends RecurringTask {
+		/**
+		 * target thread
+		 */
+		private final E thread;
+		/**
+		 * real runnable
+		 */
+		private final Runnable run;
+
+		/**
+		 * default
+		 *
+		 * @param thread
+		 * @param timeoutMs
+		 * @param run
+		 */
+		public InterThreadIntervall(final E thread, final int intervall, final Runnable run) {
+			super(intervall);
+			this.run = run;
+			this.thread = thread;
+		}
+
+		@Override
+		protected void innerRun() {
+			InterThreads.this.put(thread, run);
+		}
+
+		@Override
+		public String toString() {
+			return "RTCapsule " + run.toString();
 		}
 	}
 
