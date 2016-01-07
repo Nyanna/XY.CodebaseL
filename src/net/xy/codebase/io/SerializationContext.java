@@ -12,16 +12,16 @@
  */
 package net.xy.codebase.io;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -165,7 +165,7 @@ public class SerializationContext {
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 */
-	public void serialize(final DataOutputStream out, final Object target)
+	public void serialize(final Encoder out, final Object target)
 			throws IOException, IllegalArgumentException, IllegalAccessException {
 		try {
 			write(out, target);
@@ -182,7 +182,7 @@ public class SerializationContext {
 	 * @param target
 	 * @return
 	 */
-	public boolean serializeCatched(final DataOutputStream out, final Object target) {
+	public boolean serializeCatched(final Encoder out, final Object target) {
 		try {
 			serialize(out, target);
 			return true;
@@ -202,7 +202,7 @@ public class SerializationContext {
 	 * @param in
 	 * @return
 	 */
-	public Object deserialize(final DataInputStream in) {
+	public Object deserialize(final Decoder in) {
 		Exception e = null;
 		try {
 			return read(in);
@@ -233,7 +233,7 @@ public class SerializationContext {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private void write(final DataOutputStream out, final Object target)
+	private void write(final Encoder out, final Object target)
 			throws IOException, IllegalArgumentException, IllegalAccessException {
 		final byte eid = getEid(target != null ? target.getClass() : null, target);
 		out.writeByte(eid); // write type idendifier
@@ -250,7 +250,7 @@ public class SerializationContext {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	private void write(final DataOutputStream out, final Object target, final byte eid)
+	private void write(final Encoder out, final Object target, final byte eid)
 			throws IOException, IllegalArgumentException, IllegalAccessException {
 		switch (eid) {
 		case nullEid:
@@ -301,22 +301,46 @@ public class SerializationContext {
 		default:
 			final Class<?> tcl = target.getClass();
 			if (tcl.isEnum())
-				out.writeByte(((Enum<?>) target).ordinal());
-			else {
-				// recursive object
-				final List<Field> fields = getFields(tcl);
-				for (final Field field : fields)
-					if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
-						field.setAccessible(true);
-						try {
-							write(out, field.get(target));
-						} catch (final UnserializableException ex) {
-							ex.addTarget(target);
-							throw ex;
-						}
-					}
-			}
+				out.writeByte((byte) ((Enum<?>) target).ordinal());
+			// else if (target instanceof Externalize)
+			// writeCustom(out, (Externalize) target);
+			else
+				writeFields(out, target, tcl);
 		}
+	}
+
+	/**
+	 * write by custom implementation
+	 *
+	 * @param out
+	 * @param target
+	 */
+	private void writeCustom(final Encoder out, final Externalize target) {
+		target.encode(out);
+	}
+
+	/**
+	 * write class fields
+	 *
+	 * @param out
+	 * @param target
+	 * @param tcl
+	 * @throws IOException
+	 * @throws IllegalAccessException
+	 */
+	private void writeFields(final Encoder out, final Object target, final Class<?> tcl)
+			throws IOException, IllegalAccessException {
+		final List<Field> fields = getFields(tcl);
+		for (final Field field : fields)
+			if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
+				field.setAccessible(true);
+				try {
+					write(out, field.get(target));
+				} catch (final UnserializableException ex) {
+					ex.addTarget(target);
+					throw ex;
+				}
+			}
 	}
 
 	/**
@@ -329,7 +353,7 @@ public class SerializationContext {
 	 * @throws IOException
 	 * @throws IllegalAccessException
 	 */
-	private void writeArray(final DataOutputStream out, final Object target, final byte aeid, final Class<?> comp)
+	private void writeArray(final Encoder out, final Object target, final byte aeid, final Class<?> comp)
 			throws IOException, IllegalAccessException {
 		final int alength = Array.getLength(target);
 
@@ -342,7 +366,7 @@ public class SerializationContext {
 					break;
 				}
 			}
-		out.writeBoolean(same);
+		out.writeBool(same);
 
 		out.writeInt(alength); // write length
 		if (alength > 0)
@@ -386,7 +410,7 @@ public class SerializationContext {
 	 * @author Xyan
 	 *
 	 */
-	public class UnserializableException extends IllegalArgumentException {
+	public static class UnserializableException extends IllegalArgumentException {
 		private static final long serialVersionUID = 4275041442173875029L;
 		private final List<Object> targets = new ArrayList<Object>();
 
@@ -419,7 +443,7 @@ public class SerializationContext {
 	 * @throws NoSuchMethodException
 	 * @throws InvocationTargetException
 	 */
-	private Object read(final DataInputStream in) throws IllegalArgumentException, IllegalAccessException, IOException,
+	private Object read(final Decoder in) throws IllegalArgumentException, IllegalAccessException, IOException,
 			InstantiationException, ClassNotFoundException, SecurityException, InvocationTargetException {
 		final byte type;
 		try {
@@ -445,9 +469,8 @@ public class SerializationContext {
 	 * @throws NoSuchMethodException
 	 * @throws InvocationTargetException
 	 */
-	private Object read(final DataInputStream in, final byte type)
-			throws IllegalArgumentException, IllegalAccessException, IOException, InstantiationException,
-			ClassNotFoundException, SecurityException, InvocationTargetException {
+	private Object read(final Decoder in, final byte type) throws IllegalArgumentException, IllegalAccessException,
+			IOException, InstantiationException, ClassNotFoundException, SecurityException, InvocationTargetException {
 		switch (type) {
 		case nullEid:
 			return null;
@@ -505,33 +528,92 @@ public class SerializationContext {
 				return cl.getEnumConstants()[in.readByte()];
 			else {
 				// recursive object
-				Constructor<?> con;
-				try {
-					con = cl.getDeclaredConstructor();
-				} catch (final NoSuchMethodException e) {
-					throw new IllegalStateException("Cant find constructor for class [" + cl.getName() + "]");
-				}
-				if (!Modifier.isPublic(con.getModifiers()))
-					con.setAccessible(true);
-				final Object target = con.newInstance();
-				final List<Field> fields = getFields(cl);
-				for (final Field field : fields)
-					if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
-						if (field.getAnnotation(IgnoreRead.class) != null)
-							continue;
-
-						if (!Modifier.isPublic(field.getModifiers()))
-							field.setAccessible(true);
-						try {
-							field.set(target, read(in));
-						} catch (final IllegalStateException ex) {
-							LOG.error("Error read deffect field [" + field + "][" + ex.getMessage() + "]");
-							throw ex;
-						}
-					}
+				final Object target = inst(cl);
+				// if (target instanceof Externalize)
+				// readExtern(in, (Externalize) target);
+				// else
+				readFields(in, cl, target);
 				return filter(target);
 			}
 		}
+	}
+
+	/**
+	 * read by custom implementation
+	 *
+	 * @param in
+	 * @param target
+	 */
+	private void readExtern(final Decoder in, final Externalize target) {
+		target.decode(in);
+	}
+
+	/**
+	 * read classmembers by fields
+	 *
+	 * @param in
+	 * @param cl
+	 * @param target
+	 * @throws IllegalAccessException
+	 * @throws IOException
+	 * @throws InstantiationException
+	 * @throws ClassNotFoundException
+	 * @throws InvocationTargetException
+	 */
+	private void readFields(final Decoder in, final Class<?> cl, final Object target) throws IllegalAccessException,
+			IOException, InstantiationException, ClassNotFoundException, InvocationTargetException {
+		final List<Field> fields = getFields(cl);
+		for (final Field field : fields)
+			if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
+				if (field.getAnnotation(IgnoreRead.class) != null)
+					continue;
+
+				if (!Modifier.isPublic(field.getModifiers()))
+					field.setAccessible(true);
+				try {
+					field.set(target, read(in));
+				} catch (final IllegalStateException ex) {
+					LOG.error("Error read deffect field [" + field + "][" + ex.getMessage() + "]");
+					throw ex;
+				}
+			}
+	}
+
+	/**
+	 * creates class instance
+	 *
+	 * @param cl
+	 * @return
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws InvocationTargetException
+	 */
+	@SuppressWarnings("unchecked")
+	private static <T> T inst(final Class<T> cl) {
+		Constructor<?> con;
+		try {
+			con = cl.getDeclaredConstructor();
+		} catch (final NoSuchMethodException e) {
+			throw new IllegalStateException("Cant find constructor for class [" + cl.getName() + "]");
+		}
+		if (!Modifier.isPublic(con.getModifiers()))
+			con.setAccessible(true);
+
+		Exception e = null;
+		try {
+			return (T) con.newInstance();
+		} catch (final IllegalArgumentException e1) {
+			e = e1;
+		} catch (final IllegalAccessException e2) {
+			e = e2;
+		} catch (final SecurityException e7) {
+			e = e7;
+		} catch (final InvocationTargetException e8) {
+			e = e8;
+		} catch (final InstantiationException e9) {
+			e = e9;
+		}
+		throw new IllegalStateException("Error on reading object", e);
 	}
 
 	/**
@@ -557,7 +639,7 @@ public class SerializationContext {
 	 * @throws ClassNotFoundException
 	 * @throws InvocationTargetException
 	 */
-	private Object readArray(final DataInputStream in, final byte atype, final Class<?> comp) throws IOException,
+	private Object readArray(final Decoder in, final byte atype, final Class<?> comp) throws IOException,
 			IllegalAccessException, InstantiationException, ClassNotFoundException, InvocationTargetException {
 		final boolean same = in.readBoolean();
 		final int alength = in.readInt();
@@ -599,6 +681,7 @@ public class SerializationContext {
 			pcl = pcl.getSuperclass(); // next
 		}
 		// order difference between at least oracle and android
+		// skip renaming for obfuscation
 		Collections.sort(fields, fieldComparator);
 		return fields;
 	}
@@ -620,5 +703,150 @@ public class SerializationContext {
 		else if (clazz.isArray())
 			return arrayEid;
 		return getClassEid(clazz);
+	}
+
+	/**
+	 * interface for custom serializable objects
+	 * 
+	 * @author Xyan
+	 *
+	 */
+	public static interface Externalize {
+		public void encode(Encoder enc);
+
+		public void decode(Decoder dec);
+	}
+
+	/**
+	 * convenience wrapper for bytebuffer and deserialization
+	 * 
+	 * @author Xyan
+	 *
+	 */
+	public class Decoder {
+		private final ByteBuffer bb;
+
+		public Decoder(final ByteBuffer bb) {
+			this.bb = bb;
+		}
+
+		public void clear() {
+			bb.clear();
+		}
+
+		public <T extends Externalize> T readOpt(final Class<T> clazz) {
+			final byte fill = readByte();
+			if (fill == 0)
+				return null;
+			else {
+				final T res = inst(clazz);
+				res.decode(this);
+				return res;
+			}
+		}
+
+		public boolean readBoolean() {
+			return bb.get() > 0;
+		}
+
+		public byte readByte() {
+			return bb.get();
+		}
+
+		public short readShort() {
+			return bb.getShort();
+		}
+
+		public int readInt() {
+			return bb.getInt();
+		}
+
+		public long readLong() {
+			return bb.getLong();
+		}
+
+		public float readFloat() {
+			return bb.getFloat();
+		}
+
+		public double readDouble() {
+			return bb.getDouble();
+		}
+
+		public String readUTF() {
+			final int length = readInt();
+			final byte[] buf = new byte[length];
+			bb.get(buf);
+			return new String(buf);
+		}
+	}
+
+	/**
+	 * encoder api convenience wrapper for bytebuffer
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public class Encoder {
+		private final ByteBuffer bb;
+
+		public Encoder(final ByteBuffer bb) {
+			this.bb = bb;
+		}
+
+		public void clear() {
+			bb.clear();
+		}
+
+		public void writeUTF(final String str) {
+			try {
+				final byte[] bytes = str.getBytes("utf8");
+				writeInt(bytes.length);
+				for (final byte b : bytes)
+					writeByte(b);
+			} catch (final UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+
+		public void writeOpt(final Externalize obj) {
+			if (obj == null)
+				writeByte((byte) 0);
+			else {
+				writeByte((byte) 1);
+				obj.encode(this);
+			}
+		}
+
+		public void writeBool(final boolean b) {
+			if (b)
+				bb.put((byte) 1);
+			else
+				bb.put((byte) 0);
+		}
+
+		public void writeByte(final byte b) {
+			bb.put(b);
+		}
+
+		public void writeShort(final short s) {
+			bb.putShort(s);
+		}
+
+		public void writeInt(final int l) {
+			bb.putInt(l);
+		}
+
+		public void writeLong(final long l) {
+			bb.putLong(l);
+		}
+
+		public void writeFloat(final float f) {
+			bb.putFloat(f);
+		}
+
+		public void writeDouble(final double d) {
+			bb.putDouble(d);
+		}
 	}
 }
