@@ -53,7 +53,6 @@ public class TimeoutQueue {
 		monitor = new Semaphore(0);
 		timer = thread;
 		timer.setQueue(this);
-		timer.start();
 	}
 
 	/**
