@@ -415,16 +415,42 @@ public class SerializationContext {
 		private final List<Object> targets = new ArrayList<Object>();
 
 		public UnserializableException(final Object target, final String message) {
+			super(message);
 			addTarget(target);
 		}
 
 		public void addTarget(final Object target) {
-			targets.add(targets);
+			targets.add(target);
 		}
 
 		@Override
 		public String getMessage() {
 			return "Object not serializable [" + targets + "]";
+		}
+	}
+
+	/**
+	 * custom exception to print hierarchic object tree failures
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public static class FieldErrorException extends IllegalArgumentException {
+		private static final long serialVersionUID = 3930634758676023895L;
+		private final List<Object> targets = new ArrayList<Object>();
+
+		public FieldErrorException(final Object target, final String message, final Throwable thr) {
+			super(message, thr);
+			addTarget(target);
+		}
+
+		public void addTarget(final Object target) {
+			targets.add(target);
+		}
+
+		@Override
+		public String getMessage() {
+			return super.getMessage() + " path [" + targets + "]";
 		}
 	}
 
@@ -570,11 +596,16 @@ public class SerializationContext {
 
 				if (!Modifier.isPublic(field.getModifiers()))
 					field.setAccessible(true);
+
+				Object value = null;
 				try {
-					field.set(target, read(in));
-				} catch (final IllegalStateException ex) {
-					LOG.error("Error read deffect field [" + field + "][" + ex.getMessage() + "]");
+					value = read(in);
+					field.set(target, value);
+				} catch (final FieldErrorException ex) {
+					ex.addTarget(cl);
 					throw ex;
+				} catch (final Exception ex) {
+					throw new FieldErrorException(cl, "Error setting field to [" + field + "][" + value + "]", ex);
 				}
 			}
 	}
@@ -641,30 +672,35 @@ public class SerializationContext {
 	 */
 	private Object readArray(final Decoder in, final byte atype, final Class<?> comp) throws IOException,
 			IllegalAccessException, InstantiationException, ClassNotFoundException, InvocationTargetException {
-		final boolean same = in.readBoolean();
-		final int alength = in.readInt();
-		if (alength == 0)
-			return Array.newInstance(comp, alength);
+		try {
+			final boolean same = in.readBoolean();
+			final int alength = in.readInt();
+			if (alength == 0)
+				return Array.newInstance(comp, alength);
 
-		final Object[] array = new Object[alength];
-		for (int ac = 0; ac < alength; ac++)
-			if (same) {
-				if (comp.isArray()) {
-					final Class<?> compClassO = comp.getComponentType();
-					final byte aeidO = getClassEid(comp);
-					array[ac] = readArray(in, aeidO, compClassO);
+			final Object[] array = new Object[alength];
+			for (int ac = 0; ac < alength; ac++)
+				if (same) {
+					if (comp.isArray()) {
+						final Class<?> compClassO = comp.getComponentType();
+						final byte aeidO = getClassEid(comp);
+						array[ac] = readArray(in, aeidO, compClassO);
+					} else
+						array[ac] = read(in, atype);
 				} else
-					array[ac] = read(in, atype);
-			} else
-				array[ac] = read(in);
+					array[ac] = read(in);
 
-		final Object res = Array.newInstance(comp, alength);
-		if (comp.isPrimitive())
-			for (int i = 0; i < alength; i++)
-				Array.set(res, i, array[i]);
-		else
-			System.arraycopy(array, 0, res, 0, alength);
-		return res;
+			final Object res = Array.newInstance(comp, alength);
+			if (comp.isPrimitive())
+				for (int i = 0; i < alength; i++)
+					Array.set(res, i, array[i]);
+			else
+				System.arraycopy(array, 0, res, 0, alength);
+			return res;
+		} catch (final FieldErrorException ex) {
+			ex.addTarget("Array");
+			throw ex;
+		}
 	}
 
 	/**
