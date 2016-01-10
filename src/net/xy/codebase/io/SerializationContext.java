@@ -89,13 +89,34 @@ public class SerializationContext {
 		if (defCount + classes.length > 254)
 			throw new IllegalArgumentException("Contexts class limit exceeded");
 
+		boolean noSri = false;
 		short idx = defCount;
 		for (final Class<?>[] clSet : classes)
-			for (final Class<?> cl : clSet) {
-				if (cl.isInstance(Serializable.class))
-					throw new IllegalArgumentException("Class doesn't implements serializable [" + cl + "]");
-				addClass(cl, idx++);
-			}
+			for (final Class<?> cl : clSet)
+				if (!cl.isInterface() && !isSerializable(cl)) {
+					noSri = true;
+					LOG.error("Class doesn't implements serializable [" + cl + "]");
+				} else
+					addClass(cl, idx++);
+		if (noSri)
+			throw new IllegalArgumentException("Tried not non serializable classes");
+	}
+
+	/**
+	 * check for serializable
+	 *
+	 * @param cl
+	 * @return
+	 */
+	private boolean isSerializable(final Class<?> cl) {
+		if (cl != null) {
+			for (final Class<?> ifc : cl.getInterfaces())
+				if (Serializable.class.equals(ifc) || isSerializable(ifc))
+					return true;
+			if (isSerializable(cl.getSuperclass()))
+				return true;
+		}
+		return false;
 	}
 
 	/**
@@ -235,7 +256,7 @@ public class SerializationContext {
 	 */
 	private void write(final Encoder out, final Object target)
 			throws IOException, IllegalArgumentException, IllegalAccessException {
-		final byte eid = getEid(target != null ? target.getClass() : null, target);
+		final byte eid = getEid(target);
 		out.writeByte(eid); // write type idendifier
 		write(out, target, eid);
 	}
@@ -302,8 +323,8 @@ public class SerializationContext {
 			final Class<?> tcl = target.getClass();
 			if (tcl.isEnum())
 				out.writeByte((byte) ((Enum<?>) target).ordinal());
-			// else if (target instanceof Externalize)
-			// writeCustom(out, (Externalize) target);
+			else if (target instanceof Externalize)
+				writeCustom(out, (Externalize<?>) target);
 			else
 				writeFields(out, target, tcl);
 		}
@@ -315,7 +336,7 @@ public class SerializationContext {
 	 * @param out
 	 * @param target
 	 */
-	private void writeCustom(final Encoder out, final Externalize target) {
+	private void writeCustom(final Encoder out, final Externalize<?> target) {
 		target.encode(out);
 	}
 
@@ -555,10 +576,10 @@ public class SerializationContext {
 			else {
 				// recursive object
 				final Object target = inst(cl);
-				// if (target instanceof Externalize)
-				// readExtern(in, (Externalize) target);
-				// else
-				readFields(in, cl, target);
+				if (target instanceof Externalize)
+					readExtern(in, (Externalize<?>) target);
+				else
+					readFields(in, cl, target);
 				return filter(target);
 			}
 		}
@@ -570,7 +591,7 @@ public class SerializationContext {
 	 * @param in
 	 * @param target
 	 */
-	private void readExtern(final Decoder in, final Externalize target) {
+	private void readExtern(final Decoder in, final Externalize<?> target) {
 		target.decode(in);
 	}
 
@@ -725,11 +746,11 @@ public class SerializationContext {
 	/**
 	 * returns numerical index for context class
 	 *
-	 * @param clazz
 	 * @param target
 	 * @return
 	 */
-	private byte getEid(final Class<?> clazz, final Object target) {
+	private byte getEid(final Object target) {
+		final Class<?> clazz = target != null ? target.getClass() : null;
 		if (clazz == null)
 			return nullEid;
 		else if (clazz == Boolean.class && (Boolean) target)
@@ -747,10 +768,10 @@ public class SerializationContext {
 	 * @author Xyan
 	 *
 	 */
-	public static interface Externalize {
+	public static interface Externalize<T> {
 		public void encode(Encoder enc);
 
-		public void decode(Decoder dec);
+		public T decode(Decoder dec);
 	}
 
 	/**
@@ -770,14 +791,12 @@ public class SerializationContext {
 			bb.clear();
 		}
 
-		public <T extends Externalize> T readOpt(final Class<T> clazz) {
-			final byte fill = readByte();
-			if (fill == 0)
-				return null;
-			else {
-				final T res = inst(clazz);
-				res.decode(this);
-				return res;
+		@SuppressWarnings("unchecked")
+		public <T> T read(final Class<T> clazz) {
+			try {
+				return (T) SerializationContext.this.read(this);
+			} catch (final Exception e) {
+				throw new IllegalArgumentException("Can't deserialize", e);
 			}
 		}
 
@@ -815,6 +834,20 @@ public class SerializationContext {
 			bb.get(buf);
 			return new String(buf);
 		}
+
+		public <T> T readArray(final Class<T> clazz) {
+			return read(clazz);
+		}
+
+		public byte[] readbytes() {
+			final int length = readInt();
+			if (length > 0) {
+				final byte[] buf = new byte[length];
+				bb.get(buf);
+				return buf;
+			} else
+				return null;
+		}
 	}
 
 	/**
@@ -845,12 +878,11 @@ public class SerializationContext {
 			}
 		}
 
-		public void writeOpt(final Externalize obj) {
-			if (obj == null)
-				writeByte((byte) 0);
-			else {
-				writeByte((byte) 1);
-				obj.encode(this);
+		public void write(final Object target) {
+			try {
+				SerializationContext.this.write(this, target);
+			} catch (final Exception e) {
+				throw new IllegalArgumentException("Can't serialize", e);
 			}
 		}
 
@@ -883,6 +915,18 @@ public class SerializationContext {
 
 		public void writeDouble(final double d) {
 			bb.putDouble(d);
+		}
+
+		public void writeArray(final Object target) {
+			write(target);
+		}
+
+		public void writeBytes(final byte[] ba) {
+			if (ba != null) {
+				writeInt(ba.length);
+				bb.put(ba);
+			} else
+				writeInt(0);
 		}
 	}
 }

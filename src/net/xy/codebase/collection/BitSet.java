@@ -2,7 +2,11 @@ package net.xy.codebase.collection;
 
 import java.io.Serializable;
 
-public class BitSet implements Serializable {
+import net.xy.codebase.io.SerializationContext.Decoder;
+import net.xy.codebase.io.SerializationContext.Encoder;
+import net.xy.codebase.io.SerializationContext.Externalize;
+
+public class BitSet implements Serializable, Externalize<BitSet> {
 	private static final long serialVersionUID = -3097711895125159466L;
 
 	private byte[] array = null;
@@ -30,5 +34,22 @@ public class BitSet implements Serializable {
 			array[field] = (byte) (array[field] | 1 << sub);
 		else
 			array[field] = (byte) (array[field] & ~(1 << sub));
+	}
+
+	@Override
+	public void encode(final Encoder enc) {
+		if (array != null) {
+			enc.writeByte((byte) array.length);
+			enc.writeBytes(array);
+		} else
+			enc.writeByte((byte) 0);
+	}
+
+	@Override
+	public BitSet decode(final Decoder dec) {
+		final int length = dec.readByte();
+		if (length > 0)
+			array = dec.readbytes();
+		return this;
 	}
 }

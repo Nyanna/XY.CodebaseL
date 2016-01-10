@@ -5,8 +5,11 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import net.xy.codebase.clone.Cloneable;
+import net.xy.codebase.io.SerializationContext.Decoder;
+import net.xy.codebase.io.SerializationContext.Encoder;
+import net.xy.codebase.io.SerializationContext.Externalize;
 
-public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneable<Array<E>> {
+public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externalize<Array<E>>, Cloneable<Array<E>> {
 	private static final long serialVersionUID = -4019349541696506832L;
 	public static int MIN_GROWTH = 32;
 	public static final Array<?> EMPTY = new EmptyArray<Object>(Object.class);
@@ -565,5 +568,18 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Cloneab
 		for (int i = 0; i < size(); i++)
 			array[i] = ((Number) get(i)).floatValue();
 		return array;
+	}
+
+	@Override
+	public void encode(final Encoder enc) {
+		enc.writeInt(maxIdx);
+		enc.writeArray(elements);
+	}
+
+	@Override
+	public Array<E> decode(final Decoder dec) {
+		maxIdx = dec.readInt();
+		elements = dec.readArray(null);
+		return this;
 	}
 }
