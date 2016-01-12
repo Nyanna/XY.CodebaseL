@@ -52,4 +52,11 @@ public interface IPerfCounter {
 	 * @return
 	 */
 	public long getLastIntervall();
+
+	/**
+	 * timestamp of last time data were aggregated
+	 * 
+	 * @return
+	 */
+	public long lastUpdate();
 }

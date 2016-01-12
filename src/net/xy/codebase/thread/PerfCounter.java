@@ -30,6 +30,10 @@ public class PerfCounter implements IPerfCounter {
 	 */
 	private long measureSum;
 	/**
+	 * timestamp of last stop call
+	 */
+	private long lastMeasureStop;
+	/**
 	 * sum values
 	 */
 	private double sum;
@@ -93,6 +97,7 @@ public class PerfCounter implements IPerfCounter {
 		if (measureStart > 0) {
 			measureSum += System.nanoTime() - measureStart;
 			measureStart = 0;
+			lastMeasureStop = System.currentTimeMillis();
 		}
 	}
 
@@ -114,6 +119,11 @@ public class PerfCounter implements IPerfCounter {
 
 		sum += lastLoop;
 		count++;
+	}
+
+	@Override
+	public long lastUpdate() {
+		return lastMeasureStop;
 	}
 
 	@Override
