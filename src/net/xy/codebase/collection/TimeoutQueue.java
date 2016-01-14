@@ -1,8 +1,7 @@
 package net.xy.codebase.collection;
 
 import java.util.Comparator;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.Semaphore;
+import java.util.PriorityQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -23,11 +22,7 @@ public class TimeoutQueue {
 	/**
 	 * ordered task queue
 	 */
-	private final PriorityBlockingQueue<ITask> queue;
-	/**
-	 * monitor for queue head update checks
-	 */
-	private final Semaphore monitor;
+	private final PriorityQueue<ITask> queue;
 	/**
 	 * timer thread
 	 */
@@ -37,8 +32,7 @@ public class TimeoutQueue {
 	 * default
 	 */
 	public TimeoutQueue(final String name) {
-		queue = new PriorityBlockingQueue<ITask>(100, new TaskComparator());
-		monitor = new Semaphore(0);
+		queue = new PriorityQueue<ITask>(100, new TaskComparator());
 		timer = new QueueTimer(this, name);
 		timer.start();
 	}
@@ -49,8 +43,7 @@ public class TimeoutQueue {
 	 * @param thread
 	 */
 	public TimeoutQueue(final QueueTimer thread) {
-		queue = new PriorityBlockingQueue<ITask>(100, new TaskComparator());
-		monitor = new Semaphore(0);
+		queue = new PriorityQueue<ITask>(100, new TaskComparator());
 		timer = thread;
 		timer.setQueue(this);
 	}
@@ -63,9 +56,12 @@ public class TimeoutQueue {
 	public void add(final ITask t) {
 		if (LOG.isTraceEnabled())
 			LOG.trace("add task [" + t + "]");
-		queue.add(t);
-		if (queue.peek() == t)
-			monitor.release();
+
+		synchronized (queue) {
+			queue.add(t);
+			if (queue.peek() == t)
+				queue.notify();
+		}
 	}
 
 	/**
@@ -128,22 +124,26 @@ public class TimeoutQueue {
 
 		@Override
 		public void run() {
+			final TimeoutQueue tq = this.tq;
 			ITask nt = null;
-			while (true)
-				try {
-					final TimeoutQueue tq = this.tq;
-					nt = tq.queue.peek();
-					if (nt == null) {
-						tq.monitor.acquire();
-						continue;
-					}
+			try {
+				synchronized (tq.queue) {
+					while (true)
+						if ((nt = tq.queue.peek()) == null)
+							tq.queue.wait();
+						else {
+							final long wns = Math.max(0, nt.nextRun() - System.nanoTime());
+							final long wms = TimeUnit.NANOSECONDS.toMillis(wns);
+							tq.queue.wait(wms, (int) Math.max(1, wns % 1000000));
 
-					final long waitTime = nt.nextRun() - System.currentTimeMillis();
-					if (!tq.monitor.tryAcquire(waitTime, TimeUnit.MILLISECONDS))
-						timedOut(nt);
-				} catch (final InterruptedException e) {
-					e.printStackTrace();
+							nt = tq.queue.peek();
+							if (nt.nextRun() <= System.nanoTime())
+								timedOut(nt);
+						}
 				}
+			} catch (final InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 
 		/**
@@ -153,10 +153,12 @@ public class TimeoutQueue {
 		 * @return null on success or the new queue head
 		 */
 		private void timedOut(final ITask nt) {
-			final ITask t = tq.queue.poll();
-			run(t);
-			if (t.isRecurring())
-				tq.add(t);
+			if (tq.queue.poll() != nt)
+				throw new RuntimeException("head of que is not current");
+
+			run(nt);
+			if (nt.isRecurring())
+				tq.queue.add(nt);
 		}
 
 		/**
@@ -190,7 +192,7 @@ public class TimeoutQueue {
 		public boolean isRecurring();
 
 		/**
-		 * @return time to run this task at next
+		 * @return time to run this task at next in nanotime
 		 */
 		public long nextRun();
 	}

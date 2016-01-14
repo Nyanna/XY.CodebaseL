@@ -1,5 +1,7 @@
 package net.xy.codebase.exec;
 
+import java.util.concurrent.TimeUnit;
+
 import net.xy.codebase.collection.TimeoutQueue.ITask;
 
 /**
@@ -16,11 +18,11 @@ public abstract class TimeoutRunnable implements ITask {
 
 	/**
 	 * default
-	 * 
+	 *
 	 * @param timeoutMs
 	 */
 	public TimeoutRunnable(final long timeoutMs) {
-		next = System.currentTimeMillis() + timeoutMs;
+		next = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
 	}
 
 	@Override

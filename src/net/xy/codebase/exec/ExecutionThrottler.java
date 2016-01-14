@@ -1,5 +1,6 @@
 package net.xy.codebase.exec;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ public class ExecutionThrottler {
 	private final ScheduleRunnable runnable;
 	private final ThrottledRunnable capsule;
 	/**
-	 * intervall to run at
+	 * intervall to run at in ms
 	 */
 	private final int interval;
 	/**
@@ -49,6 +50,7 @@ public class ExecutionThrottler {
 	 *
 	 * @param runnable
 	 * @param interval
+	 *            in ms
 	 */
 	public ExecutionThrottler(final ScheduleRunnable runnable, final int interval) {
 		this.runnable = runnable;
@@ -69,8 +71,8 @@ public class ExecutionThrottler {
 			} else if (lastUpdate.compareAndSet(0, 1)) {
 				// start runnable
 				if (interval > 0) {
-					final long now = System.currentTimeMillis();
-					final long nextStart = now + interval - (now - lastStart);
+					final long now = System.nanoTime();
+					final long nextStart = now + TimeUnit.MILLISECONDS.toNanos(interval) - (now - lastStart);
 					capsule.setNextRun(Math.max(nextStart, now));
 				}
 				if (LOG.isTraceEnabled())
@@ -94,7 +96,7 @@ public class ExecutionThrottler {
 		@Override
 		public void run() {
 			final long wish = lastUpdate.get();
-			final long now = System.currentTimeMillis();
+			final long now = System.nanoTime();
 			lastStart = now;
 			if (LOG.isTraceEnabled())
 				LOG.trace("Run throttled [" + interval + "][" + this + "]");
@@ -106,7 +108,7 @@ public class ExecutionThrottler {
 			} else {
 				// update in future or has changed
 				if (interval > 0)
-					nextRun = now + interval;
+					nextRun = now + TimeUnit.MILLISECONDS.toNanos(interval);
 				if (LOG.isTraceEnabled())
 					LOG.trace("Rerun throttled run [" + interval + "][" + this + "]");
 				runnable.schedule(this);

@@ -1,5 +1,7 @@
 package net.xy.codebase.thread;
 
+import java.util.concurrent.TimeUnit;
+
 import net.xy.codebase.collection.TimeoutQueue.ITask;
 
 public abstract class RecurringTask implements ITask {
@@ -8,7 +10,7 @@ public abstract class RecurringTask implements ITask {
 
 	public RecurringTask(final int intervallMs) {
 		this.intervallMs = intervallMs;
-		nextRun = System.currentTimeMillis();
+		nextRun = System.nanoTime();
 	}
 
 	@Override
@@ -22,10 +24,11 @@ public abstract class RecurringTask implements ITask {
 	}
 
 	private void calcNextRun() {
-		final long now = System.currentTimeMillis();
+		final long now = System.nanoTime();
 		if (nextRun == 0)
 			nextRun = now;
-		nextRun += ((now - nextRun) / intervallMs + 1) * intervallMs;
+		final long ivns = TimeUnit.MILLISECONDS.toNanos(intervallMs);
+		nextRun += ((now - nextRun) / ivns + 1) * ivns;
 	}
 
 	@Override
