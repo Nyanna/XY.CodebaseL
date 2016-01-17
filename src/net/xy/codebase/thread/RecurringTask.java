@@ -7,6 +7,7 @@ import net.xy.codebase.collection.TimeoutQueue.ITask;
 public abstract class RecurringTask implements ITask {
 	private final int intervallMs;
 	private long nextRun;
+	private volatile boolean recurring = true;
 
 	public RecurringTask(final int intervallMs) {
 		this.intervallMs = intervallMs;
@@ -15,7 +16,7 @@ public abstract class RecurringTask implements ITask {
 
 	@Override
 	public boolean isRecurring() {
-		return true;
+		return recurring;
 	}
 
 	@Override
@@ -33,9 +34,15 @@ public abstract class RecurringTask implements ITask {
 
 	@Override
 	public void run() {
-		calcNextRun();
-		innerRun();
+		if (recurring) {
+			calcNextRun();
+			innerRun();
+		}
 	}
 
 	protected abstract void innerRun();
+
+	public void stop() {
+		recurring = false;
+	}
 }

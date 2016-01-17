@@ -1,5 +1,6 @@
 package net.xy.codebase.thread;
 
+import net.xy.codebase.collection.TimeoutQueue.ITask;
 import net.xy.codebase.exec.ExecutionThrottler;
 import net.xy.codebase.exec.TimeoutRunnable;
 
@@ -89,4 +90,11 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @return
 	 */
 	public RecurringTask start(E thread, Runnable run, int intervall);
+
+	/**
+	 * start self supplied recuring task
+	 *
+	 * @param task
+	 */
+	public void start(ITask task);
 }

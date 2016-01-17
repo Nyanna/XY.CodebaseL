@@ -75,7 +75,7 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 	 * @author Xyan
 	 *
 	 */
-	public abstract class AbstractInterThreadRunnable implements ScheduleRunnable {
+	public static abstract class AbstractInterThreadRunnable<E extends Enum<E>> implements ScheduleRunnable {
 		/**
 		 * real runnable
 		 */

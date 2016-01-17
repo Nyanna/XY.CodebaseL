@@ -72,12 +72,12 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 	@Override
 	public ExecutionThrottler getThrottler(final E thread, final Runnable run) {
-		return new ExecutionThrottler(new InterThreadRunnable(thread, run));
+		return new ExecutionThrottler(new InterThreadRunnable<E>(thread, run, this));
 	}
 
 	@Override
 	public ExecutionThrottler getThrottler(final E thread, final Runnable run, final int intervallMs) {
-		return new ExecutionThrottler(new InterThreadSchedulable(thread, run), intervallMs);
+		return new ExecutionThrottler(new InterThreadSchedulable<E>(thread, run, this), intervallMs);
 	}
 
 	@Override
@@ -89,9 +89,14 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 	@Override
 	public RecurringTask start(final E thread, final Runnable run, final int intervall) {
-		final InterThreadIntervall res = new InterThreadIntervall(thread, intervall, run);
+		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, run, this);
 		tque.add(res);
 		return res;
+	}
+
+	@Override
+	public void start(final ITask task) {
+		tque.add(task);
 	}
 
 	/**
@@ -136,7 +141,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * @author Xyan
 	 *
 	 */
-	public class InterThreadIntervall extends RecurringTask {
+	public static class InterThreadIntervall<E extends Enum<E>> extends RecurringTask {
 		/**
 		 * target thread
 		 */
@@ -144,7 +149,11 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		/**
 		 * real runnable
 		 */
-		private final Runnable run;
+		protected Runnable run;
+		/**
+		 * back reference
+		 */
+		private final IInterThreads<E> it;
 
 		/**
 		 * default
@@ -153,15 +162,28 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		 * @param timeoutMs
 		 * @param run
 		 */
-		public InterThreadIntervall(final E thread, final int intervall, final Runnable run) {
+		public InterThreadIntervall(final E thread, final int intervall, final Runnable run,
+				final IInterThreads<E> it) {
 			super(intervall);
 			this.run = run;
 			this.thread = thread;
+			this.it = it;
+		}
+
+		/**
+		 * for inner access
+		 * 
+		 * @param thread
+		 * @param intervall
+		 * @param it
+		 */
+		protected InterThreadIntervall(final E thread, final int intervall, final IInterThreads<E> it) {
+			this(thread, intervall, null, it);
 		}
 
 		@Override
 		protected void innerRun() {
-			InterThreads.this.put(thread, run);
+			it.put(thread, run);
 		}
 
 		@Override
@@ -176,22 +198,28 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * @author Xyan
 	 *
 	 */
-	public class InterThreadRunnable extends AbstractInterThreadRunnable {
+	public static class InterThreadRunnable<E extends Enum<E>> extends AbstractInterThreadRunnable<E> {
+		/**
+		 * back reference
+		 */
+		private final IInterThreads<E> it;
+
 		/**
 		 * default
 		 *
 		 * @param thread
 		 * @param run
 		 */
-		public InterThreadRunnable(final E thread, final Runnable run) {
+		public InterThreadRunnable(final E thread, final Runnable run, final IInterThreads<E> it) {
 			super(thread, run);
+			this.it = it;
 		}
 
 		@Override
 		public void schedule(final ITask run) {
 			if (LOG.isTraceEnabled())
 				LOG.trace("insert in threadqueue no schedule [" + this + "]");
-			InterThreads.this.put(thread, run);
+			it.put(thread, run);
 		}
 
 		@Override
@@ -212,15 +240,21 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * @author Xyan
 	 *
 	 */
-	public class InterThreadSchedulable extends AbstractInterThreadRunnable {
+	public static class InterThreadSchedulable<E extends Enum<E>> extends AbstractInterThreadRunnable<E> {
+		/**
+		 * back reference
+		 */
+		private final IInterThreads<E> it;
+
 		/**
 		 * default
 		 *
 		 * @param thread
 		 * @param run
 		 */
-		public InterThreadSchedulable(final E thread, final Runnable run) {
+		public InterThreadSchedulable(final E thread, final Runnable run, final IInterThreads<E> it) {
 			super(thread, run);
+			this.it = it;
 		}
 
 		@Override
@@ -232,7 +266,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 			} else {
 				if (LOG.isTraceEnabled())
 					LOG.trace("Schedule queued [" + this + "]");
-				InterThreads.this.tque.add(capsule);
+				it.start(capsule);
 			}
 		}
 
@@ -240,7 +274,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		public void run() {
 			if (LOG.isTraceEnabled())
 				LOG.trace("Insert in threadqueue [" + this + "]");
-			InterThreads.this.put(thread, run);
+			it.put(thread, run);
 		}
 
 		@Override
