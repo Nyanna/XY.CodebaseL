@@ -198,7 +198,6 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	public void clear() {
 		for (int i = 0; i < elements.length; i++)
 			elements[i] = null;
-		rewind();
 		reset();
 	}
 
@@ -208,14 +207,21 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	public void clean() {
 		for (int i = 0; i <= maxIdx; i++)
 			elements[i] = null;
-		rewind();
 		reset();
+	}
+
+	/**
+	 * resets max index and iterator pos
+	 */
+	public void reset() {
+		rewind();
+		resetIt();
 	}
 
 	/**
 	 * resets the iterator
 	 */
-	public void reset() {
+	public void resetIt() {
 		itIdx = 0;
 	}
 
@@ -441,7 +447,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	@Override
 	public Iterator<E> iterator() {
 		if (itIdx != 0) {
-			reset();
+			resetIt();
 			System.out.println("Iterator not reseted or used twice");
 		}
 		return this;
@@ -452,7 +458,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		final boolean res = itIdx <= maxIdx;
 		// autoreset after last call
 		if (!res)
-			reset();
+			resetIt();
 		return res;
 	}
 
