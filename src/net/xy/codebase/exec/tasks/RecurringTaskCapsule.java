@@ -1,4 +1,4 @@
-package net.xy.codebase.thread;
+package net.xy.codebase.exec.tasks;
 
 /**
  * convenience container for runnables, mainly for lamda syntax

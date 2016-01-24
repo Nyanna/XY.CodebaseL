@@ -1,8 +1,6 @@
-package net.xy.codebase.exec;
+package net.xy.codebase.exec.tasks;
 
 import java.util.concurrent.TimeUnit;
-
-import net.xy.codebase.collection.TimeoutQueue.ITask;
 
 /**
  * abstract implementation for an timeout runnable task
@@ -14,7 +12,11 @@ public abstract class TimeoutRunnable implements ITask {
 	/**
 	 * time on next and only run
 	 */
-	private final long next;
+	private long next;
+	/**
+	 * possible to reuse
+	 */
+	private volatile boolean recurring = false;
 
 	/**
 	 * default
@@ -22,12 +24,21 @@ public abstract class TimeoutRunnable implements ITask {
 	 * @param timeoutMs
 	 */
 	public TimeoutRunnable(final long timeoutMs) {
+		calculateNext(timeoutMs);
+	}
+
+	/**
+	 * calculate next execution
+	 * 
+	 * @param timeoutMs
+	 */
+	protected void calculateNext(final long timeoutMs) {
 		next = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
 	}
 
 	@Override
 	public boolean isRecurring() {
-		return false;
+		return recurring;
 	}
 
 	@Override

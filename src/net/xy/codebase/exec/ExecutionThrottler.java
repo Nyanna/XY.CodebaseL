@@ -6,7 +6,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xy.codebase.collection.TimeoutQueue.ITask;
+import net.xy.codebase.exec.tasks.ITask;
+import net.xy.codebase.exec.tasks.IScheduleRunnable;
 
 /**
  * throttler to execute an runnable not more than every interval. ensures that
@@ -24,7 +25,7 @@ public class ExecutionThrottler {
 	/**
 	 * target action to run
 	 */
-	private final ScheduleRunnable runnable;
+	private final IScheduleRunnable runnable;
 	private final ThrottledRunnable capsule;
 	/**
 	 * intervall to run at in ms
@@ -41,7 +42,7 @@ public class ExecutionThrottler {
 	 *
 	 * @param runnable
 	 */
-	public ExecutionThrottler(final ScheduleRunnable runnable) {
+	public ExecutionThrottler(final IScheduleRunnable runnable) {
 		this(runnable, 0);
 	}
 
@@ -52,7 +53,7 @@ public class ExecutionThrottler {
 	 * @param interval
 	 *            in ms
 	 */
-	public ExecutionThrottler(final ScheduleRunnable runnable, final int interval) {
+	public ExecutionThrottler(final IScheduleRunnable runnable, final int interval) {
 		this.runnable = runnable;
 		this.interval = interval;
 		capsule = new ThrottledRunnable();
@@ -141,21 +142,5 @@ public class ExecutionThrottler {
 		public String toString() {
 			return runnable.toString();
 		}
-	}
-
-	/**
-	 * interface for real action and scheduler
-	 *
-	 * @author Xyan
-	 *
-	 */
-	public static interface ScheduleRunnable extends Runnable {
-		/**
-		 * action should now to schedule his own capsule
-		 *
-		 * @param run
-		 * @param delay
-		 */
-		public void schedule(ITask run);
 	}
 }

@@ -1,4 +1,4 @@
-package net.xy.codebase.collection;
+package net.xy.codebase.exec;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
@@ -8,7 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.Primitive;
-import net.xy.codebase.thread.RecurringTaskCapsule;
+import net.xy.codebase.exec.tasks.ITask;
+import net.xy.codebase.exec.tasks.RecurringTaskCapsule;
 
 /**
  * timeout queue implementation threadsafe based on task objects which must
@@ -175,26 +176,6 @@ public class TimeoutQueue {
 				LOG.error("Error running task", e);
 			}
 		}
-	}
-
-	/**
-	 * task contract
-	 *
-	 * @author Xyan
-	 *
-	 */
-	public interface ITask extends Runnable {
-
-		/**
-		 * @return when this job should automaticly readded for further
-		 *         execution
-		 */
-		public boolean isRecurring();
-
-		/**
-		 * @return time to run this task at next in nanotime
-		 */
-		public long nextRun();
 	}
 
 	/**

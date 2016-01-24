@@ -1,8 +1,8 @@
-package net.xy.codebase.thread;
+package net.xy.codebase.exec;
 
-import net.xy.codebase.collection.TimeoutQueue.ITask;
-import net.xy.codebase.exec.ExecutionThrottler;
-import net.xy.codebase.exec.TimeoutRunnable;
+import net.xy.codebase.exec.tasks.ITask;
+import net.xy.codebase.exec.tasks.RecurringTask;
+import net.xy.codebase.exec.tasks.TimeoutRunnable;
 
 /**
  * interface for cross thread execution factories

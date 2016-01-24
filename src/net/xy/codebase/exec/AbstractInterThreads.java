@@ -1,6 +1,4 @@
-package net.xy.codebase.thread;
-
-import net.xy.codebase.exec.ExecutionThrottler.ScheduleRunnable;
+package net.xy.codebase.exec;
 
 /**
  * implementation for inter thread job execution
@@ -66,39 +64,5 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 	 */
 	protected IPerfCounter getMeasure() {
 		return null;
-	}
-
-	/**
-	 * abstract implementation of an interthread runnable container supporting
-	 * execution throttling
-	 *
-	 * @author Xyan
-	 *
-	 */
-	public static abstract class AbstractInterThreadRunnable<E extends Enum<E>> implements ScheduleRunnable {
-		/**
-		 * real runnable
-		 */
-		protected final Runnable run;
-		/**
-		 * target thread
-		 */
-		protected final E thread;
-
-		/**
-		 * default
-		 *
-		 * @param thread
-		 * @param run
-		 */
-		public AbstractInterThreadRunnable(final E thread, final Runnable run) {
-			this.run = run;
-			this.thread = thread;
-		}
-
-		@Override
-		public void run() {
-			run.run();
-		}
 	}
 }
