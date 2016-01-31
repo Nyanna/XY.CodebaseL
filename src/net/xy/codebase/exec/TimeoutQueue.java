@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import net.xy.codebase.Primitive;
 import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.RecurringTaskCapsule;
+import net.xy.codebase.exec.tasks.TimeoutRunnable;
 
 /**
  * timeout queue implementation threadsafe based on task objects which must
@@ -78,6 +79,13 @@ public class TimeoutQueue {
 	}
 
 	/**
+	 * stops proccessing
+	 */
+	public void shutdown() {
+		timer.shutdown();
+	}
+
+	/**
 	 * timer thread doing the work
 	 *
 	 * @author Xyan
@@ -92,6 +100,10 @@ public class TimeoutQueue {
 		 * ref to parent queue
 		 */
 		private TimeoutQueue tq;
+		/**
+		 * runnign state
+		 */
+		private boolean running = true;
 
 		/**
 		 * to get post initialized by extern queue
@@ -129,7 +141,7 @@ public class TimeoutQueue {
 			ITask nt = null;
 			try {
 				synchronized (tq.queue) {
-					while (true)
+					while (running)
 						if ((nt = tq.queue.peek()) == null)
 							tq.queue.wait();
 						else {
@@ -174,6 +186,21 @@ public class TimeoutQueue {
 				t.run();
 			} catch (final Exception e) {
 				LOG.error("Error running task", e);
+			}
+		}
+
+		/**
+		 * dont proccess anymore
+		 */
+		public void shutdown() {
+			tq.add(new TimeoutRunnable(0) {
+				@Override
+				public void run() {
+					running = false;
+				}
+			});
+			synchronized (tq.queue) {
+				// gets freed
 			}
 		}
 	}
