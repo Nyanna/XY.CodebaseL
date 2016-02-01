@@ -97,7 +97,13 @@ public class SerializationContext {
 					noSri = true;
 					LOG.error("Class doesn't implements serializable [" + cl + "]");
 				} else
-					addClass(cl, idx++);
+					try {
+						if (!cl.isArray() && !cl.isEnum() && !cl.isInterface())
+							cl.getDeclaredConstructor();
+						addClass(cl, idx++);
+					} catch (final NoSuchMethodException e) {
+						LOG.error("Class dont has an no arg constructor[" + cl + "]");
+					}
 		if (noSri)
 			throw new IllegalArgumentException("Tried not non serializable classes");
 	}
