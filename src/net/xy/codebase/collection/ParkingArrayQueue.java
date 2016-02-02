@@ -55,7 +55,8 @@ public class ParkingArrayQueue<E> extends ArrayQueue<E> {
 			}
 			return elem;
 		} catch (final InterruptedException e) {
-			LOG.trace(e.getMessage(), e);
+			if (LOG.isTraceEnabled())
+				LOG.trace(e.getMessage(), e);
 		} finally {
 			lock.unlock();
 		}

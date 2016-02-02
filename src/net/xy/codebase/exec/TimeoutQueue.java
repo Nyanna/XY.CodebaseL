@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import net.xy.codebase.Primitive;
 import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.RecurringTaskCapsule;
-import net.xy.codebase.exec.tasks.TimeoutRunnable;
 
 /**
  * timeout queue implementation threadsafe based on task objects which must
@@ -150,7 +149,7 @@ public class TimeoutQueue {
 							tq.queue.wait(wms, (int) Math.max(1, wns % 1000000));
 
 							nt = tq.queue.peek();
-							if (nt.nextRun() <= System.nanoTime())
+							if (running && nt.nextRun() <= System.nanoTime())
 								timedOut(nt);
 						}
 				}
@@ -193,14 +192,9 @@ public class TimeoutQueue {
 		 * dont proccess anymore
 		 */
 		public void shutdown() {
-			tq.add(new TimeoutRunnable(0) {
-				@Override
-				public void run() {
-					running = false;
-				}
-			});
 			synchronized (tq.queue) {
-				// gets freed
+				running = false;
+				tq.queue.notify();
 			}
 		}
 	}
