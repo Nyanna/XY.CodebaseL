@@ -39,7 +39,7 @@ public class TypeParser {
 	private final Pattern PT_STRICT_BYTE = Pattern.compile("([0-9\\-]{1,3}):Byte", MOD);
 	private final Pattern PT_STRICT_SHORT = Pattern.compile("([0-9\\-]{1,5}):Short", MOD);
 	private final Pattern PT_STRICT_INT = Pattern.compile("([0-9\\-]{1,10}):Integer", MOD);
-	private final Pattern PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,19}):Long", MOD);
+	private final Pattern PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,21}):Long", MOD);
 	private final Pattern PT_STRICT_FLOAT = Pattern.compile("([0-9,\\-fE]+):Float", MOD);
 	private final Pattern PT_STRICT_DOUBLE = Pattern.compile("([0-9.,\\-d]+):Double", MOD);
 	private final Pattern PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD);
@@ -48,7 +48,7 @@ public class TypeParser {
 	private final Pattern PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD);
 	private final Pattern PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD);
 	private final Pattern PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD);
-	private final Pattern PT_LONG = Pattern.compile("([0-9\\-l]{1,19})", MOD);
+	private final Pattern PT_LONG = Pattern.compile("([0-9\\-l]{1,21})", MOD);
 	private final Pattern PT_FLOAT = Pattern.compile("([0-9.,\\-fE]+)", MOD);
 	private final Pattern PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD);
 	private final Pattern PT_BOOL = Pattern.compile("(true|false)", MOD);

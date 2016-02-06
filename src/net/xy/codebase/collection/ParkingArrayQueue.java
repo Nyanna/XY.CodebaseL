@@ -58,7 +58,8 @@ public class ParkingArrayQueue<E> extends ArrayQueue<E> {
 			if (LOG.isTraceEnabled())
 				LOG.trace(e.getMessage(), e);
 		} finally {
-			lock.unlock();
+			if (lock.isHeldByCurrentThread())
+				lock.unlock();
 		}
 		return null;
 	}
