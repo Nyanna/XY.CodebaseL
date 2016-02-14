@@ -420,7 +420,8 @@ public class SerializationContext {
 	private byte getClassEid(final Class<?> clazz) {
 		final Short res = classesToIdx.get(clazz);
 		if (res == null)
-			throw new IllegalArgumentException("Class not in context [" + clazz.getName() + "]");
+			throw new IllegalArgumentException(
+					"Class not in context [" + clazz.getName() + "][" + clazz.getCanonicalName() + "]");
 		return res.byteValue();
 	}
 
@@ -888,7 +889,7 @@ public class SerializationContext {
 			try {
 				SerializationContext.this.write(this, target);
 			} catch (final Exception e) {
-				throw new IllegalArgumentException("Can't serialize", e);
+				throw new IllegalArgumentException("Can't serialize [" + target.getClass().getCanonicalName() + "]", e);
 			}
 		}
 
