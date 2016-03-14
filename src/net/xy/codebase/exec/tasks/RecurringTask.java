@@ -12,6 +12,11 @@ public abstract class RecurringTask implements ITask {
 		nextRun = System.nanoTime();
 	}
 
+	public RecurringTask(final int intervallMs, final int nextMs) {
+		this.intervallMs = intervallMs;
+		nextRun = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(nextMs);
+	}
+
 	@Override
 	public boolean isRecurring() {
 		return recurring;

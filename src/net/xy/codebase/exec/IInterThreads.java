@@ -92,6 +92,18 @@ public interface IInterThreads<E extends Enum<E>> {
 	public RecurringTask start(E thread, Runnable run, int intervall);
 
 	/**
+	 * starts an intervall regulary dilivering runnables to target thread, with
+	 * an predefined start timeout
+	 *
+	 * @param thread
+	 * @param run
+	 * @param startIn
+	 * @param intervall
+	 * @return
+	 */
+	public RecurringTask start(E thread, Runnable run, int startIn, int intervall);
+
+	/**
 	 * start self supplied recuring task
 	 *
 	 * @param task

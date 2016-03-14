@@ -288,7 +288,8 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	// public int lastIndexOf (T value, boolean identity)
 
 	public void addAll(final Array<? extends E> array) {
-		addAll(array, 0, array.size());
+		if (array != null)
+			addAll(array, 0, array.size());
 	}
 
 	public void addAll(final E[] array) {
@@ -513,7 +514,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	@Override
 	public String toString() {
-		return String.format("%s,%s,%s", maxIdx, itIdx, Arrays.toString(elements));
+		return String.format("Array s=%s,i=%s,%s", maxIdx + 1, itIdx, Arrays.toString(elements));
 	}
 
 	/**

@@ -97,6 +97,13 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	}
 
 	@Override
+	public RecurringTask start(final E thread, final Runnable run, final int startIn, final int intervall) {
+		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, startIn, run, this);
+		tque.add(res);
+		return res;
+	}
+
+	@Override
 	public void start(final ITask task) {
 		tque.add(task);
 	}

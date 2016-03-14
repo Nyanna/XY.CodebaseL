@@ -653,7 +653,8 @@ public class SerializationContext {
 		try {
 			con = cl.getDeclaredConstructor();
 		} catch (final NoSuchMethodException e) {
-			throw new IllegalStateException("Cant find constructor for class [" + cl.getName() + "]");
+			throw new IllegalStateException(
+					"Cant find constructor for class [" + cl.getName() + "][" + cl.isArray() + "]");
 		}
 		if (!Modifier.isPublic(con.getModifiers()))
 			con.setAccessible(true);
