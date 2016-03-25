@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.IScheduleRunnable;
+import net.xy.codebase.exec.tasks.ITask;
 
 /**
  * throttler to execute an runnable not more than every interval. ensures that
@@ -67,7 +67,8 @@ public class ExecutionThrottler {
 			long runs = lastUpdate.get();
 			if (runs != 0 && lastUpdate.compareAndSet(runs, ++runs)) {
 				if (LOG.isTraceEnabled())
-					LOG.trace("Request throttled run [" + interval + "][" + runnable + "]");
+					LOG.trace("Request throttled run [" + interval + "][" + runnable + "]["
+							+ runnable.getClass().getSimpleName() + "]");
 				return;
 			} else if (lastUpdate.compareAndSet(0, 1)) {
 				// start runnable
@@ -75,13 +76,16 @@ public class ExecutionThrottler {
 					final long now = System.nanoTime();
 					final long nextStart = now + TimeUnit.MILLISECONDS.toNanos(interval) - (now - lastStart);
 					capsule.setNextRun(Math.max(nextStart, now));
+					// capsule.setNextRun(nextStart > now ? nextStart : 0L);
 				}
 				if (LOG.isTraceEnabled())
-					LOG.trace("Start throttled [" + interval + "][" + runnable + "]");
+					LOG.trace("Start throttled [" + interval + "][" + runnable + "]["
+							+ runnable.getClass().getSimpleName() + "]");
 				runnable.schedule(capsule);
 				return;
 			} else if (LOG.isTraceEnabled())
-				LOG.trace("Inefficient loop repeat [" + interval + "][" + runnable + "]");
+				LOG.trace("Inefficient loop repeat [" + interval + "][" + runnable + "]["
+						+ runnable.getClass().getSimpleName() + "]");
 		}
 	}
 
@@ -140,7 +144,7 @@ public class ExecutionThrottler {
 
 		@Override
 		public String toString() {
-			return runnable.toString();
+			return "ThrottledRunnable: " + runnable.toString();
 		}
 	}
 }

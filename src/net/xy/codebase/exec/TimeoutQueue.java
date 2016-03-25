@@ -144,12 +144,15 @@ public class TimeoutQueue {
 						if ((nt = tq.queue.peek()) == null)
 							tq.queue.wait();
 						else {
-							final long wns = Math.max(0, nt.nextRun() - System.nanoTime());
-							final long wms = TimeUnit.NANOSECONDS.toMillis(wns);
-							tq.queue.wait(wms, (int) Math.max(1, wns % 1000000));
+							final long wns = Math.max(0l, nt.nextRun() - System.nanoTime());
+							if (wns > 0l) {
+								final long wms = TimeUnit.NANOSECONDS.toMillis(wns);
+								tq.queue.wait(wms, (int) (wns % 1000000));
 
-							nt = tq.queue.peek();
-							if (running && nt.nextRun() <= System.nanoTime())
+								nt = tq.queue.peek();
+								if (running && nt.nextRun() <= System.nanoTime())
+									timedOut(nt);
+							} else
 								timedOut(nt);
 						}
 				}

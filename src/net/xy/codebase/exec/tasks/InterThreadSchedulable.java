@@ -52,6 +52,6 @@ public class InterThreadSchedulable<E extends Enum<E>> extends AbstractInterThre
 
 	@Override
 	public String toString() {
-		return "Inter [" + run.getClass().getSimpleName() + "]";
+		return "Inter [" + run.getClass() + "]";
 	}
 }
