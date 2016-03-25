@@ -136,29 +136,40 @@ public class TimeoutQueue {
 
 		@Override
 		public void run() {
-			final TimeoutQueue tq = this.tq;
+			final PriorityQueue<ITask> tq = this.tq.queue;
 			ITask nt = null;
 			try {
-				synchronized (tq.queue) {
-					while (running)
-						if ((nt = tq.queue.peek()) == null)
-							tq.queue.wait();
-						else {
-							final long wns = Math.max(0l, nt.nextRun() - System.nanoTime());
-							if (wns > 0l) {
-								final long wms = TimeUnit.NANOSECONDS.toMillis(wns);
-								tq.queue.wait(wms, (int) (wns % 1000000));
-
-								nt = tq.queue.peek();
-								if (running && nt.nextRun() <= System.nanoTime())
-									timedOut(nt);
-							} else
-								timedOut(nt);
+				while (running) {
+					synchronized (tq) {
+						if ((nt = tq.peek()) == null) {
+							tq.wait();
+							continue;
 						}
+
+						final long wns = nt.nextRun() - System.nanoTime();
+						if (wns > 0l) {
+							final long wms = TimeUnit.NANOSECONDS.toMillis(wns);
+							final int wmn = (int) (wns % 1000000);
+							tq.wait(wms, wmn);
+							continue;
+						} else
+							removeHead(nt);
+					}
+					timedOut(nt);
 				}
 			} catch (final InterruptedException e) {
 				e.printStackTrace();
 			}
+		}
+
+		/**
+		 * remove head elements
+		 *
+		 * @param nt
+		 */
+		private void removeHead(final ITask nt) {
+			if (tq.queue.poll() != nt)
+				throw new RuntimeException("head of que is not current");
 		}
 
 		/**
@@ -168,12 +179,11 @@ public class TimeoutQueue {
 		 * @return null on success or the new queue head
 		 */
 		private void timedOut(final ITask nt) {
-			if (tq.queue.poll() != nt)
-				throw new RuntimeException("head of que is not current");
-
 			run(nt);
 			if (nt.isRecurring())
-				tq.queue.add(nt);
+				synchronized (tq.queue) {
+					tq.queue.add(nt);
+				}
 		}
 
 		/**

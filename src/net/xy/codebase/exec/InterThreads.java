@@ -5,12 +5,13 @@ import java.util.EnumMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xy.codebase.collection.ParkingArrayQueue;
+import net.xy.codebase.collection.ParkingQueue;
 import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.InterThreadIntervall;
 import net.xy.codebase.exec.tasks.InterThreadRunnable;
 import net.xy.codebase.exec.tasks.InterThreadSchedulable;
 import net.xy.codebase.exec.tasks.InterThreadTimeoutable;
+import net.xy.codebase.exec.tasks.PriorityInterThreadRunnable;
 import net.xy.codebase.exec.tasks.RecurringTask;
 
 /**
@@ -26,11 +27,18 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	/**
 	 * thread job stores
 	 */
-	private final EnumMap<E, ParkingArrayQueue<Runnable>> ctxs;
+	private EnumMap<E, ParkingQueue<Runnable>> ctxs;
 	/**
 	 * timeout queue for delayed interthread execution
 	 */
 	private final TimeoutQueue tque;
+
+	/**
+	 * inner, initializing common fields
+	 */
+	private InterThreads() {
+		tque = new TimeoutQueue("Interthread");
+	}
 
 	/**
 	 * default
@@ -39,19 +47,28 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * @param capacity
 	 */
 	public InterThreads(final Class<E> enun, final int capacity) {
+		this();
 		final E[] evals = enun.getEnumConstants();
-		ctxs = new EnumMap<E, ParkingArrayQueue<Runnable>>(enun);
+		ctxs = new EnumMap<E, ParkingQueue<Runnable>>(enun);
 		for (final E val : evals)
-			ctxs.put(val, new ParkingArrayQueue<Runnable>(Runnable.class, capacity));
+			ctxs.put(val, new ParkingQueue<Runnable>(Runnable.class, capacity));
+	}
 
-		tque = new TimeoutQueue("Interthread");
+	/**
+	 * with custom queue mappings
+	 *
+	 * @param ctxs
+	 */
+	public InterThreads(final EnumMap<E, ParkingQueue<Runnable>> ctxs) {
+		this();
+		this.ctxs = ctxs;
 	}
 
 	/**
 	 * @param target
 	 * @return the tragte thread queue
 	 */
-	private ParkingArrayQueue<Runnable> get(final E target) {
+	private ParkingQueue<Runnable> get(final E target) {
 		return ctxs.get(target);
 	}
 
@@ -67,7 +84,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 	@Override
 	public void put(final E target, final Runnable job) {
-		final ParkingArrayQueue<Runnable> que = get(target);
+		final ParkingQueue<Runnable> que = get(target);
 		if (!que.add(job))
 			LOG.error("Error target thread too full droping job [" + target + "][" + job + "]");
 	}
@@ -75,6 +92,11 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	@Override
 	public ExecutionThrottler getThrottler(final E thread, final Runnable run) {
 		return new ExecutionThrottler(new InterThreadRunnable<E>(thread, run, this));
+	}
+
+	@Override
+	public ExecutionThrottler getPriorityThrottler(final E thread, final Runnable run, final int priority) {
+		return new ExecutionThrottler(new PriorityInterThreadRunnable<E>(thread, run, this, priority));
 	}
 
 	@Override

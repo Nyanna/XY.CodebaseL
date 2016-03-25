@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  *
  * @param <E>
  */
-public class ArrayQueue<E> {
+public class ArrayQueue<E> implements Queue<E> {
 	private static final Logger LOG = LoggerFactory.getLogger(ArrayQueue.class);
 	/**
 	 * backing array container
@@ -113,10 +113,18 @@ public class ArrayQueue<E> {
 		return res;
 	}
 
+	/**
+	 * @return amount of contained elements
+	 */
 	public int size() {
 		return count;
 	}
 
+	/**
+	 * whether size == 0
+	 * 
+	 * @return
+	 */
 	public boolean isEmpty() {
 		return size() == 0;
 	}

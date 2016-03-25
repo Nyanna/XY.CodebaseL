@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.xy.codebase.collection.IPriority;
 import net.xy.codebase.exec.tasks.IScheduleRunnable;
 import net.xy.codebase.exec.tasks.ITask;
 
@@ -53,10 +54,15 @@ public class ExecutionThrottler {
 	 * @param interval
 	 *            in ms
 	 */
-	public ExecutionThrottler(final IScheduleRunnable runnable, final int interval) {
+	@SuppressWarnings("unchecked")
+	public <T extends IScheduleRunnable & IPriority> ExecutionThrottler(final IScheduleRunnable runnable,
+			final int interval) {
 		this.runnable = runnable;
 		this.interval = interval;
-		capsule = new ThrottledRunnable();
+		if (runnable instanceof IPriority)
+			capsule = new PriorityThrottledRunnable((T) runnable);
+		else
+			capsule = new ThrottledRunnable(runnable);
 	}
 
 	/**
@@ -75,8 +81,7 @@ public class ExecutionThrottler {
 				if (interval > 0) {
 					final long now = System.nanoTime();
 					final long nextStart = now + TimeUnit.MILLISECONDS.toNanos(interval) - (now - lastStart);
-					capsule.setNextRun(Math.max(nextStart, now));
-					// capsule.setNextRun(nextStart > now ? nextStart : 0L);
+					capsule.setNextRun(nextStart > now ? nextStart : 0L);
 				}
 				if (LOG.isTraceEnabled())
 					LOG.trace("Start throttled [" + interval + "][" + runnable + "]["
@@ -96,7 +101,23 @@ public class ExecutionThrottler {
 	 *
 	 */
 	public class ThrottledRunnable implements ITask {
+		/**
+		 * target action to run
+		 */
+		private final IScheduleRunnable runnable;
+		/**
+		 * ns of last execution
+		 */
 		private long nextRun;
+
+		/**
+		 * default
+		 *
+		 * @param runnable
+		 */
+		public ThrottledRunnable(final IScheduleRunnable runnable) {
+			this.runnable = runnable;
+		}
 
 		@Override
 		public void run() {
@@ -145,6 +166,29 @@ public class ExecutionThrottler {
 		@Override
 		public String toString() {
 			return "ThrottledRunnable: " + runnable.toString();
+		}
+	}
+
+	/**
+	 * encapsulation with priority support
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public class PriorityThrottledRunnable extends ThrottledRunnable implements IPriority {
+		/**
+		 * target action to run
+		 */
+		private final IPriority runnable;
+
+		public <R extends IScheduleRunnable & IPriority> PriorityThrottledRunnable(final R runnable) {
+			super(runnable);
+			this.runnable = runnable;
+		}
+
+		@Override
+		public int getPriority() {
+			return runnable.getPriority();
 		}
 	}
 }

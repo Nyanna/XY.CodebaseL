@@ -72,6 +72,17 @@ public interface IInterThreads<E extends Enum<E>> {
 	public ExecutionThrottler getThrottler(E thread, Runnable run, int intervallMs);
 
 	/**
+	 * gets an bounded throtler for the target thread supporting an priority
+	 * used bei priority thread worker queues
+	 *
+	 * @param thread
+	 * @param run
+	 * @param priority
+	 * @return
+	 */
+	public ExecutionThrottler getPriorityThrottler(E thread, Runnable run, int priority);
+
+	/**
 	 * enques an runnable for later execution
 	 *
 	 * @param thread
