@@ -46,7 +46,7 @@ public class InterThreadIntervall<E extends Enum<E>> extends RecurringTask {
 	 */
 	public InterThreadIntervall(final E thread, final int intervall, final int startIn, final Runnable run,
 			final IInterThreads<E> it) {
-		super(intervall);
+		super(intervall, startIn);
 		this.run = run;
 		this.thread = thread;
 		this.it = it;
