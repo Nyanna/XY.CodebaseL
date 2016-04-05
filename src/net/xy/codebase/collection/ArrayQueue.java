@@ -53,7 +53,11 @@ public class ArrayQueue<E> implements Queue<E> {
 	 * @param elem
 	 * @return true on success
 	 */
+	@Override
 	public synchronized boolean add(final E elem) {
+		if (elem == null)
+			throw new IllegalArgumentException("Element can't be null");
+
 		if (count >= maxCount)
 			return false;
 
@@ -89,6 +93,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	 *
 	 * @return
 	 */
+	@Override
 	public synchronized E take() {
 		E res = null;
 		if (count > 0) {
@@ -106,6 +111,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	/**
 	 * @return top element without removing
 	 */
+	@Override
 	public E peek() {
 		E res = null;
 		if (count > 0)
@@ -116,15 +122,17 @@ public class ArrayQueue<E> implements Queue<E> {
 	/**
 	 * @return amount of contained elements
 	 */
+	@Override
 	public int size() {
 		return count;
 	}
 
 	/**
 	 * whether size == 0
-	 * 
+	 *
 	 * @return
 	 */
+	@Override
 	public boolean isEmpty() {
 		return size() == 0;
 	}
@@ -137,6 +145,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	/**
 	 * clears the queue
 	 */
+	@Override
 	public void clear() {
 		elements.clear();
 		putIdx = 0;
