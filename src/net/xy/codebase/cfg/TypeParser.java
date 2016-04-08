@@ -30,48 +30,48 @@ import java.util.regex.Pattern;
 public class TypeParser {
 	private static final int MOD = Pattern.CASE_INSENSITIVE;
 	private static final String ARRAY_DELIMITER = ",";
+	// stricts
+	private static final Pattern PT_STRICT_STRING = Pattern.compile("(.*):String", MOD);
+	private static final Pattern PT_STRICT_BYTE = Pattern.compile("([0-9\\-]{1,3}):Byte", MOD);
+	private static final Pattern PT_STRICT_SHORT = Pattern.compile("([0-9\\-]{1,5}):Short", MOD);
+	private static final Pattern PT_STRICT_INT = Pattern.compile("([0-9\\-]{1,10}):Integer", MOD);
+	private static final Pattern PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,21}):Long", MOD);
+	private static final Pattern PT_STRICT_FLOAT = Pattern.compile("([0-9,\\-fE]+):Float", MOD);
+	private static final Pattern PT_STRICT_DOUBLE = Pattern.compile("([0-9.,\\-d]+):Double", MOD);
+	private static final Pattern PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD);
+	private static final Pattern PT_STRICT_CHAR = Pattern.compile("(.{1}):Char", MOD);
+	private static final Pattern PT_STRING = Pattern.compile("(\".*\")", MOD);
+	private static final Pattern PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD);
+	private static final Pattern PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD);
+	private static final Pattern PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD);
+	private static final Pattern PT_LONG = Pattern.compile("([0-9\\-l]{1,21})", MOD);
+	private static final Pattern PT_FLOAT = Pattern.compile("([0-9.,\\-fE]+)", MOD);
+	private static final Pattern PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD);
+	private static final Pattern PT_BOOL = Pattern.compile("(true|false)", MOD);
+	private static final Pattern PT_CHAR = Pattern.compile("('.{1}')", MOD);
+	// calls an converter like factory method accepting string returning object
+	private static final Pattern PT_CONVERTER = Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD);
+	// creates via reflection an instance with an string constructor
+	private static final Pattern PT_CUSTOM = Pattern.compile("(.*):([a-zA-Z0-9]+)", MOD);
+	// returns as lists
+	private static final Pattern PT_ARRAY_STRING_SIMPLE = Pattern.compile("\\{(.*)\\}", MOD);
+	private static final Pattern PT_ARRAY_STRING = Pattern.compile("\\{(.*)\\}:String", MOD);
+	private static final Pattern PT_ARRAY_BYTE = Pattern.compile("\\{(.*)\\}:Byte", MOD);
+	private static final Pattern PT_ARRAY_SHORT = Pattern.compile("\\{(.*)\\}:Short", MOD);
+	private static final Pattern PT_ARRAY_INT = Pattern.compile("\\{(.*)\\}:Integer", MOD);
+	private static final Pattern PT_ARRAY_LONG = Pattern.compile("\\{(.*)\\}:Long", MOD);
+	private static final Pattern PT_ARRAY_FLOAT = Pattern.compile("\\{(.*)\\}:Float", MOD);
+	private static final Pattern PT_ARRAY_DOUBLE = Pattern.compile("\\{(.*)\\}:Double", MOD);
+	private static final Pattern PT_ARRAY_BOOL = Pattern.compile("\\{(.*)\\}:Boolean", MOD);
+
 	/**
 	 * if true disable implecite relaxed checking
 	 */
 	public boolean STRICT = false;
-	// stricts
-	private final Pattern PT_STRICT_STRING = Pattern.compile("(.*):String", MOD);
-	private final Pattern PT_STRICT_BYTE = Pattern.compile("([0-9\\-]{1,3}):Byte", MOD);
-	private final Pattern PT_STRICT_SHORT = Pattern.compile("([0-9\\-]{1,5}):Short", MOD);
-	private final Pattern PT_STRICT_INT = Pattern.compile("([0-9\\-]{1,10}):Integer", MOD);
-	private final Pattern PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,21}):Long", MOD);
-	private final Pattern PT_STRICT_FLOAT = Pattern.compile("([0-9,\\-fE]+):Float", MOD);
-	private final Pattern PT_STRICT_DOUBLE = Pattern.compile("([0-9.,\\-d]+):Double", MOD);
-	private final Pattern PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD);
-	private final Pattern PT_STRICT_CHAR = Pattern.compile("(.{1}):Char", MOD);
-	private final Pattern PT_STRING = Pattern.compile("(\".*\")", MOD);
-	private final Pattern PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD);
-	private final Pattern PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD);
-	private final Pattern PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD);
-	private final Pattern PT_LONG = Pattern.compile("([0-9\\-l]{1,21})", MOD);
-	private final Pattern PT_FLOAT = Pattern.compile("([0-9.,\\-fE]+)", MOD);
-	private final Pattern PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD);
-	private final Pattern PT_BOOL = Pattern.compile("(true|false)", MOD);
-	private final Pattern PT_CHAR = Pattern.compile("('.{1}')", MOD);
-	// calls an converter like factory method accepting string returning object
-	private final Pattern PT_CONVERTER = Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD);
-	// creates via reflection an instance with an string constructor
-	private final Pattern PT_CUSTOM = Pattern.compile("(.*):([a-zA-Z0-9]+)", MOD);
-	// returns as lists
-	private final Pattern PT_ARRAY_STRING_SIMPLE = Pattern.compile("\\{(.*)\\}", MOD);
-	private final Pattern PT_ARRAY_STRING = Pattern.compile("\\{(.*)\\}:String", MOD);
-	private final Pattern PT_ARRAY_BYTE = Pattern.compile("\\{(.*)\\}:Byte", MOD);
-	private final Pattern PT_ARRAY_SHORT = Pattern.compile("\\{(.*)\\}:Short", MOD);
-	private final Pattern PT_ARRAY_INT = Pattern.compile("\\{(.*)\\}:Integer", MOD);
-	private final Pattern PT_ARRAY_LONG = Pattern.compile("\\{(.*)\\}:Long", MOD);
-	private final Pattern PT_ARRAY_FLOAT = Pattern.compile("\\{(.*)\\}:Float", MOD);
-	private final Pattern PT_ARRAY_DOUBLE = Pattern.compile("\\{(.*)\\}:Double", MOD);
-	private final Pattern PT_ARRAY_BOOL = Pattern.compile("\\{(.*)\\}:Boolean", MOD);
-
 	// calls an converter accepting string array returning object list
 	// private final Pattern PT_ARRAY_CONVERTER =
 	// Pattern.compile("\\{(.*)\\}:([a-zA-Z0-9.$]+)", MOD);
-	private final Map<String, ITypeConverter<?>> customConverters = new HashMap<String, ITypeConverter<?>>();
+	private Map<String, ITypeConverter<?>> customConverters;
 
 	/**
 	 * default, with extended converters
@@ -87,6 +87,8 @@ public class TypeParser {
 	 * @param parser
 	 */
 	public void add(final String name, final ITypeConverter<?> parser) {
+		if (customConverters == null)
+			customConverters = new HashMap<String, ITypeConverter<?>>();
 		customConverters.put(name, parser);
 	}
 
@@ -213,7 +215,7 @@ public class TypeParser {
 		if (match.matches())
 			return Character.valueOf(match.group(1).charAt(0));
 		match = PT_CUSTOM.matcher(string);
-		if (match.matches()) {
+		if (customConverters != null && match.matches()) {
 			final ITypeConverter<?> conv = customConverters.get(match.group(2));
 			if (conv != null)
 				return conv.parse(match.group(1));

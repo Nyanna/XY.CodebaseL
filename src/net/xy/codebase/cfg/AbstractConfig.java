@@ -23,7 +23,7 @@ public class AbstractConfig<Key, Value> {
 	/**
 	 * this typeparser instance
 	 */
-	protected final TypeParser parser = new TypeParser();
+	protected final TypeParser parser;
 
 	/**
 	 * adds an custom type parser
@@ -42,7 +42,25 @@ public class AbstractConfig<Key, Value> {
 	 *            custom store
 	 */
 	public AbstractConfig(final Map<Key, Value> values) {
+		this(values, new TypeParser());
+	}
+
+	/**
+	 * default with given type parser
+	 * 
+	 * @param values
+	 * @param parser
+	 */
+	public AbstractConfig(final Map<Key, Value> values, final TypeParser parser) {
 		this.values = values;
+		this.parser = parser;
+	}
+
+	/**
+	 * @return typeparser instance
+	 */
+	public TypeParser getParser() {
+		return parser;
 	}
 
 	/**

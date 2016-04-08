@@ -28,6 +28,17 @@ public class EnumConfig<Key extends Enum<Key>> extends AbstractConfig<Key, Objec
 	}
 
 	/**
+	 * default with given parser
+	 * 
+	 * @param keyType
+	 * @param parser
+	 */
+	public EnumConfig(final Class<Key> keyType, final TypeParser parser) {
+		super(new EnumMap<Key, Object>(keyType), parser);
+		this.keyType = keyType;
+	}
+
+	/**
 	 * fills the config from cli main args, by key=val pattern
 	 *
 	 * @param args
