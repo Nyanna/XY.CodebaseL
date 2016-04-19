@@ -26,6 +26,7 @@ public class FindFullPeriodLCG {
 	private int fac;
 	private int inc;
 	private final int mask;
+	@SuppressWarnings("unused")
 	private final int off;
 	private long pos;
 

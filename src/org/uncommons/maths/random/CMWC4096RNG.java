@@ -41,7 +41,12 @@ import org.uncommons.maths.binary.BinaryUtils;
  */
 public class CMWC4096RNG extends Random implements RepeatableRNG
 {
-    private static final int SEED_SIZE_BYTES = 16384; // Needs 4,096 32-bit integers.
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4837286659132637040L;
+
+	private static final int SEED_SIZE_BYTES = 16384; // Needs 4,096 32-bit integers.
 
     private static final long A = 18782L;
 

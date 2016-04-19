@@ -35,7 +35,12 @@ import org.uncommons.maths.binary.BinaryUtils;
  */
 public class XORShiftRNG extends Random implements RepeatableRNG
 {
-    private static final int SEED_SIZE_BYTES = 20; // Needs 5 32-bit integers.
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7887126388210166355L;
+
+	private static final int SEED_SIZE_BYTES = 20; // Needs 5 32-bit integers.
 
     // Previously used an array for state but using separate fields proved to be
     // faster.

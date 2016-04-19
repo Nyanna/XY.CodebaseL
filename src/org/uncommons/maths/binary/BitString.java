@@ -30,7 +30,12 @@ import java.util.Random;
  */
 public final class BitString implements Cloneable, Serializable
 {
-    private static final int WORD_LENGTH = 32;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7403806755769607172L;
+
+	private static final int WORD_LENGTH = 32;
 
     private final int length;
 

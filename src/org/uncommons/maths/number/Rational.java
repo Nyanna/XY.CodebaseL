@@ -32,6 +32,11 @@ import org.uncommons.maths.Maths;
 public final class Rational extends Number implements Comparable<Rational>
 {
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3659309223068575243L;
+
+	/**
      * Convenient constant representing a value of zero (0/1 as a rational).
      */
     public static final Rational ZERO = new Rational(0);

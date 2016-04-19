@@ -43,7 +43,12 @@ import org.uncommons.maths.binary.BinaryUtils;
  */
 public class AESCounterRNG extends Random implements RepeatableRNG
 {
-    private static final int DEFAULT_SEED_SIZE_BYTES = 16;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5949778642428995210L;
+
+	private static final int DEFAULT_SEED_SIZE_BYTES = 16;
 
     private final byte[] seed;
     private final Cipher cipher; // TO DO: This field is not Serializable.
@@ -191,7 +196,11 @@ public class AESCounterRNG extends Random implements RepeatableRNG
      */
     private static final class AESKey implements Key
     {
-        private final byte[] keyData;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1016237529823473796L;
+		private final byte[] keyData;
 
         private AESKey(byte[] keyData)
         {

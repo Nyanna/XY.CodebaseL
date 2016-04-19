@@ -47,7 +47,12 @@ import org.uncommons.maths.binary.BinaryUtils;
  */
 public class MersenneTwisterRNG extends Random implements RepeatableRNG
 {
-    // The actual seed size isn't that important, but it should be a multiple of 4.
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8167712631807993280L;
+
+	// The actual seed size isn't that important, but it should be a multiple of 4.
     private static final int SEED_SIZE_BYTES = 16;
 
     // Magic numbers from original C version.

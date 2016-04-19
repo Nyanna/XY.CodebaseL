@@ -27,6 +27,11 @@ import java.util.Random;
 public final class Probability extends Number implements Comparable<Probability>
 {
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5672535431633342036L;
+
+	/**
      * Convenient constant representing a probability of zero.  If an event has
      * a probability of zero it will never happen (it is an impossibility).
      * @see #ONE

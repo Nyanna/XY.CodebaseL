@@ -35,7 +35,12 @@ import org.uncommons.maths.binary.BinaryUtils;
  */
 public class JavaRNG extends Random implements RepeatableRNG
 {
-    private static final int SEED_SIZE_BYTES = 8;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6526304552538799385L;
+
+	private static final int SEED_SIZE_BYTES = 8;
 
     private final byte[] seed;
 

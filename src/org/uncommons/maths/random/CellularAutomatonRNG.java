@@ -33,7 +33,11 @@ import org.uncommons.maths.binary.BinaryUtils;
  */
 public class CellularAutomatonRNG extends Random implements RepeatableRNG
 {
-    private static final int SEED_SIZE_BYTES = 4;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8145432339661478849L;
+	private static final int SEED_SIZE_BYTES = 4;
     private static final int AUTOMATON_LENGTH = 2056;
     
     private static final int[] RNG_RULE =
