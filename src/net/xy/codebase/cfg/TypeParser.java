@@ -325,7 +325,7 @@ public class TypeParser {
 			if (STRICT)
 				return new StringBuilder("'").append(value).append(":String'").toString();
 			return (String) value;
-		} else if (value instanceof Short) {
+		} else if (value instanceof Byte) {
 			if (STRICT)
 				return new StringBuilder("'").append(value).append(":Byte'").toString();
 			return new StringBuilder("x").append(value).toString();
