@@ -71,7 +71,8 @@ public class TypeParser {
 	// calls an converter accepting string array returning object list
 	// private final Pattern PT_ARRAY_CONVERTER =
 	// Pattern.compile("\\{(.*)\\}:([a-zA-Z0-9.$]+)", MOD);
-	private Map<String, ITypeConverter<?>> customConverters;
+	private Map<String, ITypeConverter<?>> customFConverters;
+	private Map<Class<?>, IStringConverter<?>> customBConverters;
 
 	/**
 	 * default, with extended converters
@@ -87,9 +88,33 @@ public class TypeParser {
 	 * @param parser
 	 */
 	public void add(final String name, final ITypeConverter<?> parser) {
-		if (customConverters == null)
-			customConverters = new HashMap<String, ITypeConverter<?>>();
-		customConverters.put(name, parser);
+		if (customFConverters == null)
+			customFConverters = new HashMap<String, ITypeConverter<?>>();
+		customFConverters.put(name, parser);
+	}
+
+	/**
+	 * adds an custom backward parser
+	 *
+	 * @param clazz
+	 * @param parser
+	 */
+	public void add(final Class<?> clazz, final IStringConverter<?> parser) {
+		if (customBConverters == null)
+			customBConverters = new HashMap<Class<?>, IStringConverter<?>>();
+		customBConverters.put(clazz, parser);
+	}
+
+	/**
+	 * adds an backward forward parser
+	 *
+	 * @param name
+	 * @param clazz
+	 * @param parser
+	 */
+	public void add(final String name, final Class<?> clazz, final IObjectConverter<?> parser) {
+		add(clazz, parser);
+		add(name, parser);
 	}
 
 	/**
@@ -215,8 +240,8 @@ public class TypeParser {
 		if (match.matches())
 			return Character.valueOf(match.group(1).charAt(0));
 		match = PT_CUSTOM.matcher(string);
-		if (customConverters != null && match.matches()) {
-			final ITypeConverter<?> conv = customConverters.get(match.group(2));
+		if (customFConverters != null && match.matches()) {
+			final ITypeConverter<?> conv = customFConverters.get(match.group(2));
 			if (conv != null)
 				return conv.parse(match.group(1));
 		}
@@ -269,7 +294,11 @@ public class TypeParser {
 	 * @return
 	 */
 	public String type2String(final Object value) {
-		if (value.getClass().isArray()) {
+		@SuppressWarnings("rawtypes")
+		final IStringConverter conv;
+		if (value == null)
+			return "";
+		else if (value.getClass().isArray()) {
 			final StringBuilder res = new StringBuilder("{");
 			for (int i = 0; i < ((Object[]) value).length; i++) {
 				if (i > 0)
@@ -278,9 +307,10 @@ public class TypeParser {
 			}
 			res.append("}");
 			final Class<?> clazz = value.getClass().getComponentType();
-			if (clazz.isAssignableFrom(String.class))
-				res.append(":String");
-			else if (clazz.isAssignableFrom(Integer.class))
+			if (clazz.isAssignableFrom(String.class)) {
+				if (STRICT)
+					res.append(":String");
+			} else if (clazz.isAssignableFrom(Integer.class))
 				res.append(":Integer");
 			else if (clazz.isAssignableFrom(Long.class))
 				res.append(":Long");
@@ -291,42 +321,52 @@ public class TypeParser {
 			else if (clazz.isAssignableFrom(Boolean.class))
 				res.append(":Boolean");
 			return res.toString();
-		} else if (STRICT) {
-			if (value instanceof String)
+		} else if (value instanceof String) {
+			if (STRICT)
 				return new StringBuilder("'").append(value).append(":String'").toString();
-			else if (value instanceof Integer)
+			return (String) value;
+		} else if (value instanceof Short) {
+			if (STRICT)
+				return new StringBuilder("'").append(value).append(":Byte'").toString();
+			return new StringBuilder("x").append(value).toString();
+		} else if (value instanceof Short) {
+			if (STRICT)
+				return new StringBuilder("'").append(value).append(":Short'").toString();
+			return new StringBuilder("").append(value).append("s").toString();
+		} else if (value instanceof Integer) {
+			if (STRICT)
 				return new StringBuilder("'").append(value).append(":Integer'").toString();
-			else if (value instanceof Long)
+			return ((Integer) value).toString();
+		} else if (value instanceof Long) {
+			if (STRICT)
 				return new StringBuilder("").append(value).append(":Long").toString();
-			else if (value instanceof Float)
+			return new StringBuilder("").append(value).append("l").toString();
+		} else if (value instanceof Float) {
+			if (STRICT)
 				return new StringBuilder("").append(value).append(":Float").toString();
-			else if (value instanceof Double)
+			return new StringBuilder("").append(value).append("f").toString();
+		} else if (value instanceof Double) {
+			if (STRICT)
 				return new StringBuilder("").append(value).append(":Double").toString();
-			else if (value instanceof Boolean) {
+			return new StringBuilder("").append(value).append("d").toString();
+		} else if (value instanceof Boolean) {
+			if (STRICT) {
 				if (((Boolean) value).booleanValue())
 					return "true:Boolean";
 				return "false:Boolean";
-			} else if (value instanceof Character)
-				return new StringBuilder().append(value).append(":Char").toString();
-			else
-				return value.toString();
-		} else if (value instanceof String)
-			return (String) value;
-		else if (value instanceof Integer)
-			return ((Integer) value).toString();
-		else if (value instanceof Long)
-			return new StringBuilder("").append(value).append("l").toString();
-		else if (value instanceof Float)
-			return new StringBuilder("").append(value).append("f").toString();
-		else if (value instanceof Double)
-			return new StringBuilder("").append(value).append("d").toString();
-		else if (value instanceof Boolean) {
+			}
 			if (((Boolean) value).booleanValue())
 				return "true";
 			return "false";
-		} else if (value instanceof Character)
+		} else if (value instanceof Character) {
+			if (STRICT)
+				return new StringBuilder().append(value).append(":Char").toString();
 			return new StringBuilder("'").append(value).append("'").toString();
-		else
+		} else if (customBConverters != null && (conv = customBConverters.get(value.getClass())) != null) {
+			@SuppressWarnings("unchecked")
+			final String res = conv.toString(value);
+			return res;
+		} else
 			return value.toString();
 	}
 
@@ -344,5 +384,32 @@ public class TypeParser {
 		 * @return
 		 */
 		public T parse(String str);
+	}
+
+	/**
+	 * custom type backward transcription support
+	 *
+	 * @author Xyan
+	 *
+	 * @param <T>
+	 */
+	public static interface IStringConverter<T> {
+		/**
+		 * gets an object has to deliver an string
+		 *
+		 * @param str
+		 * @return
+		 */
+		public String toString(T obj);
+	}
+
+	/**
+	 * backward forward combined interface
+	 *
+	 * @author Xyan
+	 *
+	 * @param <T>
+	 */
+	public static interface IObjectConverter<T> extends IStringConverter<T>, ITypeConverter<T> {
 	}
 }

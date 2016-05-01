@@ -115,7 +115,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @param e
 	 */
 	public void ensureAdd(final E e) {
-		ensureAdd(1);
+		increase(1);
 		add(e);
 	}
 
