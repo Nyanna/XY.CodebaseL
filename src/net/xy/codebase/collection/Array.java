@@ -438,6 +438,13 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		return elements;
 	}
 
+	public E[] shrinkedCopy() {
+		@SuppressWarnings("unchecked")
+		final E[] newItems = (E[]) java.lang.reflect.Array.newInstance(elements.getClass().getComponentType(), size());
+		System.arraycopy(elements, 0, newItems, 0, Math.min(size(), newItems.length));
+		return newItems;
+	}
+
 	public E[] resize(final int newSize) {
 		@SuppressWarnings("unchecked")
 		final E[] newItems = (E[]) java.lang.reflect.Array.newInstance(elements.getClass().getComponentType(), newSize);
@@ -514,7 +521,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	@Override
 	public String toString() {
-		return String.format("Array s=%s,i=%s,%s", maxIdx + 1, itIdx, Arrays.toString(elements));
+		return String.format("Array s=%s,i=%s,%s", maxIdx + 1, itIdx, Arrays.deepToString(elements));
 	}
 
 	/**
