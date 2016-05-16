@@ -61,6 +61,7 @@ public class ArrayQueue<E> implements Queue<E> {
 		if (count >= maxCount)
 			return false;
 
+		// increase
 		if (count >= elements.capacity()) {
 			elements.ensureCapacity(elements.capacity() + 1);
 			final E[] raw = elements.getElements();

@@ -8,21 +8,6 @@ package net.xy.codebase.exec;
  */
 public interface IPerfCounter {
 	/**
-	 * @return the last loop time
-	 */
-	public long getLastLoopTime();
-
-	/**
-	 * @return the average loop time
-	 */
-	public long getAvrLoopTime();
-
-	/**
-	 * start measuring an loop
-	 */
-	public void startLoop();
-
-	/**
 	 * resume measuring from pause for in loop pauses
 	 */
 	public void startMeasure();
@@ -36,6 +21,16 @@ public interface IPerfCounter {
 	 * end the loop measure and calculate the average
 	 */
 	public void endLoop();
+
+	/**
+	 * @return the last loop time
+	 */
+	public long getLastLoopTime();
+
+	/**
+	 * @return the average loop time
+	 */
+	public long getAvrLoopTime();
 
 	/**
 	 * average time from one call to loop end to the next one, called intervall
@@ -55,8 +50,16 @@ public interface IPerfCounter {
 
 	/**
 	 * timestamp of last time data were aggregated
-	 * 
+	 *
 	 * @return
 	 */
 	public long lastUpdate();
+
+	/**
+	 * age of last updated related to nanoTime
+	 * 
+	 * @param nanoTime
+	 * @return
+	 */
+	public long lastUpdateAge(long nanoTime);
 }

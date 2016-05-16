@@ -71,6 +71,17 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		maxIdx = elementData.length - 1;
 	}
 
+	/**
+	 * with inline fill
+	 * 
+	 * @param clazz
+	 * @param elementData
+	 */
+	public Array(final Class<?> clazz, final E... elementData) {
+		this(clazz, elementData.length);
+		addAll(elementData);
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Array<E> cloneDeep() {
@@ -280,6 +291,12 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	public void set(final int index, final E value) {
 		elements[index] = value;
+		if (maxIdx < index)
+			maxIdx = index;
+	}
+
+	public void copy(final int index, final int index2) {
+		elements[index] = elements[index2];
 		if (maxIdx < index)
 			maxIdx = index;
 	}
