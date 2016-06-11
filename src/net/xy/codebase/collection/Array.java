@@ -19,6 +19,11 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		return (Array<T>) EMPTY;
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T> Array<T> empty(final Class<T> clazz) {
+		return (Array<T>) EMPTY;
+	}
+
 	private int maxIdx = -1;
 	private transient int itIdx = 0;
 	private E[] elements;
@@ -73,7 +78,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	/**
 	 * with inline fill
-	 * 
+	 *
 	 * @param clazz
 	 * @param elementData
 	 */
