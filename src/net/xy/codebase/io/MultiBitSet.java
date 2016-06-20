@@ -54,7 +54,7 @@ public class MultiBitSet extends BitStore {
 	 */
 	public void setVal(final int idx, final byte val) {
 		if (val >= Math.pow(2, valBits))
-			throw new IllegalArgumentException("Try to set value out of value size");
+			throw new IllegalArgumentException("Try to set value out of value size [" + val + "]");
 		setBitsRight(val, valBits, idx * valBits);
 	}
 
