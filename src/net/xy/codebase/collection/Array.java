@@ -294,10 +294,17 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		elements[index] = value;
 	}
 
-	public void set(final int index, final E value) {
+	/**
+	 * @param index
+	 * @param value
+	 * @return old value
+	 */
+	public E set(final int index, final E value) {
+		final E old = elements[index];
 		elements[index] = value;
 		if (maxIdx < index)
 			maxIdx = index;
+		return old;
 	}
 
 	public void copy(final int index, final int index2) {
