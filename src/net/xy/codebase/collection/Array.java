@@ -373,11 +373,12 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return
 	 */
 	public E removeIndex(final int index) {
-		final E value = elements[index];
-		elements[index] = elements[maxIdx];
-		elements[maxIdx] = null;
+		final E old = elements[index];
+		final E last = elements[maxIdx];
 		maxIdx--;
-		return value;
+		elements[index] = last;
+		elements[maxIdx + 1] = null;
+		return old;
 	}
 
 	/**
