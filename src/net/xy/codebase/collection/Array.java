@@ -555,6 +555,24 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	}
 
 	/**
+	 * string concatination up to maxIdx with custom separator
+	 *
+	 * @param sep
+	 * @return
+	 */
+	public String toConcatString(final char sep) {
+		if (size() > 0) {
+			final StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < size(); i++)
+				sb.append(String.valueOf(elements[i])).append(sep);
+			if (sb.length() > 0)
+				sb.setLength(sb.length() - 1);
+			return String.format("Array s=%s,i=%s:\n%s", maxIdx + 1, itIdx, sb.toString());
+		} else
+			return String.format("Array s=%s,i=%s", maxIdx + 1, itIdx);
+	}
+
+	/**
 	 * fill the given array with values from this array
 	 *
 	 * @param array
