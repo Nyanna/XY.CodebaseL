@@ -55,5 +55,10 @@ public class MappingConverter<KT, VT> implements ITypeConverter<Array<Entry<KT, 
 			return val;
 		}
 
+		@Override
+		public String toString() {
+			return String.format("%s=%s", key, val);
+		}
+
 	}
 }

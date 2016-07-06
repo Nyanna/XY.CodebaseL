@@ -13,6 +13,7 @@
  */
 package net.xy.codebase.cfg;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -300,10 +301,10 @@ public class TypeParser {
 			return "";
 		else if (value.getClass().isArray()) {
 			final StringBuilder res = new StringBuilder("{");
-			for (int i = 0; i < ((Object[]) value).length; i++) {
+			for (int i = 0; i < Array.getLength(value); i++) {
 				if (i > 0)
 					res.append(";");
-				res.append(((Object[]) value)[i]);
+				res.append(type2String(Array.get(value, i)));
 			}
 			res.append("}");
 			final Class<?> clazz = value.getClass().getComponentType();
