@@ -5,7 +5,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 public class Strings {
-	public static final DecimalFormat FloatFormat = new DecimalFormat("#.#",
+	public static final DecimalFormat FloatFormat = new DecimalFormat("#.#####",
 			DecimalFormatSymbols.getInstance(Locale.US));
 
 	public static String fformat(final float number) {
