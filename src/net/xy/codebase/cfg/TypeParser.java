@@ -16,8 +16,11 @@ package net.xy.codebase.cfg;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -74,6 +77,8 @@ public class TypeParser {
 	// Pattern.compile("\\{(.*)\\}:([a-zA-Z0-9.$]+)", MOD);
 	private Map<String, ITypeConverter<?>> customFConverters;
 	private Map<Class<?>, IStringConverter<?>> customBConverters;
+
+	private final DecimalFormat floatFormat = new DecimalFormat("0.#####", DecimalFormatSymbols.getInstance(Locale.US));
 
 	/**
 	 * default, with extended converters
@@ -299,27 +304,39 @@ public class TypeParser {
 		final IStringConverter conv;
 		if (value == null)
 			return "";
-		else if (value.getClass().isArray()) {
-			final StringBuilder res = new StringBuilder("{");
-			for (int i = 0; i < Array.getLength(value); i++) {
-				if (i > 0)
-					res.append(";");
-				res.append(type2String(Array.get(value, i)));
-			}
-			res.append("}");
+		else if (customBConverters != null && (conv = customBConverters.get(value.getClass())) != null) {
+			@SuppressWarnings("unchecked")
+			final String res = conv.toString(value);
+			return res;
+		} else if (value.getClass().isArray()) {
 			final Class<?> clazz = value.getClass().getComponentType();
+
+			final StringBuilder res = new StringBuilder("{");
+			if (clazz.isAssignableFrom(byte.class) || clazz.isAssignableFrom(short.class))
+				for (int i = 0; i < Array.getLength(value); i++)
+					res.append(Array.get(value, i)).append(ARRAY_DELIMITER);
+			else
+				for (int i = 0; i < Array.getLength(value); i++)
+					res.append(type2String(Array.get(value, i))).append(ARRAY_DELIMITER);
+			res.setLength(res.length() - 1);
+			res.append("}");
+
 			if (clazz.isAssignableFrom(String.class)) {
 				if (STRICT)
 					res.append(":String");
-			} else if (clazz.isAssignableFrom(Integer.class))
+			} else if (clazz.isAssignableFrom(byte.class))
+				res.append(":Byte");
+			else if (clazz.isAssignableFrom(short.class))
+				res.append(":Short");
+			else if (clazz.isAssignableFrom(int.class))
 				res.append(":Integer");
-			else if (clazz.isAssignableFrom(Long.class))
+			else if (clazz.isAssignableFrom(long.class))
 				res.append(":Long");
-			else if (clazz.isAssignableFrom(Float.class))
+			else if (clazz.isAssignableFrom(float.class))
 				res.append(":Float");
-			else if (clazz.isAssignableFrom(Double.class))
+			else if (clazz.isAssignableFrom(double.class))
 				res.append(":Double");
-			else if (clazz.isAssignableFrom(Boolean.class))
+			else if (clazz.isAssignableFrom(boolean.class))
 				res.append(":Boolean");
 			return res.toString();
 		} else if (value instanceof String) {
@@ -344,8 +361,8 @@ public class TypeParser {
 			return new StringBuilder("").append(value).append("l").toString();
 		} else if (value instanceof Float) {
 			if (STRICT)
-				return new StringBuilder("").append(value).append(":Float").toString();
-			return new StringBuilder("").append(value).append("f").toString();
+				return new StringBuilder("").append(floatFormat.format(value)).append(":Float").toString();
+			return new StringBuilder("").append(floatFormat.format(value)).append("f").toString();
 		} else if (value instanceof Double) {
 			if (STRICT)
 				return new StringBuilder("").append(value).append(":Double").toString();
@@ -363,10 +380,6 @@ public class TypeParser {
 			if (STRICT)
 				return new StringBuilder().append(value).append(":Char").toString();
 			return new StringBuilder("'").append(value).append("'").toString();
-		} else if (customBConverters != null && (conv = customBConverters.get(value.getClass())) != null) {
-			@SuppressWarnings("unchecked")
-			final String res = conv.toString(value);
-			return res;
 		} else
 			return value.toString();
 	}
