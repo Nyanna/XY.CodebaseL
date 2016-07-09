@@ -12,6 +12,11 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 
 	@Override
 	public void doAll(final E target) {
+		doAll(target, null);
+	}
+
+	@Override
+	public void doAll(final E target, final JobObserver<E> obs) {
 		// causes mem alloc through synchronizer node
 		final IPerfCounter measure = getMeasure();
 
@@ -21,9 +26,13 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 		for (Runnable job = next(target); job != null; job = next(target)) {
 			if (measure != null)
 				measure.startMeasure();
+			if (obs != null)
+				obs.startJob(target, job);
 
 			job.run();
 
+			if (obs != null)
+				obs.endJob(target, job);
 			if (measure != null)
 				measure.stopMeasure();
 		}
@@ -34,6 +43,11 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 
 	@Override
 	public void doAll(final E target, final int ms) {
+		doAll(target, ms, null);
+	}
+
+	@Override
+	public void doAll(final E target, final int ms, final JobObserver<E> obs) {
 		// causes mem alloc through synchronizer node
 		final IPerfCounter measure = getMeasure();
 
@@ -43,14 +57,13 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 		for (Runnable job = next(target, ms); job != null; job = next(target)) {
 			if (measure != null)
 				measure.startMeasure();
+			if (obs != null)
+				obs.startJob(target, job);
 
-			// final long start = System.currentTimeMillis();
 			job.run();
-			// final long tok = System.currentTimeMillis() - start;
-			// if (Thread.currentThread().getName().equals("Game") && tok > 2)
-			// System.out.println("Running job [" + start + "][" + tok + "][" +
-			// job + "]");
 
+			if (obs != null)
+				obs.endJob(target, job);
 			if (measure != null)
 				measure.stopMeasure();
 		}

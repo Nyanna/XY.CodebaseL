@@ -53,6 +53,23 @@ public interface IInterThreads<E extends Enum<E>> {
 	public void doAll(E target, int ms);
 
 	/**
+	 * do all currently queued jobs
+	 *
+	 * @param target
+	 * @param obs
+	 */
+	public void doAll(E target, JobObserver<E> obs);
+
+	/**
+	 * waits up to ms for at least one job to execute
+	 *
+	 * @param target
+	 * @param ms
+	 * @param obs
+	 */
+	public void doAll(E target, int ms, JobObserver<E> obs);
+
+	/**
 	 * gets an bounded throtler for the target thread
 	 *
 	 * @param thread
@@ -120,4 +137,19 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param task
 	 */
 	public void start(ITask task);
+
+	/**
+	 * listener interface for progress listenting
+	 *
+	 * @author Xyan
+	 *
+	 */
+
+	public static interface JobObserver<E> {
+
+		public void startJob(E target, Runnable job);
+
+		public void endJob(E target, Runnable job);
+
+	}
 }

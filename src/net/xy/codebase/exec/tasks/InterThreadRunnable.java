@@ -43,6 +43,6 @@ public class InterThreadRunnable<E extends Enum<E>> extends AbstractInterThreadR
 
 	@Override
 	public String toString() {
-		return "Inter [" + run.getClass().getSimpleName() + "]";
+		return "InterTRun [" + run.getClass() + "]";
 	}
 }
