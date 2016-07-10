@@ -105,6 +105,12 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	}
 
 	@Override
+	public ExecutionLimiter getPriorityLimiter(final E thread, final Runnable run, final int priority,
+			final int amount) {
+		return new ExecutionLimiter(new PriorityInterThreadRunnable<E>(thread, run, this, priority), amount);
+	}
+
+	@Override
 	public InterThreadTimeoutable<E> runLater(final E thread, final Runnable run, final int timeout) {
 		final InterThreadTimeoutable<E> res = new InterThreadTimeoutable<E>(thread, timeout, run, this);
 		tque.add(res);

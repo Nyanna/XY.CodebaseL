@@ -100,6 +100,18 @@ public interface IInterThreads<E extends Enum<E>> {
 	public ExecutionThrottler getPriorityThrottler(E thread, Runnable run, int priority);
 
 	/**
+	 * gets an concurrency limiter
+	 *
+	 * @param thread
+	 * @param run
+	 * @param priority
+	 * @param amount
+	 *            of concurrent runnables
+	 * @return
+	 */
+	public ExecutionLimiter getPriorityLimiter(E thread, Runnable run, int priority, int amount);
+
+	/**
 	 * enques an runnable for later execution
 	 *
 	 * @param thread
