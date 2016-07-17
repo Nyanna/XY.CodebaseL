@@ -49,7 +49,7 @@ public class TypeParser {
 	private static final Pattern PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD);
 	private static final Pattern PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD);
 	private static final Pattern PT_LONG = Pattern.compile("([0-9\\-l]{1,21})", MOD);
-	private static final Pattern PT_FLOAT = Pattern.compile("([0-9.,\\-fE]+)", MOD);
+	private static final Pattern PT_FLOAT = Pattern.compile("(-?[0-9.,]+E?[0-9]*f?)", MOD);
 	private static final Pattern PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD);
 	private static final Pattern PT_BOOL = Pattern.compile("(true|false)", MOD);
 	private static final Pattern PT_CHAR = Pattern.compile("('.{1}')", MOD);
