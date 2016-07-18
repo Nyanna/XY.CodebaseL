@@ -3,6 +3,9 @@ package net.xy.codebase.collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * arrayqueue extended by an set to update elements in queue and ensure only one
  * equal object is present.
@@ -12,8 +15,7 @@ import java.util.Map;
  * @param <E>
  */
 public class ArrayQueueSet<E> extends ArrayQueue<E> {
-	// private static final Logger LOG =
-	// LoggerFactory.getLogger(ArrayQueueSet.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ArrayQueueSet.class);
 	/**
 	 * backed set
 	 */
@@ -33,8 +35,10 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 	public synchronized boolean add(final E elem) {
 		if (set.put(elem, elem) == null) {
 			final boolean added = super.add(elem);
-			if (!added)
+			if (!added) {
 				set.remove(elem);
+				LOG.error("Queue rejected addition cuz too full [" + elem + "][" + this + "]");
+			}
 			return added;
 		}
 		return true;
