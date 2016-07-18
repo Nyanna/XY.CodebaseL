@@ -86,7 +86,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	public void put(final E target, final Runnable job) {
 		final ParkingQueue<Runnable> que = get(target);
 		if (!que.add(job))
-			LOG.error("Error target thread too full droping job [" + target + "][" + job + "]");
+			LOG.error("Error target thread too full droping job [" + target + "][" + que.size() + "][" + job + "]");
 	}
 
 	@Override
