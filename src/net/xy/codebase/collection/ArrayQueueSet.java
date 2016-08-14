@@ -40,8 +40,7 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 				LOG.error("Queue rejected addition cuz too full [" + elem + "]");
 			}
 			return added;
-		} else
-			LOG.error("Updating element [" + elem + "]");
+		}
 		return true;
 	}
 
