@@ -789,9 +789,16 @@ public class SerializationContext {
 	 *
 	 */
 	public class Decoder {
-		private final ByteBuffer bb;
+		private ByteBuffer bb;
+
+		public Decoder() {
+		}
 
 		public Decoder(final ByteBuffer bb) {
+			this.bb = bb;
+		}
+
+		public void setBuffer(final ByteBuffer bb) {
 			this.bb = bb;
 		}
 
@@ -865,9 +872,16 @@ public class SerializationContext {
 	 *
 	 */
 	public class Encoder {
-		private final ByteBuffer bb;
+		private ByteBuffer bb;
+
+		public Encoder() {
+		}
 
 		public Encoder(final ByteBuffer bb) {
+			this.bb = bb;
+		}
+
+		public void setBuffer(final ByteBuffer bb) {
 			this.bb = bb;
 		}
 
