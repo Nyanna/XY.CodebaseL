@@ -13,14 +13,35 @@ public interface IPerfCounter {
 	public void startMeasure();
 
 	/**
+	 * start measure with given time
+	 *
+	 * @param nanoTime
+	 */
+	public void startMeasure(long nanoTime);
+
+	/**
 	 * currently pauses the measure
 	 */
 	public void stopMeasure();
 
 	/**
+	 * stop measure with given time
+	 *
+	 * @param nanoTime
+	 */
+	public void stopMeasure(long nanoTime);
+
+	/**
 	 * end the loop measure and calculate the average
 	 */
 	public void endLoop();
+
+	/**
+	 * end loop with given time
+	 * 
+	 * @param nanoTime
+	 */
+	public void endLoop(long nanoTime);
 
 	/**
 	 * @return the last loop time
@@ -57,7 +78,7 @@ public interface IPerfCounter {
 
 	/**
 	 * age of last updated related to nanoTime
-	 * 
+	 *
 	 * @param nanoTime
 	 * @return
 	 */

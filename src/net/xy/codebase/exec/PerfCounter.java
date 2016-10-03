@@ -65,11 +65,16 @@ public class PerfCounter implements IPerfCounter {
 
 	@Override
 	public void startMeasure() {
+		startMeasure(System.nanoTime());
+	}
+
+	@Override
+	public void startMeasure(final long nanoTime) {
 		if (measureStart != 0) {
 			measureStart = 0;
 			LOG.error("Error started measure twice, ignore last measure");
 		}
-		measureStart = System.nanoTime();
+		measureStart = nanoTime;
 	}
 
 	@Override
@@ -77,7 +82,8 @@ public class PerfCounter implements IPerfCounter {
 		stopMeasure(System.nanoTime());
 	}
 
-	private void stopMeasure(final long nanoTime) {
+	@Override
+	public void stopMeasure(final long nanoTime) {
 		if (measureStart != 0) {
 			measureSum += nanoTime - measureStart;
 			measureStart = 0;
@@ -87,8 +93,12 @@ public class PerfCounter implements IPerfCounter {
 
 	@Override
 	public void endLoop() {
-		final long now = System.nanoTime();
-		stopMeasure(now);
+		endLoop(System.nanoTime());
+	}
+
+	@Override
+	public void endLoop(final long nanoTime) {
+		stopMeasure(nanoTime);
 
 		lastLoopSum = measureSum;
 		measureSum = 0;
@@ -98,10 +108,10 @@ public class PerfCounter implements IPerfCounter {
 		loopCounts *= frame;
 
 		if (lastLoopEnd > 0) {
-			currentInterval = now - lastLoopEnd;
+			currentInterval = nanoTime - lastLoopEnd;
 			intvalSum += currentInterval;
 		}
-		lastLoopEnd = now;
+		lastLoopEnd = nanoTime;
 
 		overallSum += lastLoopSum;
 		loopCounts++;
