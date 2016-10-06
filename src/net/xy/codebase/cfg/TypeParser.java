@@ -124,6 +124,18 @@ public class TypeParser {
 	}
 
 	/**
+	 * delegate with toString() conversion
+	 *
+	 * @param obj
+	 * @return
+	 */
+	public Object string2type(final Object obj) {
+		if (obj == null)
+			return null;
+		return string2type(obj.toString());
+	}
+
+	/**
 	 * delegate without converter and custom type support
 	 *
 	 * @param string
