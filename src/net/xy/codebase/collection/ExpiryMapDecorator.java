@@ -82,7 +82,11 @@ public class ExpiryMapDecorator<Key, Value> implements Map<Key, Value> {
 
 	@Override
 	public Value put(final Key key, final Value value) {
-		final int creationOff = (int) (System.currentTimeMillis() - creationTime);
+		return put(key, value, System.currentTimeMillis());
+	}
+
+	public Value put(final Key key, final Value value, final long now) {
+		final int creationOff = (int) (now - creationTime);
 
 		TemporaryValue<Value> tval = delegate.get(key);
 		Value old = null;
