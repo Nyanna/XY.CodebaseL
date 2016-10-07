@@ -24,6 +24,10 @@ public class ExpiryMapDecorator<Key, Value> implements Map<Key, Value> {
 		this.obs = obs;
 	}
 
+	public void checkExpire() {
+		checkExpire(timeout);
+	}
+
 	public void checkExpire(final int recheck) {
 		final int creationOff = (int) (System.currentTimeMillis() - creationTime);
 		if (lastCheck + recheck > creationOff)
