@@ -29,8 +29,12 @@ public class ExpiryMapDecorator<Key, Value> implements Map<Key, Value> {
 	}
 
 	public void checkExpire(final int recheck) {
+		checkExpire(recheck, false);
+	}
+
+	public void checkExpire(final int recheck, final boolean force) {
 		final int creationOff = (int) (System.currentTimeMillis() - creationTime);
-		if (lastCheck + recheck > creationOff)
+		if (!force && lastCheck + recheck > creationOff)
 			return;
 		lastCheck = creationOff;
 
