@@ -152,6 +152,8 @@ public class SerializationContext {
 	private void addClass(final Class<?> clazz, final short eid) {
 		classesToIdx.put(clazz, eid);
 		idxToClasses.put(eid, clazz);
+		if (LOG.isDebugEnabled())
+			LOG.debug("Mapped class in context [" + eid + "][" + clazz + "]");
 	}
 
 	/**
@@ -576,7 +578,7 @@ public class SerializationContext {
 			final short typei = (short) (type & 0xff);
 			final Class<?> cl = idxToClasses.get(typei);
 			if (cl == null) {
-				LOG.error("Error class id not in Serialization context [" + typei + "]");
+				LOG.error("Error class id not in Serialization context [" + typei + "]", new Exception());
 				return null;
 			} else if (cl.isEnum())
 				return cl.getEnumConstants()[in.readByte()];
