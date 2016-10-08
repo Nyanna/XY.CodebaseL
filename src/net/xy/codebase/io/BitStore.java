@@ -33,7 +33,7 @@ public class BitStore {
 	 */
 	private void checkIdx(final int idx) {
 		if (idx > getLength() || idx < 0)
-			throw new IllegalArgumentException("Index to retrieve is out of range");
+			throw new IllegalArgumentException("Index to retrieve is out of range [" + idx + "]");
 	}
 
 	/**
