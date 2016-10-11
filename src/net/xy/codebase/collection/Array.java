@@ -529,6 +529,24 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+
+		if (elements == null)
+			result = prime * result + 0;
+		else
+			for (int i = 0; i <= maxIdx; i++)
+				if (elements[i] == null)
+					result = prime * result + 0;
+				else
+					result = prime * result + elements[i].hashCode();
+
+		result = prime * result + maxIdx;
+		return result;
+	}
+
+	@Override
 	public boolean equals(final Object object) {
 		if (object == this)
 			return true;
