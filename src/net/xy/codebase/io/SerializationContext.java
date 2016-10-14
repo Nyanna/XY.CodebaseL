@@ -404,7 +404,7 @@ public class SerializationContext {
 				if (same) {
 					if (comp.isArray()) {
 						final Class<?> compClassO = comp.getComponentType();
-						final byte aeidO = getClassEid(comp);
+						final byte aeidO = getClassEid(compClassO);
 						writeArray(out, elem, aeidO, compClassO);
 					} else
 						write(out, elem, aeid);
@@ -706,27 +706,19 @@ public class SerializationContext {
 		try {
 			final boolean same = in.readBoolean();
 			final int alength = in.readInt();
-			if (alength == 0)
-				return Array.newInstance(comp, alength);
+			final Object res = Array.newInstance(comp, alength);
 
-			final Object[] array = new Object[alength];
 			for (int ac = 0; ac < alength; ac++)
 				if (same) {
 					if (comp.isArray()) {
 						final Class<?> compClassO = comp.getComponentType();
-						final byte aeidO = getClassEid(comp);
-						array[ac] = readArray(in, aeidO, compClassO);
+						final byte aeidO = getClassEid(compClassO);
+						Array.set(res, ac, readArray(in, aeidO, compClassO));
 					} else
-						array[ac] = read(in, atype);
+						Array.set(res, ac, read(in, atype));
 				} else
-					array[ac] = read(in);
+					Array.set(res, ac, read(in));
 
-			final Object res = Array.newInstance(comp, alength);
-			if (comp.isPrimitive())
-				for (int i = 0; i < alength; i++)
-					Array.set(res, i, array[i]);
-			else
-				System.arraycopy(array, 0, res, 0, alength);
 			return res;
 		} catch (final FieldErrorException ex) {
 			ex.addTarget("Array");
