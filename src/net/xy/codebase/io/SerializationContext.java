@@ -800,6 +800,11 @@ public class SerializationContext {
 			bb.clear();
 		}
 
+		/**
+		 * @param clazz
+		 *            only for cast
+		 * @return
+		 */
 		@SuppressWarnings("unchecked")
 		public <T> T read(final Class<T> clazz) {
 			try {
