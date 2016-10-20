@@ -3,6 +3,7 @@ package net.xy.codebase.collection;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Set;
 
 import net.xy.codebase.clone.Cloneable;
 import net.xy.codebase.io.SerializationContext.Decoder;
@@ -82,9 +83,22 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @param clazz
 	 * @param elementData
 	 */
-	public Array(final Class<?> clazz, final E... elementData) {
+	public Array(final Class<E> clazz, final E... elementData) {
 		this(clazz, elementData.length);
 		addAll(elementData);
+	}
+
+	/**
+	 * filled by set
+	 *
+	 * @param clazz
+	 * @param set
+	 */
+	public Array(final Class<E> clazz, final Set<E> set) {
+		this(clazz, set != null ? set.size() : 0);
+		if (set != null)
+			for (final E elem : set)
+				add(elem);
 	}
 
 	@SuppressWarnings("unchecked")
