@@ -1,6 +1,7 @@
 package net.xy.codebase.exec;
 
 import java.util.EnumMap;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		ctxs = new EnumMap<E, ParkingQueue<Runnable>>(enun);
 		for (final E val : evals)
 			ctxs.put(val, new ParkingQueue<Runnable>(Runnable.class, capacity));
+		addDiagnosticTask();
 	}
 
 	/**
@@ -62,6 +64,25 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	public InterThreads(final EnumMap<E, ParkingQueue<Runnable>> ctxs) {
 		this();
 		this.ctxs = ctxs;
+		LOG.info("Created task broker [" + ctxs.size() + "][" + this + "]");
+		addDiagnosticTask();
+	}
+
+	private void addDiagnosticTask() {
+		tque.add(15000, new Runnable() {
+			private final StringBuilder sb = new StringBuilder();
+
+			@Override
+			public void run() {
+				sb.setLength(0);
+
+				sb.append("Task broker sizes: ");
+				for (final Entry<E, ParkingQueue<Runnable>> entry : ctxs.entrySet())
+					sb.append("[").append(entry.getKey()).append("=").append(entry.getValue().size()).append("]");
+
+				LOG.info(sb.toString());
+			}
+		});
 	}
 
 	/**

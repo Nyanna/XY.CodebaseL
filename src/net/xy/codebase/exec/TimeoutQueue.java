@@ -36,6 +36,8 @@ public class TimeoutQueue {
 		queue = new PriorityQueue<ITask>(100, new TaskComparator());
 		timer = new QueueTimer(this, name);
 		timer.start();
+		LOG.info("Created named TimeOutQueue [" + name + "][" + timer.getName() + "]");
+		addDiagnosticTask();
 	}
 
 	/**
@@ -47,6 +49,18 @@ public class TimeoutQueue {
 		queue = new PriorityQueue<ITask>(100, new TaskComparator());
 		timer = thread;
 		timer.setQueue(this);
+		LOG.info("Created unnamed TimeOutQueue [" + thread + "][" + timer.getName() + "]");
+		addDiagnosticTask();
+	}
+
+	private void addDiagnosticTask() {
+		add(15000, new Runnable() {
+			@Override
+			public void run() {
+				LOG.info("TQueue size [" + queue.size() + "][exec=" + timer.getResetExecCount() + "][" + timer.getName()
+						+ "]");
+			}
+		});
 	}
 
 	/**
@@ -103,6 +117,10 @@ public class TimeoutQueue {
 		 * runnign state
 		 */
 		private boolean running = true;
+		/**
+		 * amount of executed tasks
+		 */
+		private int execCount = 0;
 
 		/**
 		 * to get post initialized by extern queue
@@ -111,6 +129,17 @@ public class TimeoutQueue {
 		 */
 		public QueueTimer(final String name) {
 			this(null, name);
+		}
+
+		/**
+		 * returns and resets amount of executed tasks
+		 *
+		 * @return
+		 */
+		public int getResetExecCount() {
+			final int tex = execCount;
+			execCount = 0;
+			return tex;
 		}
 
 		/**
@@ -179,6 +208,7 @@ public class TimeoutQueue {
 		 * @return null on success or the new queue head
 		 */
 		private void timedOut(final ITask nt) {
+			execCount++;
 			run(nt);
 			if (nt.isRecurring())
 				synchronized (tq.queue) {

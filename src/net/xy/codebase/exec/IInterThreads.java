@@ -151,7 +151,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	public void start(ITask task);
 
 	/**
-	 * listener interface for progress listenting
+	 * interceptor interface for progress listenting
 	 *
 	 * @author Xyan
 	 *
@@ -159,7 +159,13 @@ public interface IInterThreads<E extends Enum<E>> {
 
 	public static interface JobObserver<E> {
 
-		public void startJob(E target, Runnable job);
+		/**
+		 *
+		 * @param target
+		 * @param job
+		 * @return when false job gots skipped
+		 */
+		public boolean startJob(E target, Runnable job);
 
 		public void endJob(E target, Runnable job);
 

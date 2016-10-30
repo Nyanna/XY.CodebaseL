@@ -26,13 +26,16 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 		for (Runnable job = next(target); job != null; job = next(target)) {
 			if (measure != null)
 				measure.startMeasure();
+			boolean runJob = true;
 			if (obs != null)
-				obs.startJob(target, job);
+				runJob = obs.startJob(target, job);
 
-			job.run();
+			if (runJob) {
+				job.run();
 
-			if (obs != null)
-				obs.endJob(target, job);
+				if (obs != null)
+					obs.endJob(target, job);
+			}
 			if (measure != null)
 				measure.stopMeasure();
 		}
@@ -57,13 +60,16 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 		for (Runnable job = next(target, ms); job != null; job = next(target)) {
 			if (measure != null)
 				measure.startMeasure();
+			boolean runJob = true;
 			if (obs != null)
-				obs.startJob(target, job);
+				runJob = obs.startJob(target, job);
 
-			job.run();
+			if (runJob) {
+				job.run();
 
-			if (obs != null)
-				obs.endJob(target, job);
+				if (obs != null)
+					obs.endJob(target, job);
+			}
 			if (measure != null)
 				measure.stopMeasure();
 		}
