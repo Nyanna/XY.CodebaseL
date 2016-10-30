@@ -68,4 +68,12 @@ public class ReflectionUtils {
 			}
 		}
 	}
+
+	public static boolean isClassLoaded(final String className) {
+		try {
+			return Class.forName(className) != null;
+		} catch (final ClassNotFoundException e) {
+		}
+		return false;
+	}
 }

@@ -335,7 +335,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 			addAll(array, 0, array.size());
 	}
 
-	public void addAll(final E[] array) {
+	public void addAll(final E... array) {
 		addAll(array, 0, array.length);
 	}
 

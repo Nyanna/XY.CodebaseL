@@ -36,6 +36,10 @@ public class ExecutionThrottler {
 	 * last time the action was startet
 	 */
 	private long lastStart;
+	/**
+	 * for stopping throttler
+	 */
+	private boolean enabled = true;
 
 	/**
 	 * with 0 intervall ensures only that not 2 runnable are scheduled at the
@@ -45,6 +49,15 @@ public class ExecutionThrottler {
 	 */
 	public ExecutionThrottler(final IScheduleRunnable runnable) {
 		this(runnable, 0);
+	}
+
+	/**
+	 * for stopping or desabling throttler
+	 *
+	 * @param enabled
+	 */
+	public void setEnabled(final boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	/**
@@ -69,7 +82,7 @@ public class ExecutionThrottler {
 	 * start the action or place an update wish
 	 */
 	public void run() {
-		while (true) {
+		while (enabled) {
 			long runs = lastUpdate.get();
 			if (runs != 0 && lastUpdate.compareAndSet(runs, ++runs)) {
 				if (LOG.isTraceEnabled())
