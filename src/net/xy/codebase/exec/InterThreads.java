@@ -64,23 +64,26 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	public InterThreads(final EnumMap<E, ParkingQueue<Runnable>> ctxs) {
 		this();
 		this.ctxs = ctxs;
-		LOG.info("Created task broker [" + ctxs.size() + "][" + this + "]");
+		if (LOG.isDebugEnabled())
+			LOG.debug("Created task broker [" + ctxs.size() + "][" + this + "]");
 		addDiagnosticTask();
 	}
 
 	private void addDiagnosticTask() {
-		tque.add(15000, new Runnable() {
+		tque.add(30 * 1000, new Runnable() {
 			private final StringBuilder sb = new StringBuilder();
 
 			@Override
 			public void run() {
-				sb.setLength(0);
+				if (LOG.isDebugEnabled()) {
+					sb.setLength(0);
 
-				sb.append("Task broker sizes: ");
-				for (final Entry<E, ParkingQueue<Runnable>> entry : ctxs.entrySet())
-					sb.append("[").append(entry.getKey()).append("=").append(entry.getValue().size()).append("]");
+					sb.append("Task broker sizes: ");
+					for (final Entry<E, ParkingQueue<Runnable>> entry : ctxs.entrySet())
+						sb.append("[").append(entry.getKey()).append("=").append(entry.getValue().size()).append("]");
 
-				LOG.info(sb.toString());
+					LOG.debug(sb.toString());
+				}
 			}
 		});
 	}

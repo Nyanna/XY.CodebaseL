@@ -36,7 +36,8 @@ public class TimeoutQueue {
 		queue = new PriorityQueue<ITask>(100, new TaskComparator());
 		timer = new QueueTimer(this, name);
 		timer.start();
-		LOG.info("Created named TimeOutQueue [" + name + "][" + timer.getName() + "]");
+		if (LOG.isDebugEnabled())
+			LOG.debug("Created named TimeOutQueue [" + name + "][" + timer.getName() + "]");
 		addDiagnosticTask();
 	}
 
@@ -49,16 +50,18 @@ public class TimeoutQueue {
 		queue = new PriorityQueue<ITask>(100, new TaskComparator());
 		timer = thread;
 		timer.setQueue(this);
-		LOG.info("Created unnamed TimeOutQueue [" + thread + "][" + timer.getName() + "]");
+		if (LOG.isDebugEnabled())
+			LOG.debug("Created unnamed TimeOutQueue [" + thread + "][" + timer.getName() + "]");
 		addDiagnosticTask();
 	}
 
 	private void addDiagnosticTask() {
-		add(15000, new Runnable() {
+		add(30 * 1000, new Runnable() {
 			@Override
 			public void run() {
-				LOG.info("TQueue size [" + queue.size() + "][exec=" + timer.getResetExecCount() + "][" + timer.getName()
-						+ "]");
+				if (LOG.isDebugEnabled())
+					LOG.debug("TQueue size [" + queue.size() + "][exec=" + timer.getResetExecCount() + "]["
+							+ timer.getName() + "]");
 			}
 		});
 	}
