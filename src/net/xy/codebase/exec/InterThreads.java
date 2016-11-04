@@ -107,10 +107,13 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	}
 
 	@Override
-	public void put(final E target, final Runnable job) {
+	public boolean put(final E target, final Runnable job) {
 		final ParkingQueue<Runnable> que = get(target);
-		if (!que.add(job))
+		if (!que.add(job)) {
 			LOG.error("Error target thread too full droping job [" + target + "][" + que.size() + "][" + job + "]");
+			return false;
+		}
+		return true;
 	}
 
 	@Override
@@ -137,26 +140,23 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	@Override
 	public InterThreadTimeoutable<E> runLater(final E thread, final Runnable run, final int timeout) {
 		final InterThreadTimeoutable<E> res = new InterThreadTimeoutable<E>(thread, timeout, run, this);
-		tque.add(res);
-		return res;
+		return tque.add(res) ? res : null;
 	}
 
 	@Override
 	public RecurringTask start(final E thread, final Runnable run, final int intervall) {
 		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, run, this);
-		tque.add(res);
-		return res;
+		return tque.add(res) ? res : null;
 	}
 
 	@Override
 	public RecurringTask start(final E thread, final Runnable run, final int startIn, final int intervall) {
 		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, startIn, run, this);
-		tque.add(res);
-		return res;
+		return tque.add(res) ? res : null;
 	}
 
 	@Override
-	public void start(final ITask task) {
-		tque.add(task);
+	public boolean start(final ITask task) {
+		return tque.add(task);
 	}
 }

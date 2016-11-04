@@ -12,6 +12,7 @@ public interface IScheduleRunnable extends Runnable {
 	 *
 	 * @param run
 	 * @param delay
+	 * @return false on failure
 	 */
-	public void schedule(ITask run);
+	public boolean schedule(ITask run);
 }

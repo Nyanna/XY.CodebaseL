@@ -32,6 +32,8 @@ public class ExecutionThrottler {
 	 * intervall to run at in ms
 	 */
 	private final int interval;
+	// in nanos
+	private final long intervalNs;
 	/**
 	 * last time the action was startet
 	 */
@@ -72,6 +74,7 @@ public class ExecutionThrottler {
 			final int interval) {
 		this.runnable = runnable;
 		this.interval = interval;
+		intervalNs = TimeUnit.MILLISECONDS.toNanos(interval);
 		if (runnable instanceof IPriority)
 			capsule = new PriorityThrottledRunnable((T) runnable);
 		else
@@ -91,15 +94,18 @@ public class ExecutionThrottler {
 				return;
 			} else if (lastUpdate.compareAndSet(0, 1)) {
 				// start runnable
-				if (interval > 0) {
+				if (intervalNs > 0) {
 					final long now = System.nanoTime();
-					final long nextStart = now + TimeUnit.MILLISECONDS.toNanos(interval) - (now - lastStart);
+					final long nextStart = lastStart + intervalNs;
 					capsule.setNextRun(nextStart > now ? nextStart : 0L);
 				}
 				if (LOG.isTraceEnabled())
 					LOG.trace("Start throttled [" + interval + "][" + runnable + "]["
 							+ runnable.getClass().getSimpleName() + "]");
-				runnable.schedule(capsule);
+				if (!runnable.schedule(capsule)) {
+					lastUpdate.set(0);
+					LOG.error("Failed to schedule throttle, reseting");
+				}
 				return;
 			} else if (LOG.isTraceEnabled())
 				LOG.trace("Inefficient loop repeat [" + interval + "][" + runnable + "]["
@@ -146,11 +152,12 @@ public class ExecutionThrottler {
 				return;
 			} else {
 				// update in future or has changed
-				if (interval > 0)
-					nextRun = now + TimeUnit.MILLISECONDS.toNanos(interval);
+				if (intervalNs > 0)
+					nextRun = now + intervalNs;
 				if (LOG.isTraceEnabled())
 					LOG.trace("Rerun throttled run [" + interval + "][" + this + "]");
-				runnable.schedule(this);
+				if (!runnable.schedule(this))
+					LOG.error("Error rescheduling throttler [" + this + "]");
 			}
 		}
 

@@ -31,15 +31,16 @@ public class InterThreadSchedulable<E extends Enum<E>> extends AbstractInterThre
 	}
 
 	@Override
-	public void schedule(final ITask capsule) {
+	public boolean schedule(final ITask capsule) {
 		if (capsule.nextRun() <= 0) {
 			if (LOG.isTraceEnabled())
 				LOG.trace("Schedule directly [" + this + "]");
 			capsule.run();
+			return true;
 		} else {
 			if (LOG.isTraceEnabled())
 				LOG.trace("Schedule queued [" + this + "]");
-			it.start(capsule);
+			return it.start(capsule);
 		}
 	}
 

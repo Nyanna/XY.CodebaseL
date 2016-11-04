@@ -76,7 +76,10 @@ public class ExecutionLimiter {
 				// start runnable
 				if (LOG.isTraceEnabled())
 					LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
-				runnable.schedule(capsule);
+				if (!runnable.schedule(capsule)) {
+					running.set(--runs);
+					LOG.error("Error starting limiter, decrementing");
+				}
 				return;
 			} else if (LOG.isTraceEnabled())
 				LOG.trace("Inefficient loop repeat [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");

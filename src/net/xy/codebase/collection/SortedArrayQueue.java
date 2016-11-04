@@ -36,7 +36,6 @@ public class SortedArrayQueue<E> extends ArrayQueue<E> {
 
 		protected int getRi(final int idx) {
 			final int res = (getIdx + idx) % elements.capacity();
-			// System.out.println("idx: " + idx + " > " + res);
 			return res;
 		}
 

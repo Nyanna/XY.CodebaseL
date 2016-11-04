@@ -52,36 +52,13 @@ public class FindFullPeriodLCG {
 		do
 			inc = RND.nextInt(Integer.MAX_VALUE);
 		while (bi.gcd(BigInteger.valueOf(inc)).intValue() != 1);
-
-		// System.out.println("cMul: " + cMul + " fac: " + fac + " inc:" + inc);
 	}
-
-	// @Override
-	// public WAddress getResult() {
-	// return res;
-	// }
-
-	// @Override
-	// public boolean findNext() {
-	// boolean found = false;
-	// while (count > 0 && !found) {
-	// final short[] nextOff = mat[off + next() % size];
-	// count--;
-	// if ((res = find(nextOff)) != null)
-	// found = true;
-	// }
-	// return found;
-	// }
 
 	private int next() {
 		// LCG
 		pos = (fac * pos + inc) % size;
 		return (int) ((pos ^ mask) >= size ? pos : pos ^ mask);
 	}
-
-	// private WAddress find(final short[] nextOff) {
-	// return crit.find(nextOff);
-	// }
 
 	/**
 	 * gets common multiply basefactor for 20 = 2² * 5 it gets 2 * 5

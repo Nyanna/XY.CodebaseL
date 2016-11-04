@@ -30,14 +30,6 @@ public interface IInterThreads<E extends Enum<E>> {
 	public Runnable next(E target, int ms);
 
 	/**
-	 * put an job in this target threads queue
-	 *
-	 * @param target
-	 * @param job
-	 */
-	public void put(E target, Runnable job);
-
-	/**
 	 * do all currently queued jobs
 	 *
 	 * @param target
@@ -70,11 +62,20 @@ public interface IInterThreads<E extends Enum<E>> {
 	public void doAll(E target, int ms, JobObserver<E> obs);
 
 	/**
+	 * put an job in this target threads queue
+	 *
+	 * @param target
+	 * @param job
+	 * @return true on success
+	 */
+	public boolean put(E target, Runnable job);
+
+	/**
 	 * gets an bounded throtler for the target thread
 	 *
 	 * @param thread
 	 * @param run
-	 * @return
+	 * @return null on failure
 	 */
 	public ExecutionThrottler getThrottler(E thread, Runnable run);
 
@@ -84,7 +85,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param thread
 	 * @param run
 	 * @param intervallMs
-	 * @return
+	 * @return null on failure
 	 */
 	public ExecutionThrottler getThrottler(E thread, Runnable run, int intervallMs);
 
@@ -95,7 +96,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param thread
 	 * @param run
 	 * @param priority
-	 * @return
+	 * @return null on failure
 	 */
 	public ExecutionThrottler getPriorityThrottler(E thread, Runnable run, int priority);
 
@@ -107,7 +108,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param priority
 	 * @param amount
 	 *            of concurrent runnables
-	 * @return
+	 * @return null on failure
 	 */
 	public ExecutionLimiter getPriorityLimiter(E thread, Runnable run, int priority, int amount);
 
@@ -117,7 +118,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param thread
 	 * @param run
 	 * @param timeout
-	 * @return
+	 * @return null on failure
 	 */
 	public TimeoutRunnable runLater(E thread, Runnable run, int timeout);
 
@@ -127,7 +128,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param thread
 	 * @param run
 	 * @param intervall
-	 * @return
+	 * @return null on failure
 	 */
 	public RecurringTask start(E thread, Runnable run, int intervall);
 
@@ -139,7 +140,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param run
 	 * @param startIn
 	 * @param intervall
-	 * @return
+	 * @return null on failure
 	 */
 	public RecurringTask start(E thread, Runnable run, int startIn, int intervall);
 
@@ -147,8 +148,9 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * start self supplied recuring task
 	 *
 	 * @param task
+	 * @return false on failure
 	 */
-	public void start(ITask task);
+	public boolean start(ITask task);
 
 	/**
 	 * interceptor interface for progress listenting
@@ -158,7 +160,6 @@ public interface IInterThreads<E extends Enum<E>> {
 	 */
 
 	public static interface JobObserver<E> {
-
 		/**
 		 *
 		 * @param target

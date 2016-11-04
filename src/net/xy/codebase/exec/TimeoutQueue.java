@@ -71,15 +71,19 @@ public class TimeoutQueue {
 	 *
 	 * @param t
 	 */
-	public void add(final ITask t) {
+	public boolean add(final ITask t) {
+		boolean res = false;
 		if (LOG.isTraceEnabled())
 			LOG.trace("add task [" + t + "]");
 
 		synchronized (queue) {
-			queue.add(t);
+			res = queue.add(t);
 			if (queue.peek() == t)
 				queue.notify();
 		}
+		if (!res)
+			LOG.error("Error inserting task into timeout que [" + t + "][" + timer.getName() + "]");
+		return res;
 	}
 
 	/**
@@ -90,8 +94,7 @@ public class TimeoutQueue {
 	 */
 	public RecurringTaskCapsule add(final int intervall, final Runnable run) {
 		final RecurringTaskCapsule cap = new RecurringTaskCapsule(intervall, run);
-		add(cap);
-		return cap;
+		return add(cap) ? cap : null;
 	}
 
 	/**

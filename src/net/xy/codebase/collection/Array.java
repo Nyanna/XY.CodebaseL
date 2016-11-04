@@ -5,12 +5,16 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.xy.codebase.clone.Cloneable;
 import net.xy.codebase.io.SerializationContext.Decoder;
 import net.xy.codebase.io.SerializationContext.Encoder;
 import net.xy.codebase.io.SerializationContext.Externalize;
 
 public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externalize<Array<E>>, Cloneable<Array<E>> {
+	private static final Logger LOG = LoggerFactory.getLogger(Array.class);
 	private static final long serialVersionUID = -4019349541696506832L;
 	public static int MIN_GROWTH = 32;
 	public static final Array<?> EMPTY = new EmptyArray<Object>(Object.class);
@@ -500,7 +504,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	public Iterator<E> iterator() {
 		if (itIdx != 0) {
 			resetIt();
-			System.out.println("Iterator not reseted or used twice");
+			LOG.error("Iterator not reseted or used twice");
 		}
 		return this;
 	}
