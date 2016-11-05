@@ -18,6 +18,7 @@ import java.util.Map.Entry;
  *
  */
 public class PersistentConfig extends Config<String, Object> {
+	private IStoreListener obs;
 
 	/**
 	 * default based on HashMap
@@ -47,6 +48,10 @@ public class PersistentConfig extends Config<String, Object> {
 		super(new HashMap<String, Object>(), parent);
 	}
 
+	public void setStoreListener(final IStoreListener obs) {
+		this.obs = obs;
+	}
+
 	/**
 	 * persists and changes the value
 	 *
@@ -55,6 +60,8 @@ public class PersistentConfig extends Config<String, Object> {
 	 */
 	public void storeValue(final String key, final Object val) {
 		values.put(key, val);
+		if (obs != null)
+			obs.valueStored(key, val);
 	}
 
 	/**
@@ -114,5 +121,9 @@ public class PersistentConfig extends Config<String, Object> {
 					throw new IllegalStateException("Error closing input", e);
 				}
 		}
+	}
+
+	public static interface IStoreListener {
+		public void valueStored(String key, Object val);
 	}
 }
