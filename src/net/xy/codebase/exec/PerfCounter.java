@@ -129,12 +129,12 @@ public class PerfCounter implements IPerfCounter {
 
 	@Override
 	public long getIdleTime() {
-		return getLastIntervall() - getLastLoopTime();
+		return TimeUnit.NANOSECONDS.toMicros(currentInterval - lastLoopSum);
 	}
 
 	@Override
 	public float getIdleFraction() {
-		return 1f - (float) getLastLoopTime() / getLastIntervall();
+		return 1f - lastLoopSum / (float) currentInterval;
 	}
 
 	@Override
