@@ -7,7 +7,7 @@ package net.xy.codebase.exec.tasks;
  * @author Xyan
  *
  */
-public abstract class AbstractInterThreadRunnable<E extends Enum<E>> implements IScheduleRunnable {
+public abstract class AbstractInterThreadRunnable<E extends Enum<E>> implements IScheduleRunnable, ICoveredRunnable {
 	/**
 	 * real runnable
 	 */
@@ -33,6 +33,7 @@ public abstract class AbstractInterThreadRunnable<E extends Enum<E>> implements 
 		run.run();
 	}
 
+	@Override
 	public Runnable getRunnable() {
 		return run;
 	}

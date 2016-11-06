@@ -29,7 +29,7 @@ public abstract class TimeoutRunnable implements ITask {
 
 	/**
 	 * calculate next execution
-	 * 
+	 *
 	 * @param timeoutMs
 	 */
 	protected void calculateNext(final long timeoutMs) {

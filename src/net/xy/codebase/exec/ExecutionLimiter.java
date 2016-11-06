@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.collection.IPriority;
+import net.xy.codebase.exec.tasks.ICoveredRunnable;
 import net.xy.codebase.exec.tasks.IScheduleRunnable;
 import net.xy.codebase.exec.tasks.ITask;
 
@@ -92,7 +93,7 @@ public class ExecutionLimiter {
 	 * @author Xyan
 	 *
 	 */
-	public class LimitedRunnable implements ITask {
+	public class LimitedRunnable implements ITask, ICoveredRunnable {
 		/**
 		 * target action to run
 		 */
@@ -133,6 +134,11 @@ public class ExecutionLimiter {
 		@Override
 		public long nextRun() {
 			return 0;
+		}
+
+		@Override
+		public Runnable getRunnable() {
+			return runnable;
 		}
 
 		@Override

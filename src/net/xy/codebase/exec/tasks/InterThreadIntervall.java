@@ -8,7 +8,7 @@ import net.xy.codebase.exec.IInterThreads;
  * @author Xyan
  *
  */
-public class InterThreadIntervall<E extends Enum<E>> extends RecurringTask {
+public class InterThreadIntervall<E extends Enum<E>> extends RecurringTask implements ICoveredRunnable {
 	/**
 	 * target thread
 	 */
@@ -82,5 +82,10 @@ public class InterThreadIntervall<E extends Enum<E>> extends RecurringTask {
 	@Override
 	public String toString() {
 		return "RTCapsule " + run.toString();
+	}
+
+	@Override
+	public Runnable getRunnable() {
+		return run;
 	}
 }

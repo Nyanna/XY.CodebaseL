@@ -6,7 +6,7 @@ package net.xy.codebase.exec.tasks;
  * @author Xyan
  *
  */
-public class RecurringTaskCapsule extends RecurringTask {
+public class RecurringTaskCapsule extends RecurringTask implements ICoveredRunnable {
 	/**
 	 * encapsulated runnables
 	 */
@@ -31,5 +31,10 @@ public class RecurringTaskCapsule extends RecurringTask {
 	@Override
 	public String toString() {
 		return "RTCapsule " + run.toString();
+	}
+
+	@Override
+	public Runnable getRunnable() {
+		return run;
 	}
 }

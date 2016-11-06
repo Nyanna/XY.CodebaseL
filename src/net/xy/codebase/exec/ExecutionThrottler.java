@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.collection.IPriority;
+import net.xy.codebase.exec.tasks.ICoveredRunnable;
 import net.xy.codebase.exec.tasks.IScheduleRunnable;
 import net.xy.codebase.exec.tasks.ITask;
 
@@ -119,7 +120,7 @@ public class ExecutionThrottler {
 	 * @author Xyan
 	 *
 	 */
-	public class ThrottledRunnable implements ITask {
+	public class ThrottledRunnable implements ITask, ICoveredRunnable {
 		/**
 		 * target action to run
 		 */
@@ -169,7 +170,8 @@ public class ExecutionThrottler {
 			}
 		}
 
-		public IScheduleRunnable getRunnable() {
+		@Override
+		public Runnable getRunnable() {
 			return runnable;
 		}
 
