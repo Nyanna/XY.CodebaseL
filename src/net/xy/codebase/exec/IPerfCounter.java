@@ -38,7 +38,7 @@ public interface IPerfCounter {
 
 	/**
 	 * end loop with given time
-	 * 
+	 *
 	 * @param nanoTime
 	 */
 	public void endLoop(long nanoTime);
@@ -83,4 +83,18 @@ public interface IPerfCounter {
 	 * @return
 	 */
 	public long lastUpdateAge(long nanoTime);
+
+	/**
+	 * idletime in intervall
+	 *
+	 * @return
+	 */
+	public long getIdleTime();
+
+	/**
+	 * fractional amount of idletime per intervall
+	 * 
+	 * @return
+	 */
+	public float getIdleFraction();
 }

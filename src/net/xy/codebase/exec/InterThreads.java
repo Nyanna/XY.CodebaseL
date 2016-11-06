@@ -28,11 +28,15 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	/**
 	 * thread job stores
 	 */
-	private EnumMap<E, ParkingQueue<Runnable>> ctxs;
+	private EnumMap<E, TrackingQueue> ctxs;
 	/**
 	 * timeout queue for delayed interthread execution
 	 */
 	private final TimeoutQueue tque;
+	/**
+	 * for diagnostics output
+	 */
+	private StringBuilder sb;
 
 	/**
 	 * inner, initializing common fields
@@ -50,49 +54,57 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	public InterThreads(final Class<E> enun, final int capacity) {
 		this();
 		final E[] evals = enun.getEnumConstants();
-		ctxs = new EnumMap<E, ParkingQueue<Runnable>>(enun);
+		ctxs = new EnumMap<E, TrackingQueue>(enun);
 		for (final E val : evals)
-			ctxs.put(val, new ParkingQueue<Runnable>(Runnable.class, capacity));
+			ctxs.put(val, new TrackingQueue(new ParkingQueue<Runnable>(Runnable.class, capacity)));
 		addDiagnosticTask();
 	}
 
 	/**
 	 * with custom queue mappings
 	 *
-	 * @param ctxs
+	 * @param giv
 	 */
-	public InterThreads(final EnumMap<E, ParkingQueue<Runnable>> ctxs) {
+	public InterThreads(final Class<E> enun, final EnumMap<E, ParkingQueue<Runnable>> giv) {
 		this();
-		this.ctxs = ctxs;
-		if (LOG.isDebugEnabled())
-			LOG.debug("Created task broker [" + ctxs.size() + "][" + this + "]");
+		ctxs = new EnumMap<E, TrackingQueue>(enun);
+		for (final Entry<E, ParkingQueue<Runnable>> val : giv.entrySet())
+			ctxs.put(val.getKey(), new TrackingQueue(val.getValue()));
 		addDiagnosticTask();
 	}
 
 	private void addDiagnosticTask() {
-		tque.add(30 * 1000, new Runnable() {
-			private final StringBuilder sb = new StringBuilder();
-
+		if (LOG.isDebugEnabled())
+			LOG.debug("Created task broker [" + ctxs.size() + "][" + this + "]");
+		tque.add(5 * 1000, new Runnable() {
 			@Override
 			public void run() {
-				if (LOG.isDebugEnabled()) {
-					sb.setLength(0);
-
-					sb.append("Task broker sizes: ");
-					for (final Entry<E, ParkingQueue<Runnable>> entry : ctxs.entrySet())
-						sb.append("[").append(entry.getKey()).append("=").append(entry.getValue().size()).append("]");
-
-					LOG.debug(sb.toString());
-				}
+				printDiagnostics();
 			}
 		});
+	}
+
+	protected void printDiagnostics() {
+		if (!LOG.isDebugEnabled())
+			return;
+		if (sb == null)
+			sb = new StringBuilder();
+		sb.setLength(0);
+
+		sb.append("Tasks quesize [");
+		for (final Entry<E, TrackingQueue> entry : ctxs.entrySet())
+			sb.append("").append(entry.getKey()).append("=").append(entry.getValue().size()).append(",");
+
+		sb.setLength(sb.length() - 1);
+		sb.append("]");
+		LOG.info(sb.toString());
 	}
 
 	/**
 	 * @param target
 	 * @return the tragte thread queue
 	 */
-	private ParkingQueue<Runnable> get(final E target) {
+	private TrackingQueue get(final E target) {
 		return ctxs.get(target);
 	}
 
@@ -108,7 +120,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 	@Override
 	public boolean put(final E target, final Runnable job) {
-		final ParkingQueue<Runnable> que = get(target);
+		final TrackingQueue que = get(target);
 		if (!que.add(job)) {
 			LOG.error("Error target thread too full droping job [" + target + "][" + que.size() + "][" + job + "]");
 			return false;
