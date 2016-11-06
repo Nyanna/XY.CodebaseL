@@ -6,11 +6,16 @@ import net.xy.codebase.collection.ParkingQueue;
 
 public class TrackingQueue {
 	private final ParkingQueue<Runnable> que;
-	private final AtomicInteger added = new AtomicInteger(0);
-	private final AtomicInteger removed = new AtomicInteger(0);
+	public final AtomicInteger added = new AtomicInteger(0);
+	public final AtomicInteger removed = new AtomicInteger(0);
 
 	public TrackingQueue(final ParkingQueue<Runnable> que) {
 		this.que = que;
+	}
+
+	public void reset() {
+		removed.set(0);
+		added.set(0);
 	}
 
 	public Runnable take() {
@@ -36,10 +41,5 @@ public class TrackingQueue {
 
 	public int size() {
 		return que.size();
-	}
-
-	public void reset() {
-		removed.set(0);
-		added.set(0);
 	}
 }

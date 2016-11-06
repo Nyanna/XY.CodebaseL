@@ -50,7 +50,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param target
 	 * @param obs
 	 */
-	public void doAll(E target, JobObserver<E> obs);
+	public void doAll(E target, IJobObserver<E> obs);
 
 	/**
 	 * waits up to ms for at least one job to execute
@@ -59,7 +59,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param ms
 	 * @param obs
 	 */
-	public void doAll(E target, int ms, JobObserver<E> obs);
+	public void doAll(E target, int ms, IJobObserver<E> obs);
 
 	/**
 	 * put an job in this target threads queue
@@ -159,7 +159,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 *
 	 */
 
-	public static interface JobObserver<E> {
+	public static interface IJobObserver<E> {
 		/**
 		 *
 		 * @param target

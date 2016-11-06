@@ -91,12 +91,18 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 			sb = new StringBuilder();
 		sb.setLength(0);
 
-		sb.append("Tasks quesize [");
-		for (final Entry<E, TrackingQueue> entry : ctxs.entrySet())
-			sb.append("").append(entry.getKey()).append("=").append(entry.getValue().size()).append(",");
+		sb.append("Tasks ques:\n");
+		for (final Entry<E, TrackingQueue> entry : ctxs.entrySet()) {
+			final TrackingQueue que = entry.getValue();
+			sb.append(String.format("%-12s", entry.getKey())).append("|");
+			sb.append(String.format("%3s", que.size())).append(" q|");
+			sb.append("+").append(String.format("%6s", que.added.get())).append(" ad|");
+			sb.append(String.format("%7s", que.removed.get())).append(" re|");
+			sb.append("\n");
+			que.reset();
+		}
 
 		sb.setLength(sb.length() - 1);
-		sb.append("]");
 		LOG.info(sb.toString());
 	}
 
@@ -104,7 +110,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * @param target
 	 * @return the tragte thread queue
 	 */
-	private TrackingQueue get(final E target) {
+	protected TrackingQueue get(final E target) {
 		return ctxs.get(target);
 	}
 

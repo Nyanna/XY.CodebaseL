@@ -16,7 +16,7 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 	}
 
 	@Override
-	public void doAll(final E target, final JobObserver<E> obs) {
+	public void doAll(final E target, final IJobObserver<E> obs) {
 		// causes mem alloc through synchronizer node
 		final IPerfCounter measure = getMeasure();
 
@@ -50,7 +50,7 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 	}
 
 	@Override
-	public void doAll(final E target, final int ms, final JobObserver<E> obs) {
+	public void doAll(final E target, final int ms, final IJobObserver<E> obs) {
 		// causes mem alloc through synchronizer node
 		final IPerfCounter measure = getMeasure();
 
