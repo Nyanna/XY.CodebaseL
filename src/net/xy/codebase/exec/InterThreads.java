@@ -37,6 +37,11 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * for diagnostics output
 	 */
 	private StringBuilder sb;
+	/**
+	 * for failure logging
+	 */
+	private long lastDropMessage;
+	private int lastDropCounter;
 
 	/**
 	 * inner, initializing common fields
@@ -106,6 +111,19 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		LOG.info(sb.toString());
 	}
 
+	private void taskDroped(final E target, final Runnable job, final int size) {
+		final long now = System.currentTimeMillis();
+		if (lastDropMessage < now - 100) {
+			lastDropMessage = now;
+			if (lastDropCounter > 0) {
+				LOG.error("Thread overloaded droping job and others [" + lastDropCounter + "][" + job + "]");
+				lastDropCounter = 0;
+			} else
+				LOG.error("Target thread too full droping job [" + target + "][" + size + "][" + job + "]");
+		} else
+			lastDropCounter++;
+	}
+
 	/**
 	 * @param target
 	 * @return the tragte thread queue
@@ -128,7 +146,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	public boolean put(final E target, final Runnable job) {
 		final TrackingQueue que = get(target);
 		if (!que.add(job)) {
-			LOG.error("Error target thread too full droping job [" + target + "][" + que.size() + "][" + job + "]");
+			taskDroped(target, job, que.size());
 			return false;
 		}
 		return true;
