@@ -45,7 +45,11 @@ public abstract class RecurringTask implements ITask {
 
 	protected abstract void innerRun();
 
-	public void stop() {
-		recurring = false;
+	public boolean stop() {
+		if (recurring) {
+			recurring = false;
+			return true;
+		}
+		return false;
 	}
 }

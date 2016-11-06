@@ -504,7 +504,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	public Iterator<E> iterator() {
 		if (itIdx != 0) {
 			resetIt();
-			LOG.error("Iterator not reseted or used twice");
+			LOG.error("Iterator not reseted or used twice", new Exception());
 		}
 		return this;
 	}
