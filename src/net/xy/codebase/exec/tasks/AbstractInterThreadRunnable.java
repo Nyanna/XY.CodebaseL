@@ -32,4 +32,8 @@ public abstract class AbstractInterThreadRunnable<E extends Enum<E>> implements 
 	public void run() {
 		run.run();
 	}
+
+	public Runnable getRunnable() {
+		return run;
+	}
 }
