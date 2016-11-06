@@ -9,7 +9,7 @@ public class TrackingJobObserver<J> implements IJobObserver<J> {
 	private Map<Class<?>, ExecutionTracker> exec = new HashMap<Class<?>, ExecutionTracker>();
 	private long start = 0;
 
-	private void track(final Runnable res, final long tok) {
+	protected void track(final Runnable res, final long tok) {
 		final Class<?> cc = res.getClass();
 		ExecutionTracker trk = exec.get(cc);
 		if (trk == null)

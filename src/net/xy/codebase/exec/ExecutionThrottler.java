@@ -169,6 +169,10 @@ public class ExecutionThrottler {
 			}
 		}
 
+		public IScheduleRunnable getRunnable() {
+			return runnable;
+		}
+
 		@Override
 		public boolean isRecurring() {
 			return false;
