@@ -93,8 +93,15 @@ public interface IPerfCounter {
 
 	/**
 	 * fractional amount of idletime per intervall
+	 *
+	 * @return
+	 */
+	public float getUseFraction();
+
+	/**
+	 * average usage fraction
 	 * 
 	 * @return
 	 */
-	public float getIdleFraction();
+	public float getUseAvrFraction();
 }

@@ -14,6 +14,7 @@ import net.xy.codebase.exec.tasks.InterThreadSchedulable;
 import net.xy.codebase.exec.tasks.InterThreadTimeoutable;
 import net.xy.codebase.exec.tasks.PriorityInterThreadRunnable;
 import net.xy.codebase.exec.tasks.RecurringTask;
+import net.xy.codebase.util.StringUtil;
 
 /**
  * implementation for inter thread job execution
@@ -36,7 +37,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	/**
 	 * for diagnostics output
 	 */
-	private StringBuilder sb;
+	private StringUtil sb;
 	/**
 	 * for failure logging
 	 */
@@ -93,16 +94,16 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		if (!LOG.isDebugEnabled())
 			return;
 		if (sb == null)
-			sb = new StringBuilder();
+			sb = new StringUtil();
 		sb.setLength(0);
 
 		sb.append("Tasks ques:\n");
 		for (final Entry<E, TrackingQueue> entry : ctxs.entrySet()) {
 			final TrackingQueue que = entry.getValue();
-			sb.append(String.format("%-12s", entry.getKey())).append("|");
-			sb.append(String.format("%3s", que.size())).append(" q|");
-			sb.append("+").append(String.format("%6s", que.added.get())).append(" ad|");
-			sb.append(String.format("%7s", que.removed.get())).append(" re|");
+			sb.padRight(12, entry.getKey()).append("|");
+			sb.padLeft(3, que.size()).append(" q|");
+			sb.append("+").padLeft(6, que.added.get()).append(" ad|");
+			sb.padLeft(7, que.removed.get()).append(" re|");
 			sb.append("\n");
 			que.reset();
 		}

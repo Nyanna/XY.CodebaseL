@@ -133,8 +133,13 @@ public class PerfCounter implements IPerfCounter {
 	}
 
 	@Override
-	public float getIdleFraction() {
-		return 1f - lastLoopSum / (float) currentInterval;
+	public float getUseFraction() {
+		return lastLoopSum / (float) currentInterval;
+	}
+
+	@Override
+	public float getUseAvrFraction() {
+		return (float) (overallSum / loopCounts / (intvalSum / loopCounts));
 	}
 
 	@Override
