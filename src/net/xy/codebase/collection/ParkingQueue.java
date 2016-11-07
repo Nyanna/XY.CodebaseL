@@ -2,37 +2,38 @@ package net.xy.codebase.collection;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.xy.codebase.concurrent.FairLock;
 
 public class ParkingQueue<E> {
 	private static final Logger LOG = LoggerFactory.getLogger(ParkingQueue.class);
 
 	private final Queue<E> aq;
-	private final ReentrantLock lock;
+	private final FairLock lock;
 	private final Condition added;
 	private final Condition empty;
 
 	/**
 	 * default with default ArrayQueue
-	 * 
+	 *
 	 * @param clazz
 	 * @param maxCount
 	 */
 	public ParkingQueue(final Class<E> clazz, final int maxCount) {
-		this(new ArrayQueue<E>(clazz, maxCount));
+		this(new ArrayQueueUnsynced<E>(clazz, maxCount));
 	}
 
 	/**
 	 * default with given queue
-	 * 
+	 *
 	 * @param aq
 	 */
 	public ParkingQueue(final Queue<E> aq) {
 		this.aq = aq;
-		lock = new ReentrantLock(false);
+		lock = new FairLock();
 		added = lock.newCondition();
 		empty = lock.newCondition();
 	}
@@ -88,8 +89,7 @@ public class ParkingQueue<E> {
 			if (LOG.isTraceEnabled())
 				LOG.trace(e.getMessage(), e);
 		} finally {
-			if (lock.isHeldByCurrentThread())
-				lock.unlock();
+			lock.tryUnlock();
 		}
 		return null;
 	}

@@ -61,34 +61,55 @@ public class ArrayQueue<E> implements Queue<E> {
 		if (count >= maxCount)
 			return false;
 
-		// increase
 		synchronized (this) {
-			if (count >= elements.capacity()) {
-				elements.ensureCapacity(elements.capacity() + 1);
-				final E[] raw = elements.getElements();
-				if (LOG.isDebugEnabled())
-					LOG.debug("Increased queue to [" + raw.getClass().getComponentType().getSimpleName() + "]["
-							+ raw.length + "]");
-
-				if (putIdx <= getIdx) {
-					final int copylength = Math.min(raw.length - count, putIdx);
-					if (copylength > 0) {
-						System.arraycopy(raw, 0, raw, getIdx + count - putIdx, copylength);
-						if (putIdx - copylength > 0)
-							System.arraycopy(raw, copylength, raw, 0, putIdx - copylength);
-					}
-					putIdx = (getIdx + count) % raw.length;
-				}
-			}
-
-			elements.set(putIdx, elem);
-			if (putIdx + 1 == elements.capacity())
-				putIdx = 0;
-			else
-				putIdx++;
-			count++;
+			addInner(elem);
 		}
 		return true;
+	}
+
+	/**
+	 * beware not synchrobized
+	 *
+	 * @param elem
+	 * @return
+	 */
+	protected boolean addRaw(final E elem) {
+		if (elem == null)
+			throw new IllegalArgumentException("Element can't be null");
+
+		if (count >= maxCount)
+			return false;
+
+		addInner(elem);
+		return true;
+	}
+
+	private void addInner(final E elem) {
+		// increase
+		if (count >= elements.capacity()) {
+			elements.ensureCapacity(elements.capacity() + 1);
+			final E[] raw = elements.getElements();
+			if (LOG.isDebugEnabled())
+				LOG.debug("Increased queue to [" + raw.getClass().getComponentType().getSimpleName() + "][" + raw.length
+						+ "]");
+
+			if (putIdx <= getIdx) {
+				final int copylength = Math.min(raw.length - count, putIdx);
+				if (copylength > 0) {
+					System.arraycopy(raw, 0, raw, getIdx + count - putIdx, copylength);
+					if (putIdx - copylength > 0)
+						System.arraycopy(raw, copylength, raw, 0, putIdx - copylength);
+				}
+				putIdx = (getIdx + count) % raw.length;
+			}
+		}
+
+		elements.set(putIdx, elem);
+		if (putIdx + 1 == elements.capacity())
+			putIdx = 0;
+		else
+			putIdx++;
+		count++;
 	}
 
 	/**
@@ -98,17 +119,27 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public E take() {
-		E res = null;
 		synchronized (this) {
-			if (count > 0) {
-				res = elements.get(getIdx);
-				elements.set(getIdx, null);
-				if (getIdx + 1 == elements.capacity())
-					getIdx = 0;
-				else
-					getIdx++;
-				count--;
-			}
+			return takeRaw();
+		}
+	}
+
+	/**
+	 * beware not synchronized
+	 *
+	 * @param res
+	 * @return
+	 */
+	protected E takeRaw() {
+		E res = null;
+		if (count > 0) {
+			res = elements.get(getIdx);
+			elements.set(getIdx, null);
+			if (getIdx + 1 == elements.capacity())
+				getIdx = 0;
+			else
+				getIdx++;
+			count--;
 		}
 		return res;
 	}
