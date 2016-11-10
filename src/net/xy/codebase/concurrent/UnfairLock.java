@@ -10,7 +10,7 @@ public class UnfairLock extends AbstractLock {
 	 */
 	@Override
 	public void lock() {
-		if (compareAndSetState(0, 1))
+		if (compareAndSetLocks(0, 1))
 			setExclusiveOwnerThread(Thread.currentThread());
 		else
 			acquire(1);

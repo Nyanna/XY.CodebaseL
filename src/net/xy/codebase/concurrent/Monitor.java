@@ -8,8 +8,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.LockSupport;
 
 /**
- * Condition implementation for a {@link AbstractQueuedLock} serving as
- * the basis of a {@link Lock} implementation.
+ * Condition implementation for a {@link AbstractQueuedLock} serving as the
+ * basis of a {@link Lock} implementation.
  *
  * <p>
  * Method documentation for this class describes mechanics, not behavioral
@@ -51,11 +51,11 @@ public class Monitor implements Condition {
 	private Node addConditionWaiter() {
 		Node t = lastWaiter;
 		// If lastWaiter is cancelled, clean out.
-		if (t != null && t.waitStatus.get() != Node.CONDITION) {
+		if (t != null && t.getWaitStatus() != Node.CONDITION) {
 			unlinkCancelledWaiters();
 			t = lastWaiter;
 		}
-		final Node node = new Node(Thread.currentThread(), Node.CONDITION);
+		final Node node = sync.createNode(Thread.currentThread(), Node.CONDITION);
 		if (t == null)
 			firstWaiter = node;
 		else
@@ -77,7 +77,7 @@ public class Monitor implements Condition {
 			if ((firstWaiter = first.nextWaiter) == null)
 				lastWaiter = null;
 			first.nextWaiter = null;
-		} while (!sync.transferForSignal(first) && (first = firstWaiter) != null);
+		} while (!transferForSignal(first) && (first = firstWaiter) != null);
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class Monitor implements Condition {
 		do {
 			final Node next = first.nextWaiter;
 			first.nextWaiter = null;
-			sync.transferForSignal(first);
+			transferForSignal(first);
 			first = next;
 		} while (first != null);
 	}
@@ -112,7 +112,7 @@ public class Monitor implements Condition {
 		Node trail = null;
 		while (t != null) {
 			final Node next = t.nextWaiter;
-			if (t.waitStatus.get() != Node.CONDITION) {
+			if (t.getWaitStatus() != Node.CONDITION) {
 				t.nextWaiter = null;
 				if (trail == null)
 					firstWaiter = next;
@@ -137,7 +137,7 @@ public class Monitor implements Condition {
 	 */
 	@Override
 	public void signal() {
-		if (!sync.isHeldExclusively())
+		if (!sync.isHeldByCurrentThread())
 			throw new IllegalMonitorStateException();
 		final Node first = firstWaiter;
 		if (first != null)
@@ -153,7 +153,7 @@ public class Monitor implements Condition {
 	 */
 	@Override
 	public void signalAll() {
-		if (!sync.isHeldExclusively())
+		if (!sync.isHeldByCurrentThread())
 			throw new IllegalMonitorStateException();
 		final Node first = firstWaiter;
 		if (first != null)
@@ -174,9 +174,9 @@ public class Monitor implements Condition {
 	@Override
 	public void awaitUninterruptibly() {
 		final Node node = addConditionWaiter();
-		final int savedState = sync.fullyRelease(node);
+		final int savedState = fullyRelease(node);
 		boolean interrupted = false;
-		while (!sync.isOnSyncQueue(node)) {
+		while (!isOnSyncQueue(node)) {
 			LockSupport.park(this);
 			if (Thread.interrupted())
 				interrupted = true;
@@ -202,7 +202,7 @@ public class Monitor implements Condition {
 	 * REINTERRUPT if after signalled, or 0 if not interrupted.
 	 */
 	private int checkInterruptWhileWaiting(final Node node) {
-		return Thread.interrupted() ? sync.transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT : 0;
+		return Thread.interrupted() ? transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT : 0;
 	}
 
 	/**
@@ -213,7 +213,7 @@ public class Monitor implements Condition {
 		if (interruptMode == THROW_IE)
 			throw new InterruptedException();
 		else if (interruptMode == REINTERRUPT)
-			AbstractQueuedLock.selfInterrupt();
+			selfInterrupt();
 	}
 
 	/**
@@ -234,9 +234,9 @@ public class Monitor implements Condition {
 		if (Thread.interrupted())
 			throw new InterruptedException();
 		final Node node = addConditionWaiter();
-		final int savedState = sync.fullyRelease(node);
+		final int savedState = fullyRelease(node);
 		int interruptMode = 0;
-		while (!sync.isOnSyncQueue(node)) {
+		while (!isOnSyncQueue(node)) {
 			LockSupport.park(this);
 			if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
 				break;
@@ -267,12 +267,12 @@ public class Monitor implements Condition {
 		if (Thread.interrupted())
 			throw new InterruptedException();
 		final Node node = addConditionWaiter();
-		final int savedState = sync.fullyRelease(node);
+		final int savedState = fullyRelease(node);
 		long lastTime = System.nanoTime();
 		int interruptMode = 0;
-		while (!sync.isOnSyncQueue(node)) {
+		while (!isOnSyncQueue(node)) {
 			if (nanosTimeout <= 0L) {
-				sync.transferAfterCancelledWait(node);
+				transferAfterCancelledWait(node);
 				break;
 			}
 			LockSupport.parkNanos(this, nanosTimeout);
@@ -314,12 +314,12 @@ public class Monitor implements Condition {
 		if (Thread.interrupted())
 			throw new InterruptedException();
 		final Node node = addConditionWaiter();
-		final int savedState = sync.fullyRelease(node);
+		final int savedState = fullyRelease(node);
 		boolean timedout = false;
 		int interruptMode = 0;
-		while (!sync.isOnSyncQueue(node)) {
+		while (!isOnSyncQueue(node)) {
 			if (System.currentTimeMillis() > abstime) {
-				timedout = sync.transferAfterCancelledWait(node);
+				timedout = transferAfterCancelledWait(node);
 				break;
 			}
 			LockSupport.parkUntil(this, abstime);
@@ -357,13 +357,13 @@ public class Monitor implements Condition {
 		if (Thread.interrupted())
 			throw new InterruptedException();
 		final Node node = addConditionWaiter();
-		final int savedState = sync.fullyRelease(node);
+		final int savedState = fullyRelease(node);
 		long lastTime = System.nanoTime();
 		boolean timedout = false;
 		int interruptMode = 0;
-		while (!sync.isOnSyncQueue(node)) {
+		while (!isOnSyncQueue(node)) {
 			if (nanosTimeout <= 0L) {
-				timedout = sync.transferAfterCancelledWait(node);
+				timedout = transferAfterCancelledWait(node);
 				break;
 			}
 			LockSupport.parkNanos(this, nanosTimeout);
@@ -385,16 +385,6 @@ public class Monitor implements Condition {
 	// support for instrumentation
 
 	/**
-	 * Returns true if this condition was created by the given synchronization
-	 * object.
-	 *
-	 * @return {@code true} if owned
-	 */
-	final boolean isOwnedBy(final AbstractQueuedLock sync) {
-		return sync == this.sync;
-	}
-
-	/**
 	 * Queries whether any threads are waiting on this condition. Implements
 	 * {@link AbstractQueuedLock#hasWaiters}.
 	 *
@@ -403,10 +393,10 @@ public class Monitor implements Condition {
 	 *             if {@link #isHeldExclusively} returns {@code false}
 	 */
 	protected boolean hasWaiters() {
-		if (!sync.isHeldExclusively())
+		if (!sync.isHeldByCurrentThread())
 			throw new IllegalMonitorStateException();
 		for (Node w = firstWaiter; w != null; w = w.nextWaiter)
-			if (w.waitStatus.get() == Node.CONDITION)
+			if (w.getWaitStatus() == Node.CONDITION)
 				return true;
 		return false;
 	}
@@ -420,33 +410,169 @@ public class Monitor implements Condition {
 	 *             if {@link #isHeldExclusively} returns {@code false}
 	 */
 	protected int getWaitQueueLength() {
-		if (!sync.isHeldExclusively())
+		if (!sync.isHeldByCurrentThread())
 			throw new IllegalMonitorStateException();
 		int n = 0;
 		for (Node w = firstWaiter; w != null; w = w.nextWaiter)
-			if (w.waitStatus.get() == Node.CONDITION)
+			if (w.getWaitStatus() == Node.CONDITION)
 				++n;
 		return n;
 	}
 
 	/**
 	 * Returns a collection containing those threads that may be waiting on this
-	 * Condition. Implements
-	 * {@link AbstractQueuedLock#getWaitingThreads}.
+	 * Condition. Implements {@link AbstractQueuedLock#getWaitingThreads}.
 	 *
 	 * @return the collection of threads
 	 * @throws IllegalMonitorStateException
 	 *             if {@link #isHeldExclusively} returns {@code false}
 	 */
 	protected Collection<Thread> getWaitingThreads(final List<Thread> list) {
-		if (!sync.isHeldExclusively())
+		if (!sync.isHeldByCurrentThread())
 			throw new IllegalMonitorStateException();
 		for (Node w = firstWaiter; w != null; w = w.nextWaiter)
-			if (w.waitStatus.get() == Node.CONDITION) {
-				final Thread t = w.thread;
+			if (w.getWaitStatus() == Node.CONDITION) {
+				final Thread t = w.getThread();
 				if (t != null)
 					list.add(t);
 			}
 		return list;
+	}
+
+	// Internal support methods for Conditions
+
+	/**
+	 * Returns true if a node, always one that was initially placed on a
+	 * condition queue, is now waiting to reacquire on sync queue.
+	 *
+	 * @param node
+	 *            the node
+	 * @return true if is reacquiring
+	 */
+	public boolean isOnSyncQueue(final Node node) {
+		if (node.getWaitStatus() == Node.CONDITION || node.getPrev() == null)
+			return false;
+		if (node.getNextWaiter() != null) // If has successor, it must be on
+											// queue
+			return true;
+		/*
+		 * node.prev can be non-null, but not yet on queue because the CAS to
+		 * place it on queue can fail. So we have to traverse from tail to make
+		 * sure it actually made it. It will always be near the tail in calls to
+		 * this method, and unless the CAS failed (which is unlikely), it will
+		 * be there, so we hardly ever traverse much.
+		 */
+		return findNodeFromTail(node);
+	}
+
+	/**
+	 * Returns true if node is on sync queue by searching backwards from tail.
+	 * Called only when needed by isOnSyncQueue.
+	 *
+	 * @return true if present
+	 */
+	private boolean findNodeFromTail(final Node node) {
+		Node t = sync.tail.get();
+		for (;;) {
+			if (t == node)
+				return true;
+			if (t == null)
+				return false;
+			t = t.getPrev();
+		}
+	}
+
+	/**
+	 * Transfers a node from a condition queue onto sync queue. Returns true if
+	 * successful.
+	 *
+	 * @param node
+	 *            the node
+	 * @return true if successfully transferred (else the node was cancelled
+	 *         before signal).
+	 */
+	public boolean transferForSignal(final Node node) {
+		/*
+		 * If cannot change waitStatus, the node has been cancelled.
+		 */
+		if (!node.compareAndSetWaitStatus(Node.CONDITION, 0))
+			return false;
+
+		/*
+		 * Splice onto queue and try to set waitStatus of predecessor to
+		 * indicate that thread is (probably) waiting. If cancelled or attempt
+		 * to set waitStatus fails, wake up to resync (in which case the
+		 * waitStatus can be transiently and harmlessly wrong).
+		 */
+		final Node p = sync.enq(node);
+		final int ws = p.getWaitStatus();
+		if (ws > 0 || !p.compareAndSetWaitStatus(ws, Node.SIGNAL))
+			LockSupport.unpark(node.getThread());
+		return true;
+	}
+
+	/**
+	 * Transfers node, if necessary, to sync queue after a cancelled wait.
+	 * Returns true if thread was cancelled before being signalled.
+	 *
+	 * @param current
+	 *            the waiting thread
+	 * @param node
+	 *            its node
+	 * @return true if cancelled before the node was signalled.
+	 */
+	public boolean transferAfterCancelledWait(final Node node) {
+		if (node.compareAndSetWaitStatus(Node.CONDITION, 0)) {
+			sync.enq(node);
+			return true;
+		}
+		/*
+		 * If we lost out to a signal(), then we can't proceed until it finishes
+		 * its enq(). Cancelling during an incomplete transfer is both rare and
+		 * transient, so just spin.
+		 */
+		while (!isOnSyncQueue(node))
+			Thread.yield();
+		return false;
+	}
+
+	/**
+	 * Invokes release with current state value; returns saved state. Cancels
+	 * node and throws exception on failure.
+	 *
+	 * @param node
+	 *            the condition node for this wait
+	 * @return previous sync state
+	 */
+	public int fullyRelease(final Node node) {
+		try {
+			final int savedState = sync.getLocks();
+			if (sync.release(savedState))
+				return savedState;
+		} catch (final RuntimeException ex) {
+			node.setWaitStatus(Node.CANCELLED);
+			throw ex;
+		}
+		// reach here if release fails
+		node.setWaitStatus(Node.CANCELLED);
+		throw new IllegalMonitorStateException();
+	}
+
+	// Instrumentation methods for conditions
+
+	/**
+	 * Queries whether the given ConditionObject uses this synchronizer as its
+	 * lock.
+	 *
+	 * @param condition
+	 *            the condition
+	 * @return <tt>true</tt> if owned
+	 * @throws NullPointerException
+	 *             if the condition is null
+	 */
+	public boolean owns(final AbstractLock sync) {
+		if (sync == null)
+			throw new NullPointerException();
+		return sync == this.sync;
 	}
 }

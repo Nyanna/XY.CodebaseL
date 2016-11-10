@@ -81,20 +81,13 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class Node {
 	/** waitStatus value to indicate thread has cancelled */
-	static final int CANCELLED = 1;
+	public static final int CANCELLED = 1;
 	/** waitStatus value to indicate successor's thread needs unparking */
-	static final int SIGNAL = -1;
+	public static final int SIGNAL = -1;
 	/** waitStatus value to indicate thread is waiting on condition */
-	static final int CONDITION = -2;
-	/**
-	 * waitStatus value to indicate the next acquireShared should
-	 * unconditionally propagate
-	 */
-	static final int PROPAGATE = -3;
-	/** Marker to indicate a node is waiting in shared mode */
-	static final Node SHARED = new Node();
+	public static final int CONDITION = -2;
 	/** Marker to indicate a node is waiting in exclusive mode */
-	static final Node EXCLUSIVE = null;
+	public static final Node EXCLUSIVE = null;
 
 	/**
 	 * Status field, taking on only the values: SIGNAL: The successor of this
@@ -119,7 +112,7 @@ public final class Node {
 	 * The field is initialized to 0 for normal sync nodes, and CONDITION for
 	 * condition nodes. It is modified only using CAS.
 	 */
-	final AtomicInteger waitStatus = new AtomicInteger();
+	private final AtomicInteger waitStatus = new AtomicInteger();
 
 	/**
 	 * Link to predecessor node that current node/thread relies on for checking
@@ -130,7 +123,7 @@ public final class Node {
 	 * result of successful acquire. A cancelled thread never succeeds in
 	 * acquiring, and a thread only cancels itself, not any other node.
 	 */
-	volatile Node prev;
+	private volatile Node prev;
 
 	/**
 	 * Link to the successor node that the current node/thread unparks upon
@@ -142,13 +135,13 @@ public final class Node {
 	 * queue. However, if a next field appears to be null, we can scan prev's
 	 * from the tail to double-check.
 	 */
-	final AtomicReference<Node> next = new AtomicReference<Node>();
+	private final AtomicReference<Node> next = new AtomicReference<Node>();
 
 	/**
 	 * The thread that enqueued this node. Initialized on construction and
 	 * nulled out after use.
 	 */
-	volatile Thread thread;
+	private volatile Thread thread;
 
 	/**
 	 * Link to next node waiting on condition, or the special value SHARED.
@@ -158,13 +151,61 @@ public final class Node {
 	 * re-acquire. And because conditions can only be exclusive, we save a field
 	 * by using special value to indicate shared mode.
 	 */
-	Node nextWaiter;
+	public Node nextWaiter;
+
+	public Node(final Thread thread, final int waitStatus) {
+		this.waitStatus.set(waitStatus);
+		this.thread = thread;
+	}
+
+	public void reset(final Thread thread, final int waitStatus) {
+		this.waitStatus.set(waitStatus);
+		this.thread = thread;
+		next.set(null);
+		prev = null;
+	}
+
+	public void setNextWaiter(final Node next) {
+		this.next.set(next);
+	}
+
+	public Node getNextWaiter() {
+		return next.get();
+	}
+
+	public boolean compareAndSetNext(final Node exspected, final Node update) {
+		return next.compareAndSet(exspected, update);
+	}
+
+	public int getWaitStatus() {
+		return waitStatus.get();
+	}
+
+	public void setWaitStatus(final int status) {
+		waitStatus.set(status);
+	}
 
 	/**
-	 * Returns true if node is waiting in shared mode
+	 * CAS waitStatus field of a node.
 	 */
-	final boolean isShared() {
-		return nextWaiter == SHARED;
+	public boolean compareAndSetWaitStatus(final int expect, final int update) {
+		return waitStatus.compareAndSet(expect, update);
+	}
+
+	public Node getPrev() {
+		return prev;
+	}
+
+	public void setPrev(final Node prev) {
+		this.prev = prev;
+	}
+
+	public Thread getThread() {
+		return thread;
+	}
+
+	public void setThread(final Thread thread) {
+		this.thread = thread;
 	}
 
 	/**
@@ -173,24 +214,12 @@ public final class Node {
 	 *
 	 * @return the predecessor of this node
 	 */
-	final Node predecessor() throws NullPointerException {
-		final Node p = prev;
+	public Node predecessor() throws NullPointerException {
+		final Node p = getPrev();
 		if (p == null)
 			throw new NullPointerException();
 		else
 			return p;
 	}
 
-	Node() { // Used to establish initial head or SHARED marker
-	}
-
-	Node(final Thread thread, final Node mode) { // Used by addWaiter
-		nextWaiter = mode;
-		this.thread = thread;
-	}
-
-	Node(final Thread thread, final int waitStatus) { // Used by Condition
-		this.waitStatus.set(waitStatus);
-		this.thread = thread;
-	}
 }
