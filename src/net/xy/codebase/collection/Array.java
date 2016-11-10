@@ -57,7 +57,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	public Array(final Class<?> clazz, final int capacity) {
 		@SuppressWarnings("unchecked")
 		final E[] arr = (E[]) java.lang.reflect.Array.newInstance(clazz, capacity);
-		elements = arr;
+		setElementsRaw(arr);
 	}
 
 	/**
@@ -67,8 +67,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @param copy
 	 */
 	public Array(final Array<E> copy) {
-		this(copy.elements.getClass().getComponentType(), copy.size());
-		addAll(copy);
+		this(copy.shrinkedCopy());
 	}
 
 	/**
@@ -77,8 +76,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @param elementData
 	 */
 	public Array(final E... elementData) {
-		this.elements = elementData;
-		maxIdx = elementData.length - 1;
+		setElements(elementData);
 	}
 
 	/**
@@ -106,17 +104,22 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	}
 
 	@SuppressWarnings("unchecked")
+	public Class<E> getComponentClass() {
+		return (Class<E>) getElements().getClass().getComponentType();
+	}
+
+	@SuppressWarnings("unchecked")
 	@Override
 	public Array<E> cloneDeep() {
-		final Array<E> res = new Array<E>(elements.getClass().getComponentType(), size());
-		for (int i = 0; i < size(); i++) {
-			final E elem = get(i);
+		final Array<E> res = new Array<E>(shrinkedCopy());
+		res.setMaxIdx(getMaxIdx());
+		for (int i = 0; i < res.size(); i++) {
+			final E elem = res.get(i);
 			if (elem instanceof Cloneable)
 				res.set(i, ((Cloneable<E>) elem).cloneDeep());
 			else
 				res.set(i, elem);
 		}
-		res.maxIdx = maxIdx;
 		return res;
 	}
 
@@ -127,9 +130,9 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return
 	 */
 	public int add(final E e) {
-		elements[maxIdx + 1] = e;
-		++maxIdx;
-		return maxIdx;
+		final int tidx = getMaxIdx() + 1;
+		set(tidx, e);
+		return tidx;
 	}
 
 	/**
@@ -139,7 +142,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 */
 	public void ensureAdd(final int amount) {
 		final int minCapacity = size() + amount;
-		if (minCapacity - elements.length > 0)
+		if (minCapacity - capacity() > 0)
 			grow(minCapacity, true);
 	}
 
@@ -160,7 +163,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 */
 	public void increase(final int amount) {
 		final int minCapacity = size() + amount;
-		if (minCapacity - elements.length > 0)
+		if (minCapacity - capacity() > 0)
 			grow(minCapacity, false);
 	}
 
@@ -181,22 +184,22 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @param minCapacity
 	 */
 	public void ensureCapacity(final int minCapacity) {
-		if (minCapacity - elements.length > 0)
+		if (minCapacity - capacity() > 0)
 			grow(minCapacity, true);
 	}
 
 	protected void grow(final int minCapacity, final boolean minGrowth) {
 		// overflow-conscious code
-		final int oldCapacity = elements.length;
+		final int oldCapacity = capacity();
 		int newCapacity;
 		if (minGrowth)
-			newCapacity = oldCapacity + ((oldCapacity / 2 - 1) / MIN_GROWTH + 1) * MIN_GROWTH;
+			newCapacity = getNextSize(oldCapacity);
 		else
 			newCapacity = minCapacity;
 		if (newCapacity - minCapacity < 0)
 			newCapacity = minCapacity;
 		// minCapacity is usually close to size, so this is a win:
-		elements = Arrays.copyOf(elements, newCapacity);
+		resize(newCapacity);
 	}
 
 	/**
@@ -205,14 +208,51 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return
 	 */
 	public int size() {
-		return maxIdx + 1;
+		return getMaxIdx() + 1;
+	}
+
+	protected int getMaxIdx() {
+		return maxIdx;
+	}
+
+	protected void setMaxIdx(final int idx) {
+		maxIdx = idx;
+	}
+
+	protected void setItIdx(final int itIdx) {
+		this.itIdx = itIdx;
+	}
+
+	protected int getItIdx() {
+		return itIdx;
+	}
+
+	/**
+	 * @return backend byte array
+	 */
+	public E[] getElements() {
+		return elements;
+	}
+
+	/**
+	 * for container usage set element data
+	 *
+	 * @param elements
+	 */
+	public void setElements(final E[] elements) {
+		setElementsRaw(elements);
+		setMaxIdx(elements != null ? capacity() - 1 : -1);
+	}
+
+	protected E[] setElementsRaw(final E[] elements) {
+		return this.elements = elements;
 	}
 
 	/**
 	 * @return actual capacity of backend array
 	 */
 	public int capacity() {
-		return elements.length;
+		return getElements().length;
 	}
 
 	public boolean isEmpty() {
@@ -223,15 +263,15 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * resets the position counter to begin adding the first element again
 	 */
 	public void rewind() {
-		maxIdx = -1;
+		setMaxIdx(-1);
 	}
 
 	/**
 	 * nulls all field in the array
 	 */
 	public void clear() {
-		for (int i = 0; i < elements.length; i++)
-			elements[i] = null;
+		for (int i = 0; i < capacity(); i++)
+			set(i, null);
 		reset();
 	}
 
@@ -239,8 +279,8 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * nulls all fields up to the current maximum element
 	 */
 	public void clean() {
-		for (int i = 0; i <= maxIdx; i++)
-			elements[i] = null;
+		for (int i = 0; i <= getMaxIdx(); i++)
+			set(i, null);
 		reset();
 	}
 
@@ -256,11 +296,11 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * resets the iterator
 	 */
 	public void resetIt() {
-		itIdx = 0;
+		setItIdx(0);
 	}
 
 	public E get(final int index) {
-		return elements[index];
+		return getElements()[index];
 	}
 
 	/**
@@ -272,7 +312,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	@SuppressWarnings("unchecked")
 	public <T> T get(final Class<T> clazz) {
 		for (int i = 0; i < size(); i++) {
-			final E obj = getChecked(i);
+			final E obj = get(i);
 			if (clazz.isInstance(obj))
 				return (T) obj;
 		}
@@ -303,13 +343,13 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return element at index or null
 	 */
 	public E getChecked(final int index) {
-		return index < elements.length && index >= 0 ? elements[index] : null;
+		return index < capacity() && index >= 0 ? get(index) : null;
 	}
 
 	public void setChecked(final int index, final E value) {
-		if (index + 1 - elements.length > 0)
+		if (index + 1 - capacity() > 0)
 			grow(index + 1, false);
-		elements[index] = value;
+		set(index, value);
 	}
 
 	/**
@@ -318,21 +358,18 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return old value
 	 */
 	public E set(final int index, final E value) {
-		final E old = elements[index];
-		elements[index] = value;
-		if (maxIdx < index)
-			maxIdx = index;
+		final E old = get(index);
+		getElements()[index] = value;
+		if (getMaxIdx() < index)
+			setMaxIdx(index);
 		return old;
 	}
 
 	public void copy(final int index, final int index2) {
-		elements[index] = elements[index2];
-		if (maxIdx < index)
-			maxIdx = index;
+		set(index, get(index2));
+		if (getMaxIdx() < index)
+			setMaxIdx(index);
 	}
-
-	// public void insert (int index, T value)
-	// public int lastIndexOf (T value, boolean identity)
 
 	public void addAll(final Array<? extends E> array) {
 		if (array != null)
@@ -340,53 +377,62 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	}
 
 	public void addAll(final E... array) {
-		addAll(array, 0, array.length);
+		if (array != null)
+			addAll(array, 0, array.length);
 	}
 
-	public void addAll(final Array<? extends E> array, final int start, final int length) {
-		addAll(array.elements, start, length);
+	public void addAll(final Array<? extends E> array, final int start, final int count) {
+		final int addCount = Math.min(array.size() - start, count);
+		ensureAdd(addCount);
+
+		// works for inherited too
+		for (int i = 0; i < addCount; i++)
+			add(array.get(start + i));
 	}
 
 	public void addAll(final E[] array, final int start, final int count) {
-		ensureAdd(count);
-		System.arraycopy(array, start, elements, size(), count);
-		maxIdx += count;
+		final int addCount = Math.min(array.length - start, count);
+		ensureAdd(addCount);
+
+		// works for inherited too
+		for (int i = 0; i < addCount; i++)
+			add(array[start + i]);
 	}
 
 	public void swap(final int idx1, final int idx2) {
-		final E tmp = elements[idx1];
-		elements[idx1] = elements[idx2];
-		elements[idx2] = tmp;
+		final E tmp = get(idx1);
+		set(idx1, get(idx2));
+		set(idx2, tmp);
 	}
 
 	public boolean contains(final E value) {
-		int i = maxIdx;
+		int i = getMaxIdx();
 		while (i >= 0)
-			if (elements[i--] == value)
+			if (get(i--) == value)
 				return true;
 		return false;
 	}
 
 	public E containsEquals(final E value) {
-		int i = maxIdx;
+		int i = getMaxIdx();
 		while (i >= 0) {
 			E res;
-			if (value.equals(res = elements[i--]))
+			if (value.equals(res = get(i--)))
 				return res;
 		}
 		return null;
 	}
 
 	public int indexOf(final E value) {
-		for (int i = 0; i <= maxIdx; i++)
-			if (elements[i] == value)
+		for (int i = 0; i <= getMaxIdx(); i++)
+			if (get(i) == value)
 				return i;
 		return -1;
 	}
 
 	public int indexOfEquals(final E value) {
-		for (int i = 0; i <= maxIdx; i++)
-			if (value.equals(elements[i]))
+		for (int i = 0; i <= getMaxIdx(); i++)
+			if (value.equals(get(i)))
 				return i;
 		return -1;
 	}
@@ -398,11 +444,13 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return
 	 */
 	public E removeIndex(final int index) {
-		final E old = elements[index];
-		final E last = elements[maxIdx];
-		maxIdx--;
-		elements[index] = last;
-		elements[maxIdx + 1] = null;
+		final int tidx = getMaxIdx();
+
+		final E old = get(index);
+		final E last = get(tidx);
+		set(index, last);
+		setMaxIdx(tidx - 1);
+
 		return old;
 	}
 
@@ -413,12 +461,18 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return
 	 */
 	public E shift(final int index) {
-		final E value = elements[index];
+		final E value = get(index);
 
+		// works for inherited too
 		for (int i = index; i < size() - 1; i++)
-			elements[i] = elements[i + 1];
+			set(i, get(i + 1));
+		// works only for native arrays
+		// System.arraycopy(get Elements (), index, get Elements (), index + 1,
+		// size() - 1 - index);
 
-		elements[maxIdx--] = null;
+		final int tidx = getMaxIdx();
+		set(tidx, null);
+		setMaxIdx(tidx - 1);
 		return value;
 	}
 
@@ -429,8 +483,8 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @param elem
 	 */
 	public void insertAt(final int index, final E elem) {
-		final E value = elements[index];
-		elements[index] = elem;
+		final E value = get(index);
+		set(index, elem);
 		addChecked(value);
 	}
 
@@ -461,48 +515,35 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		return null;
 	}
 
-	public E cutIndex(final int index) {
-		final E value = elements[index];
-		System.arraycopy(elements, index + 1, elements, index, size() - index);
-		elements[maxIdx] = null;
-		maxIdx--;
-		return value;
-	}
-
 	public E pop() {
-		final E item = elements[maxIdx];
-		elements[maxIdx] = null;
-		--maxIdx;
+		final int tidx = getMaxIdx();
+		final E item = get(tidx);
+		set(tidx, null);
+		setMaxIdx(tidx - 1);
 		return item;
 	}
 
 	public E peek() {
-		return elements[maxIdx];
+		return get(getMaxIdx());
 	}
 
 	public E[] shrink() {
-		if (elements.length != size())
+		if (capacity() != size())
 			return resize(size());
-		return elements;
+		return getElements();
 	}
 
 	public E[] shrinkedCopy() {
-		@SuppressWarnings("unchecked")
-		final E[] newItems = (E[]) java.lang.reflect.Array.newInstance(elements.getClass().getComponentType(), size());
-		System.arraycopy(elements, 0, newItems, 0, Math.min(size(), newItems.length));
-		return newItems;
+		return Arrays.copyOf(getElements(), size());
 	}
 
 	public E[] resize(final int newSize) {
-		@SuppressWarnings("unchecked")
-		final E[] newItems = (E[]) java.lang.reflect.Array.newInstance(elements.getClass().getComponentType(), newSize);
-		System.arraycopy(elements, 0, newItems, 0, Math.min(size(), newItems.length));
-		return this.elements = newItems;
+		return setElementsRaw(Arrays.copyOf(getElements(), newSize));
 	}
 
 	@Override
 	public Iterator<E> iterator() {
-		if (itIdx != 0) {
+		if (getItIdx() != 0) {
 			resetIt();
 			LOG.error("Iterator not reseted or used twice", new Exception());
 		}
@@ -511,7 +552,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	@Override
 	public boolean hasNext() {
-		final boolean res = itIdx <= maxIdx;
+		final boolean res = getItIdx() <= getMaxIdx();
 		// autoreset after last call
 		if (!res)
 			resetIt();
@@ -520,30 +561,15 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	@Override
 	public E next() {
-		final E res = elements[itIdx++];
+		final int tidx = getItIdx();
+		final E res = get(tidx);
+		setItIdx(tidx + 1);
 		return res;
 	}
 
 	@Override
 	public void remove() {
-		removeIndex(itIdx);
-	}
-
-	/**
-	 * @return backend byte array
-	 */
-	public E[] getElements() {
-		return elements;
-	}
-
-	/**
-	 * for container usage set element data
-	 *
-	 * @param elements
-	 */
-	public void setElements(final E[] elements) {
-		this.elements = elements;
-		maxIdx = elements != null ? elements.length - 1 : -1;
+		removeIndex(getItIdx());
 	}
 
 	@Override
@@ -551,16 +577,18 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		final int prime = 31;
 		int result = 1;
 
-		if (elements == null)
+		if (isEmpty())
 			result = prime * result + 0;
 		else
-			for (int i = 0; i <= maxIdx; i++)
-				if (elements[i] == null)
+			for (int i = 0; i <= getMaxIdx(); i++) {
+				final E elem = get(i);
+				if (elem == null)
 					result = prime * result + 0;
 				else
-					result = prime * result + elements[i].hashCode();
+					result = prime * result + elem.hashCode();
+			}
 
-		result = prime * result + maxIdx;
+		result = prime * result + getMaxIdx();
 		return result;
 	}
 
@@ -571,14 +599,12 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		if (!(object instanceof Array))
 			return false;
 		final Array<?> array = (Array<?>) object;
-		final int n = maxIdx;
-		if (n != array.maxIdx)
+		final int n = getMaxIdx();
+		if (n != array.getMaxIdx())
 			return false;
-		final Object[] items1 = this.elements;
-		final Object[] items2 = array.elements;
 		for (int i = 0; i <= n; i++) {
-			final Object o1 = items1[i];
-			final Object o2 = items2[i];
+			final Object o1 = this.get(i);
+			final Object o2 = array.get(i);
 			if (!(o1 == null ? o2 == null : o1.equals(o2)))
 				return false;
 		}
@@ -587,7 +613,22 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	@Override
 	public String toString() {
-		return String.format("Array s=%s,i=%s,%s", maxIdx + 1, itIdx, Arrays.deepToString(elements));
+		return String.format("Array s=%s,i=%s,%s", size(), getItIdx(), Arrays.deepToString(getElements()));
+	}
+
+	public String toStringShallow() {
+		return toString(this, new StringBuilder(size() * 5));
+	}
+
+	public static String toString(final Array<?> array, final StringBuilder sb) {
+		if (array.isEmpty())
+			return "[]";
+		sb.append('[');
+		for (int i = 0; i < array.size(); i++)
+			sb.append(array.get(i)).append(", ");
+		sb.setLength(sb.length() - 2);
+		sb.append(']');
+		return sb.toString();
 	}
 
 	/**
@@ -600,12 +641,12 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		if (size() > 0) {
 			final StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < size(); i++)
-				sb.append(String.valueOf(elements[i])).append(sep);
+				sb.append(String.valueOf(get(i))).append(sep);
 			if (sb.length() > 0)
 				sb.setLength(sb.length() - 1);
-			return String.format("Array s=%s,i=%s:\n%s", maxIdx + 1, itIdx, sb.toString());
+			return String.format("Array s=%s,i=%s:\n%s", getMaxIdx() + 1, getItIdx(), sb.toString());
 		} else
-			return String.format("Array s=%s,i=%s", maxIdx + 1, itIdx);
+			return String.format("Array s=%s,i=%s", getMaxIdx() + 1, getItIdx());
 	}
 
 	/**
@@ -668,16 +709,29 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		return array;
 	}
 
-	@Override
-	public void encode(final Encoder enc) {
-		enc.writeInt(maxIdx);
-		enc.writeArray(elements);
+	/**
+	 * array growth formula
+	 *
+	 * @param oldCapacity
+	 * @return
+	 */
+	public static int getNextSize(final int oldCapacity) {
+		return oldCapacity + ((oldCapacity / 2 - 1) / MIN_GROWTH + 1) * MIN_GROWTH;
 	}
 
 	@Override
+	public void encode(final Encoder enc) {
+		enc.writeInt(size());
+		for (int i = 0; i < size(); i++)
+			enc.write(get(i));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
 	public Array<E> decode(final Decoder dec) {
-		maxIdx = dec.readInt();
-		elements = dec.readArray(null);
+		final int size = dec.readInt();
+		for (int i = 0; i < size; i++)
+			add((E) dec.read(Object.class));
 		return this;
 	}
 }

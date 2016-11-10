@@ -24,8 +24,28 @@ public class SortedArrayQueue<E> extends ArrayQueue<E> {
 		this.comparator = comparator;
 	}
 
+	public SortedArrayQueue(final Array<E> array, final Comparator<E> comparator) {
+		super(array);
+		this.comparator = comparator;
+	}
+
 	public synchronized void sort() {
-		sorter.doSort(qadap, comparator, 0, count);
+		sorter.doSort(qadap, comparator, 0, size());
+	}
+
+	@Override
+	public synchronized E take() {
+		return super.take();
+	}
+
+	@Override
+	public synchronized boolean add(final E elem) {
+		return super.add(elem);
+	}
+
+	@Override
+	public synchronized void clear() {
+		super.clear();
 	}
 
 	public class QueueArrayAdapter implements IArray<E> {
@@ -35,7 +55,7 @@ public class SortedArrayQueue<E> extends ArrayQueue<E> {
 		}
 
 		protected int getRi(final int idx) {
-			final int res = (getIdx + idx) % elements.capacity();
+			final int res = (int) ((getIdx.get() + idx) % elements.capacity());
 			return res;
 		}
 

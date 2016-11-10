@@ -31,6 +31,10 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 		super(clazz, maxCount);
 	}
 
+	public ArrayQueueSet(final Array<E> array) {
+		super(array);
+	}
+
 	@Override
 	public synchronized boolean add(final E elem) {
 		if (set.put(elem, elem) == null) {
@@ -54,6 +58,12 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 				clear();
 			}
 		return elem;
+	}
+
+	@Override
+	public synchronized void clear() {
+		set.clear();
+		super.clear();
 	}
 
 	@Override
