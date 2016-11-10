@@ -2,6 +2,7 @@ package net.xy.codebase.concurrent;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+//TODO unittest
 public class ThreadMonitor {
 	/**
 	 * amount of threads in object active

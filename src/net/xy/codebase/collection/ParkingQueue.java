@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.concurrent.FairLock;
 
+// TODO make allocation less
 public class ParkingQueue<E> {
 	private static final Logger LOG = LoggerFactory.getLogger(ParkingQueue.class);
 
@@ -23,7 +24,11 @@ public class ParkingQueue<E> {
 	 * @param maxCount
 	 */
 	public ParkingQueue(final Class<E> clazz, final int maxCount) {
-		this(new ArrayQueueUnsynced<E>(clazz, maxCount));
+		this(new ArrayQueue<E>(clazz, maxCount));
+	}
+
+	public ParkingQueue(final Array<E> array) {
+		this(new ArrayQueue<E>(array));
 	}
 
 	/**
