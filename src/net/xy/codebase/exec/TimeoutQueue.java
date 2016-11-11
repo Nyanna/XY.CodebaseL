@@ -110,7 +110,7 @@ public class TimeoutQueue {
 	 * @author Xyan
 	 *
 	 */
-	public static class QueueTimer extends Thread {
+	public static class QueueTimer extends ThreadExtended {
 		/**
 		 * counter for threadname numbering
 		 */
@@ -155,9 +155,8 @@ public class TimeoutQueue {
 		 * @param name
 		 */
 		public QueueTimer(final TimeoutQueue queue, final String name) {
+			super(name + " " + TimeoutQueue.class.getSimpleName() + "-" + ++COUNTER, true);
 			setQueue(queue);
-			setName(name + " " + TimeoutQueue.class.getSimpleName() + "-" + ++COUNTER);
-			setDaemon(true);
 		}
 
 		/**

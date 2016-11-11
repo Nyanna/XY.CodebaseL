@@ -58,7 +58,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	public ArrayQueue(final Array<E> array) {
 		elements = array;
-		this.maxCount = array.size();
+		this.maxCount = array.capacity();
 	}
 
 	/**
@@ -113,14 +113,14 @@ public class ArrayQueue<E> implements Queue<E> {
 		do {
 			putIdx = this.putIdx.get();
 			getIdx = this.getIdx.get();
-			if (putIdx - getIdx > maxCount)
+			if (putIdx - getIdx >= maxCount)
 				return false;
 			if (putIdx - getIdx == elements.capacity())
 				growth();
 
 			tIdx = putIdx % elements.capacity();
 			nIdx = putIdx + 1;
-		} while (!this.putIdx.compareAndSet(tIdx, nIdx));
+		} while (!this.putIdx.compareAndSet(putIdx, nIdx));
 
 		elements.set((int) tIdx, elem);
 		return true;
@@ -138,12 +138,13 @@ public class ArrayQueue<E> implements Queue<E> {
 
 				tIdx = getIdx % elements.capacity();
 				nIdx = getIdx + 1;
+				// non atomic, at least one thread will get reference
 				res = elements.set((int) tIdx, null);
 				if (res != null) // when not set already yield
 					break;
 				Thread.yield();
 			}
-		while (!this.getIdx.compareAndSet(tIdx, nIdx));
+		while (!this.getIdx.compareAndSet(getIdx, nIdx));
 		return res;
 	}
 
@@ -192,7 +193,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public int size() {
-		return (int) (getIdx.get() - putIdx.get());
+		return (int) (putIdx.get() - getIdx.get());
 	}
 
 	/**

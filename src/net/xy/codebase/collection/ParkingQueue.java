@@ -1,21 +1,25 @@
 package net.xy.codebase.collection;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xy.codebase.concurrent.FairLock;
+import net.xy.codebase.concurrent.CASMonitor;
 
-// TODO make allocation less
+/**
+ * implementation is not synchronized by itself!
+ *
+ * @author Xyan
+ *
+ * @param <E>
+ */
 public class ParkingQueue<E> {
 	private static final Logger LOG = LoggerFactory.getLogger(ParkingQueue.class);
 
 	private final Queue<E> aq;
-	private final FairLock lock;
-	private final Condition added;
-	private final Condition empty;
+	private final CASMonitor added = new CASMonitor();
+	private final CASMonitor empty = new CASMonitor();
 
 	/**
 	 * default with default ArrayQueue
@@ -38,9 +42,6 @@ public class ParkingQueue<E> {
 	 */
 	public ParkingQueue(final Queue<E> aq) {
 		this.aq = aq;
-		lock = new FairLock();
-		added = lock.newCondition();
-		empty = lock.newCondition();
 	}
 
 	/**
@@ -50,15 +51,9 @@ public class ParkingQueue<E> {
 	 * @return true on success
 	 */
 	public boolean add(final E elem) {
-		boolean res = false;
-		try {
-			lock.lock();
-			res = aq.add(elem);
-			if (res)
-				added.signal();
-		} finally {
-			lock.unlock();
-		}
+		final boolean res = aq.add(elem);
+		if (res)
+			added.call();
 		return res;
 	}
 
@@ -78,23 +73,29 @@ public class ParkingQueue<E> {
 	 * @return
 	 */
 	public E take(final long waitMillis) {
+		long wait = waitMillis;
 		try {
-			lock.lockInterruptibly();
-			E elem = aq.take();
-			if (elem == null) {
-				empty.signalAll();
-				if (waitMillis < 0)
-					added.await();
-				else
-					added.await(waitMillis, TimeUnit.MILLISECONDS);
+			E elem;
+			for (;;) {
+				final long state = added.getState();
 				elem = aq.take();
+
+				if (elem == null) {
+					empty.callAll();
+
+					final long waited = added.await(state, TimeUnit.MILLISECONDS.toNanos(wait));
+					if (waitMillis < 0)
+						continue;
+					wait -= waited;
+					if (wait > 0)
+						continue;
+				}
+				break;
 			}
 			return elem;
 		} catch (final InterruptedException e) {
 			if (LOG.isTraceEnabled())
 				LOG.trace(e.getMessage(), e);
-		} finally {
-			lock.tryUnlock();
 		}
 		return null;
 	}
@@ -104,12 +105,9 @@ public class ParkingQueue<E> {
 	 */
 	public void waitEmpty() {
 		try {
-			lock.lock();
-			empty.await();
+			empty.await(empty.getState());
 		} catch (final InterruptedException e) {
 			LOG.trace(e.getMessage(), e);
-		} finally {
-			lock.unlock();
 		}
 	}
 

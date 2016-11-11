@@ -1,10 +1,11 @@
 package net.xy.codebase.test;
 
+import net.xy.codebase.exec.ThreadUtils;
 import net.xy.codebase.mem.GCManagedPool;
 
 public class WRTest {
 
-	public static void main(final String[] args) throws InterruptedException {
+	public static void main(final String[] args) {
 		final GCManagedPool<WRObject> pool = new GCManagedPool<WRObject>() {
 
 			@Override
@@ -26,10 +27,10 @@ public class WRTest {
 				objs[i] = pool.obtain();
 
 			System.gc();
-			Thread.sleep(100);
+			ThreadUtils.sleep(100);
 			objs = null;
 			System.gc();
-			Thread.sleep(3000);
+			ThreadUtils.sleep(3000);
 		}
 	}
 }
