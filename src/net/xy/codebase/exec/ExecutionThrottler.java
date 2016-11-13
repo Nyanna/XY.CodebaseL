@@ -1,7 +1,7 @@
 package net.xy.codebase.exec;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ public class ExecutionThrottler {
 	/**
 	 * last update wish time or 0 in case of not running
 	 */
-	private final AtomicLong lastUpdate = new AtomicLong(0);
+	private final AtomicInteger lastUpdate = new AtomicInteger();
 	/**
 	 * target action to run
 	 */
@@ -55,15 +55,6 @@ public class ExecutionThrottler {
 	}
 
 	/**
-	 * for stopping or desabling throttler
-	 *
-	 * @param enabled
-	 */
-	public void setEnabled(final boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	/**
 	 * default
 	 *
 	 * @param runnable
@@ -83,12 +74,21 @@ public class ExecutionThrottler {
 	}
 
 	/**
+	 * for stopping or desabling throttler
+	 *
+	 * @param enabled
+	 */
+	public void setEnabled(final boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	/**
 	 * start the action or place an update wish
 	 */
 	public void run() {
 		while (enabled) {
-			long runs = lastUpdate.get();
-			if (runs != 0 && lastUpdate.compareAndSet(runs, ++runs)) {
+			final int runs = lastUpdate.get();
+			if (runs != 0 && lastUpdate.compareAndSet(runs, runs + 1)) {
 				if (LOG.isTraceEnabled())
 					LOG.trace("Request throttled run [" + interval + "][" + runnable + "]["
 							+ runnable.getClass().getSimpleName() + "]");
@@ -141,7 +141,7 @@ public class ExecutionThrottler {
 
 		@Override
 		public void run() {
-			final long wish = lastUpdate.get();
+			final int wish = lastUpdate.get();
 			final long now = System.nanoTime();
 			lastStart = now;
 			if (LOG.isTraceEnabled())

@@ -1,6 +1,6 @@
 package net.xy.codebase.exec;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +21,11 @@ public class ExecutionLimiter {
 	/**
 	 * amount of requested runs
 	 */
-	private final AtomicLong calls = new AtomicLong(0);
+	private final AtomicInteger calls = new AtomicInteger();
 	/**
 	 * amount of actually running tasks
 	 */
-	private final AtomicLong running = new AtomicLong(0);
+	private final AtomicInteger running = new AtomicInteger();
 	/**
 	 * target action to run
 	 */
@@ -66,19 +66,19 @@ public class ExecutionLimiter {
 	 * check to start new tasks
 	 */
 	private void checkDettach() {
-		while (true) {
-			long runs = running.get();
+		for (;;) {
+			final int runs = running.get();
 			if (runs >= amount && running.compareAndSet(runs, runs)) {
 				if (LOG.isTraceEnabled())
 					LOG.trace("concurrent runnings reached [" + runnable + "][" + runnable.getClass().getSimpleName()
 							+ "]");
 				return;
-			} else if (running.compareAndSet(runs, ++runs)) {
+			} else if (running.compareAndSet(runs, runs + 1)) {
 				// start runnable
 				if (LOG.isTraceEnabled())
 					LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
 				if (!runnable.schedule(capsule)) {
-					running.set(--runs);
+					running.set(runs - 1);
 					LOG.error("Error starting limiter, decrementing");
 				}
 				return;
@@ -110,11 +110,17 @@ public class ExecutionLimiter {
 
 		@Override
 		public void run() {
-			if (calls.getAndDecrement() > 0) {
-				runGuarded();
-				running.decrementAndGet();
-				if (calls.get() > 0)
-					checkDettach();
+			for (;;) {
+				final int cals = calls.get();
+				if (cals > 1) {
+					if (!calls.compareAndSet(cals, cals - 1))
+						continue;
+					runGuarded();
+					running.decrementAndGet();
+					if (cals > 1)
+						checkDettach();
+				}
+				break;
 			}
 		}
 

@@ -1,6 +1,5 @@
 package net.xy.codebase.collection;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 
@@ -21,11 +20,6 @@ public class SortedArrayQueue<E> extends ArrayQueue<E> {
 
 	public SortedArrayQueue(final Class<E> clazz, final int maxCount, final Comparator<E> comparator) {
 		super(clazz, maxCount);
-		this.comparator = comparator;
-	}
-
-	public SortedArrayQueue(final Array<E> array, final Comparator<E> comparator) {
-		super(array);
 		this.comparator = comparator;
 	}
 
@@ -51,11 +45,11 @@ public class SortedArrayQueue<E> extends ArrayQueue<E> {
 	public class QueueArrayAdapter implements IArray<E> {
 		@Override
 		public int length() {
-			return elements.capacity();
+			return elements.length();
 		}
 
 		protected int getRi(final int idx) {
-			final int res = (int) ((getIdx.get() + idx) % elements.capacity());
+			final int res = (getIndex.get() + idx) % elements.length();
 			return res;
 		}
 
@@ -71,7 +65,9 @@ public class SortedArrayQueue<E> extends ArrayQueue<E> {
 
 		@Override
 		public void copy(final int idx1, final int idx2) {
-			elements.copy(getRi(idx1), getRi(idx2));
+			final E tmp = elements.get(idx1);
+			elements.set(idx1, elements.get(idx2));
+			elements.set(idx2, tmp);
 		}
 
 		@Override
@@ -120,8 +116,8 @@ public class SortedArrayQueue<E> extends ArrayQueue<E> {
 			else
 				saq.add(rnd.nextInt(1000));
 
-		System.out.println(Arrays.toString(saq.elements.getElements()));
+		System.out.println(saq.elements);
 		saq.sort();
-		System.out.println(Arrays.toString(saq.elements.getElements()));
+		System.out.println(saq.elements);
 	}
 }

@@ -1,11 +1,9 @@
 package net.xy.codebase.collection;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import net.xy.codebase.concurrent.ThreadMonitor;
+import net.xy.codebase.exec.ThreadUtils;
 
 /**
  * an unboundet self expanding queue up to an maximum. full synchronized when
@@ -15,30 +13,16 @@ import net.xy.codebase.concurrent.ThreadMonitor;
  *
  * @param <E>
  */
-// TODO unittest
 public class ArrayQueue<E> implements Queue<E> {
-	private static final Logger LOG = LoggerFactory.getLogger(ArrayQueue.class);
+	// private static final Logger LOG =
+	// LoggerFactory.getLogger(ArrayQueue.class);
+	protected static final int SIZE_OK = 0, SIZE_MAXED = 1, RESIZED = 2;
 	/**
 	 * backing array container
 	 */
-	protected Array<E> elements;
-	/**
-	 * idx to put next element in
-	 */
-	protected AtomicLong putIdx = new AtomicLong();
-	/**
-	 * actues index to get an element from
-	 */
-	protected AtomicLong getIdx = new AtomicLong();
-	/**
-	 * monitor needed for resize
-	 */
-	protected ThreadMonitor mon = new ThreadMonitor();
-	protected ThreadMonitor gro = new ThreadMonitor();
-	/**
-	 * maximum allowed element count
-	 */
-	protected final int maxCount;
+	protected AtomicReferenceArray<E> elements;
+	protected final AtomicInteger putIndex = new AtomicInteger();
+	protected final AtomicInteger getIndex = new AtomicInteger();
 
 	/**
 	 * default
@@ -46,19 +30,9 @@ public class ArrayQueue<E> implements Queue<E> {
 	 * @param clazz
 	 * @param maxCount
 	 */
+	// @SuppressWarnings("unchecked")
 	public ArrayQueue(final Class<E> clazz, final int maxCount) {
-		elements = new Array<E>(clazz);
-		this.maxCount = maxCount;
-	}
-
-	/**
-	 * already at may size
-	 *
-	 * @param array
-	 */
-	public ArrayQueue(final Array<E> array) {
-		elements = array;
-		this.maxCount = array.capacity();
+		elements = new AtomicReferenceArray<E>(maxCount);
 	}
 
 	/**
@@ -69,15 +43,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public boolean add(final E elem) {
-		if (elem == null)
-			throw new IllegalArgumentException("Element can't be null");
-
-		try {
-			mon.enter();
-			return addInner(elem);
-		} finally {
-			mon.leave();
-		}
+		return addInner(elem);
 	}
 
 	/**
@@ -87,93 +53,52 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public E take() {
-		try {
-			mon.enter();
-			return takeInner();
-		} finally {
-			mon.leave();
-		}
-
+		return takeInner();
 	}
 
-	private void growth() {
-		// increase
-		try {
-			gro.enter();
-			synchronized (elements) {
-				growthInner();
-			}
-		} finally {
-			gro.leave();
-		}
-	}
-
-	private boolean addInner(final E elem) {
-		long tIdx, nIdx, putIdx, getIdx;
-		do {
-			putIdx = this.putIdx.get();
-			getIdx = this.getIdx.get();
-			if (putIdx - getIdx >= maxCount)
+	protected boolean addInner(final E elem) {
+		int putIdx, loop = 0;
+		for (;;) {
+			putIdx = putIndex.get();
+			final int nIdx = (putIdx + 1) % elements.length();
+			final int checkLimit = checkLimit(nIdx);
+			if (checkLimit == SIZE_MAXED)
 				return false;
-			if (putIdx - getIdx == elements.capacity())
-				growth();
 
-			tIdx = putIdx % elements.capacity();
-			nIdx = putIdx + 1;
-		} while (!this.putIdx.compareAndSet(putIdx, nIdx));
+			if (checkLimit == SIZE_OK && putIndex.compareAndSet(putIdx, nIdx))
+				break;
+			loop = ThreadUtils.yieldCAS(loop);
+		}
 
-		elements.set((int) tIdx, elem);
+		while (!elements.compareAndSet(putIdx, null, elem))
+			ThreadUtils.yield();
 		return true;
 	}
 
-	private E takeInner() {
-		E res;
-		long tIdx, nIdx, putIdx, getIdx;
-		do
-			for (;;) {
-				putIdx = this.putIdx.get();
-				getIdx = this.getIdx.get();
-				if (putIdx - getIdx <= 0)
-					return null;
-
-				tIdx = getIdx % elements.capacity();
-				nIdx = getIdx + 1;
-				// non atomic, at least one thread will get reference
-				res = elements.set((int) tIdx, null);
-				if (res != null) // when not set already yield
-					break;
-				Thread.yield();
-			}
-		while (!this.getIdx.compareAndSet(getIdx, nIdx));
-		return res;
+	protected int checkLimit(final int nIdx) {
+		if (nIdx == getIndex.get())
+			return SIZE_MAXED;
+		return SIZE_OK;
 	}
 
-	private void growthInner() {
-		try {
-			mon.wait(gro.count());
+	protected E takeInner() {
+		int getIdx, loop = 0;
+		for (;;) {
+			getIdx = getIndex.get();
+			if (getIdx == putIndex.get())
+				return null;
 
-			if (size() >= elements.capacity()) {
-				final long oldPut = putIdx.get();
-				final long oldGet = getIdx.get();
-				final long size = oldPut - oldGet;
+			final int nIdx = (getIdx + 1) % elements.length();
+			if (getIndex.compareAndSet(getIdx, nIdx))
+				break;
+			loop = ThreadUtils.yieldCAS(loop);
+		}
 
-				final Array<E> nue = new Array<E>(elements.getComponentClass(),
-						Math.min(Array.getNextSize(elements.capacity()), maxCount));
-				if (LOG.isDebugEnabled())
-					LOG.debug("Increased queue to [" + nue.getComponentClass().getSimpleName() + "][" + nue.capacity()
-							+ "]");
-
-				for (int i = 0; i < size; i++) {
-					final int get = (int) ((oldGet + i) % elements.capacity());
-					nue.add(elements.get(get));
-				}
-
-				elements = nue;
-				this.putIdx.set(elements.size());
-				this.getIdx.set(0);
-			}
-		} finally {
-			mon.release();
+		for (;;) {
+			final E res = elements.get(getIdx);
+			if (res != null && elements.compareAndSet(getIdx, res, null))
+				return res;
+			ThreadUtils.yield();
 		}
 	}
 
@@ -183,8 +108,11 @@ public class ArrayQueue<E> implements Queue<E> {
 	@Override
 	public E peek() {
 		E res = null;
-		if (size() > 0)
-			res = elements.get((int) (getIdx.get() % elements.capacity()));
+		if (size() > 0) {
+			final int length = elements.length();
+			final int tidx = (length + putIndex.get() - 1) % length;
+			res = elements.get(tidx);
+		}
 		return res;
 	}
 
@@ -193,7 +121,12 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public int size() {
-		return (int) (putIdx.get() - getIdx.get());
+		final int putIdx = putIndex.get();
+		final int getIdx = getIndex.get();
+		if (putIdx < getIdx)
+			return putIdx + elements.length() - getIdx;
+		else
+			return putIdx - getIdx;
 	}
 
 	/**
@@ -216,22 +149,9 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public void clear() {
-		elements.clear();
-		putIdx.set(0);
-		getIdx.set(0);
-	}
-
-	public static void main(final String[] args) {
-		Array.MIN_GROWTH = 2;
-		int count = 0;
-		int cnt = 0;
-		final ArrayQueue<Integer> aq = new ArrayQueue<Integer>(Integer.class, 16000);
-		for (int i = 1000; i > 0; i--) {
-			Integer got = 0;
-			if (Math.random() > 0.4d)
-				aq.add(count++);
-			else if ((got = aq.take()) != null && got != cnt++)
-				throw new RuntimeException("Lost element [" + got + "]");
-		}
+		for (int i = 0; i < elements.length(); i++)
+			elements.set(i, null);
+		putIndex.set(0);
+		getIndex.set(0);
 	}
 }

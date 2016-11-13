@@ -1,6 +1,6 @@
 package net.xy.codebase.concurrent;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
@@ -9,16 +9,16 @@ import net.xy.codebase.mem.ConcurrentPool;
 // TODO unittest
 public class CASMonitor {
 	private final NodePool pool = new NodePool();
-	private final AtomicLong modCounter = new AtomicLong();
+	private final AtomicInteger modCounter = new AtomicInteger();
 	private final AtomicReference<Node> tail = new AtomicReference<Node>();
 
-	public long await(final long state) throws InterruptedException {
+	public long await(final int state) {
 		return await(state, 0);
 	}
 
-	public long await(final long state, final long nanoTime) throws InterruptedException {
+	public long await(final int state, final long nanoTime) {
 		if (Thread.interrupted())
-			throw new InterruptedException();
+			return 0;
 		final long lastTime = System.nanoTime();
 
 		{ // every enqueue parks
@@ -77,7 +77,7 @@ public class CASMonitor {
 		}
 	}
 
-	public long getState() {
+	public int getState() {
 		return modCounter.get();
 	}
 
