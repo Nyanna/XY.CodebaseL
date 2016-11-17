@@ -1,118 +1,27 @@
 package net.xy.codebase.concurrent;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.LockSupport;
-
-import net.xy.codebase.mem.ConcurrentPool;
-
-// TODO unittest
-public class CASMonitor {
-	private final NodePool pool = new NodePool();
-	private final AtomicInteger modCounter = new AtomicInteger();
-	private final AtomicReference<Node> tail = new AtomicReference<Node>();
-
-	public long await(final int state) {
-		return await(state, 0);
-	}
-
-	public long await(final int state, final long nanoTime) {
-		if (Thread.interrupted())
-			return 0;
-		final long lastTime = System.nanoTime();
-
-		{ // every enqueue parks
-			enque();
-			if (!modCounter.compareAndSet(state, state))
-				call();
-			if (nanoTime < 0)
-				LockSupport.park(this);
-			else
-				LockSupport.parkNanos(this, nanoTime);
-		}
-
-		final long now = System.nanoTime();
-		final long waited = now - lastTime;
-
-		return nanoTime - waited;
-	}
-
-	public void call() {
-		Node ta;
-		modCounter.incrementAndGet();
-		for (;;) {
-			ta = tail.get();
-			final Node next = ta != null ? ta.getNext() : null;
-			if (!tail.compareAndSet(ta, next))
-				continue;
-
-			if (ta != null) {
-				LockSupport.unpark(ta.getThread());
-				pool.free(ta);
-			}
-			break;
-		}
-	}
-
-	public void callAll() {
-		while (tail.get() != null)
-			call();
-	}
-
+/**
+ * 1. every thread handles it queue node self <br>
+ * 1b. that allows pooling of nodes <br>
+ * 1c. stale nodes in other threads only cause wake <br>
+ * 2. ordered wait and wake, clear every wake permit <br>
+ * 3. every thread only leaves on timeout or state change <br>
+ * 4. atomic enqueue/dequeue operations <br>
+ * 5. state change ensures validness on queue and will loop at least once <br>
+ * 5b. due next field will only be set on enqueue <br>
+ *
+ * @author Xyan
+ *
+ */
+public class CASMonitor extends CASSync {
 	/**
-	 * node should only be handle by one thread at a time
+	 * increments state and wakes up all waiting threads
 	 *
-	 * @return nothing
+	 * @return
 	 */
-	private void enque() {
-		final Node nue = pool.obtain();
-		nue.set(Thread.currentThread());
-
-		for (;;) {
-			final Node ta = tail.get();
-			if (tail.compareAndSet(ta, nue)) {
-				nue.setNext(ta);
-				break;
-			}
-		}
-	}
-
-	public int getState() {
-		return modCounter.get();
-	}
-
-	public class NodePool extends ConcurrentPool<Node> {
-		@Override
-		protected Node newObject() {
-			return new Node();
-		}
-
-		@Override
-		public void free(final Node entry) {
-			entry.setNext(null);
-			entry.set(null);
-			super.free(entry);
-		}
-	}
-
-	public class Node {
-		private volatile Thread thread;
-		private volatile Node next;
-
-		public void setNext(final Node next) {
-			this.next = next;
-		}
-
-		public Node getNext() {
-			return next;
-		}
-
-		public void set(final Thread thread) {
-			this.thread = thread;
-		}
-
-		public Thread getThread() {
-			return thread;
-		}
+	@Override
+	public boolean call() {
+		modCounter.incrementAndGet();
+		return wakeAll(tail.get());
 	}
 }

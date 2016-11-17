@@ -23,18 +23,6 @@ public class InterThreadIntervall<E extends Enum<E>> extends RecurringTask imple
 	private final IInterThreads<E> it;
 
 	/**
-	 * default
-	 *
-	 * @param thread
-	 * @param intervall
-	 * @param run
-	 * @param it
-	 */
-	public InterThreadIntervall(final E thread, final int intervall, final Runnable run, final IInterThreads<E> it) {
-		this(thread, intervall, 0, run, it);
-	}
-
-	/**
 	 * default, with timed first run
 	 *
 	 * @param thread
@@ -76,7 +64,7 @@ public class InterThreadIntervall<E extends Enum<E>> extends RecurringTask imple
 
 	@Override
 	protected void innerRun() {
-		it.put(thread, run);
+		it.run(thread, run);
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package net.xy.codebase.collection;
 import java.util.concurrent.TimeUnit;
 
 import net.xy.codebase.concurrent.CASMonitor;
+import net.xy.codebase.concurrent.CASSemaphore;
 
 /**
  * implementation is not synchronized by itself!
@@ -15,7 +16,7 @@ public class ParkingQueue<E> {
 	// private static final Logger LOG =
 	// LoggerFactory.getLogger(ParkingQueue.class);
 	private final Queue<E> aq;
-	private final CASMonitor added = new CASMonitor();
+	private final CASSemaphore added = new CASSemaphore();
 	private final CASMonitor empty = new CASMonitor();
 
 	/**
@@ -66,21 +67,21 @@ public class ParkingQueue<E> {
 	 * @return
 	 */
 	public E take(final long waitMillis) {
-		long wait = waitMillis;
+		final long startTime = System.currentTimeMillis();
+
 		E elem;
 		for (;;) {
 			final int state = added.getState();
 			elem = aq.take();
 
 			if (elem == null) {
-				empty.callAll();
+				empty.call();
 
-				final long waited = added.await(state, TimeUnit.MILLISECONDS.toNanos(wait));
-				if (waitMillis < 0)
+				final long waitTime = waitMillis - (System.currentTimeMillis() - startTime);
+				if (waitTime >= 0) {
+					added.await(state, TimeUnit.MILLISECONDS.toNanos(waitTime));
 					continue;
-				wait -= waited;
-				if (wait > 0)
-					continue;
+				}
 			}
 			break;
 		}

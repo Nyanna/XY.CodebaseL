@@ -48,7 +48,7 @@ public class InterThreadSchedulable<E extends Enum<E>> extends AbstractInterThre
 	public void run() {
 		if (LOG.isTraceEnabled())
 			LOG.trace("Insert in threadqueue [" + this + "]");
-		it.put(thread, run);
+		it.run(thread, run);
 	}
 
 	@Override

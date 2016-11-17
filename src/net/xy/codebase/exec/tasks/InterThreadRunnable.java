@@ -33,7 +33,7 @@ public class InterThreadRunnable<E extends Enum<E>> extends AbstractInterThreadR
 	public boolean schedule(final ITask run) {
 		if (LOG.isTraceEnabled())
 			LOG.trace("insert in threadqueue no schedule [" + this + "]");
-		return it.put(thread, run);
+		return it.run(thread, run);
 	}
 
 	@Override

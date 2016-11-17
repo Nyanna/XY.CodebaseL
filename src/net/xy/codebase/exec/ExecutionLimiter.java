@@ -11,7 +11,7 @@ import net.xy.codebase.exec.tasks.IScheduleRunnable;
 import net.xy.codebase.exec.tasks.ITask;
 
 /**
- * throttler to execute an runnable not more than N paralel amounts;
+ * throttler to execute an runnable not more than N parallel amounts;
  *
  * @author Xyan
  *

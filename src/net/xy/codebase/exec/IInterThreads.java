@@ -5,70 +5,55 @@ import net.xy.codebase.exec.tasks.RecurringTask;
 import net.xy.codebase.exec.tasks.TimeoutRunnable;
 
 /**
- * interface for cross thread execution factories
+ * interface for cross thread task execution
  *
  * @author Xyan
  *
  * @param <E>
- *            enum describing all possible target threads
+ *            enum describing all possible target thread categories
  */
 public interface IInterThreads<E extends Enum<E>> {
-
-	/**
-	 * @param target
-	 * @return the next job or null, returns instantly
-	 */
-	public Runnable next(E target);
-
 	/**
 	 * waits up to ms for the next job
 	 *
 	 * @param target
 	 * @param ms
+	 *            -1 waits until one job gots collected, 0 to try and return
 	 * @return
 	 */
 	public Runnable next(E target, int ms);
 
 	/**
-	 * do all currently queued jobs
-	 *
-	 * @param target
-	 */
-	public void doAll(E target);
-
-	/**
-	 * waits up to ms for at least one job to execute
+	 * waits up to ms for at least one job to execute up to all jobs in que are
+	 * executed
 	 *
 	 * @param target
 	 * @param ms
+	 *            -1 waits until one job gots collected, 0 to try and return
 	 */
 	public void doAll(E target, int ms);
 
 	/**
-	 * do all currently queued jobs
-	 *
-	 * @param target
-	 * @param obs
-	 */
-	public void doAll(E target, IJobObserver<E> obs);
-
-	/**
-	 * waits up to ms for at least one job to execute
+	 * waits up to ms for at least one job to execute up to all jobs in que are
+	 * executed
 	 *
 	 * @param target
 	 * @param ms
+	 *            -1 waits until one job gots collected, 0 to try and return
 	 * @param obs
+	 *            (optional) job observer
+	 *
 	 */
 	public void doAll(E target, int ms, IJobObserver<E> obs);
 
 	/**
-	 * put an job in this target threads queue
+	 * put an job in this target threads category queue
 	 *
 	 * @param target
 	 * @param job
 	 * @return true on success
 	 */
-	public boolean put(E target, Runnable job);
+	public boolean run(E target, Runnable job);
 
 	/**
 	 * gets an bounded throtler for the target thread
@@ -80,7 +65,8 @@ public interface IInterThreads<E extends Enum<E>> {
 	public ExecutionThrottler getThrottler(E thread, Runnable run);
 
 	/**
-	 * gets an bounded throtler for the target thread at an specific intervall
+	 * gets an bounded throtler for the target thread with an specific minimum
+	 * intervall
 	 *
 	 * @param thread
 	 * @param run
@@ -90,8 +76,8 @@ public interface IInterThreads<E extends Enum<E>> {
 	public ExecutionThrottler getThrottler(E thread, Runnable run, int intervallMs);
 
 	/**
-	 * gets an bounded throtler for the target thread supporting an priority
-	 * used bei priority thread worker queues
+	 * gets an bounded throtler for the target thread supporting priority
+	 * execution used bei priority thread worker queues
 	 *
 	 * @param thread
 	 * @param run
@@ -101,7 +87,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	public ExecutionThrottler getPriorityThrottler(E thread, Runnable run, int priority);
 
 	/**
-	 * gets an concurrency limiter
+	 * gets an concurrency limiter for parallel execution by specific amounts
 	 *
 	 * @param thread
 	 * @param run
@@ -118,6 +104,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param thread
 	 * @param run
 	 * @param timeout
+	 *            in milliseconds
 	 * @return null on failure
 	 */
 	public TimeoutRunnable runLater(E thread, Runnable run, int timeout);
@@ -126,23 +113,28 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * starts an intervall regulary dilivering runnables to target thread
 	 *
 	 * @param thread
+	 *            target thread category
 	 * @param run
 	 * @param intervall
+	 *            intervall to run at in milliseconds
 	 * @return null on failure
 	 */
-	public RecurringTask start(E thread, Runnable run, int intervall);
+	public RecurringTask startIntervall(E thread, Runnable run, int intervall);
 
 	/**
 	 * starts an intervall regulary dilivering runnables to target thread, with
 	 * an predefined start timeout
 	 *
 	 * @param thread
+	 *            target thread category
 	 * @param run
-	 * @param startIn
+	 * @param startDelay
+	 *            delay for first startup in milliseconds
 	 * @param intervall
+	 *            intervall to run at in milliseconds
 	 * @return null on failure
 	 */
-	public RecurringTask start(E thread, Runnable run, int startIn, int intervall);
+	public RecurringTask startDelayed(E thread, Runnable run, int startDelay, int intervall);
 
 	/**
 	 * start self supplied recuring task
@@ -158,7 +150,6 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @author Xyan
 	 *
 	 */
-
 	public static interface IJobObserver<E> {
 		/**
 		 *
@@ -168,7 +159,12 @@ public interface IInterThreads<E extends Enum<E>> {
 		 */
 		public boolean startJob(E target, Runnable job);
 
+		/**
+		 * after the job gets executed
+		 *
+		 * @param target
+		 * @param job
+		 */
 		public void endJob(E target, Runnable job);
-
 	}
 }

@@ -39,7 +39,7 @@ public class InterThreadTimeoutable<E extends Enum<E>> extends TimeoutRunnable i
 
 	@Override
 	public void run() {
-		it.put(thread, run);
+		it.run(thread, run);
 	}
 
 	@Override

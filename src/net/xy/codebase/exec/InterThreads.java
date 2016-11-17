@@ -22,16 +22,16 @@ import net.xy.codebase.util.StringUtil;
  * @author Xyan
  *
  * @param <E>
- *            enum of possible threads
+ *            enum of possible thread categories
  */
 public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	private static final Logger LOG = LoggerFactory.getLogger(InterThreads.class);
 	/**
-	 * thread job stores
+	 * thread job category stores
 	 */
 	private EnumMap<E, TrackingQueue> ctxs;
 	/**
-	 * timeout queue for delayed interthread execution
+	 * timeout queue for delayed task execution
 	 */
 	private final TimeoutQueue tque;
 	/**
@@ -48,7 +48,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * inner, initializing common fields
 	 */
 	private InterThreads() {
-		tque = new TimeoutQueue("Interthread");
+		tque = new TimeoutQueue("TimeoutQue-" + hashCode());
 	}
 
 	/**
@@ -134,17 +134,12 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	}
 
 	@Override
-	public Runnable next(final E target) {
-		return get(target).take();
-	}
-
-	@Override
 	public Runnable next(final E target, final int ms) {
 		return get(target).take(ms);
 	}
 
 	@Override
-	public boolean put(final E target, final Runnable job) {
+	public boolean run(final E target, final Runnable job) {
 		final TrackingQueue que = get(target);
 		if (!que.add(job)) {
 			taskDroped(target, job, que.size());
@@ -177,19 +172,19 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	@Override
 	public InterThreadTimeoutable<E> runLater(final E thread, final Runnable run, final int timeout) {
 		final InterThreadTimeoutable<E> res = new InterThreadTimeoutable<E>(thread, timeout, run, this);
-		return tque.add(res) ? res : null;
+		return start(res) ? res : null;
 	}
 
 	@Override
-	public RecurringTask start(final E thread, final Runnable run, final int intervall) {
-		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, run, this);
-		return tque.add(res) ? res : null;
+	public RecurringTask startIntervall(final E thread, final Runnable run, final int intervall) {
+		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, 0, run, this);
+		return start(res) ? res : null;
 	}
 
 	@Override
-	public RecurringTask start(final E thread, final Runnable run, final int startIn, final int intervall) {
-		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, startIn, run, this);
-		return tque.add(res) ? res : null;
+	public RecurringTask startDelayed(final E thread, final Runnable run, final int startDelay, final int intervall) {
+		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, startDelay, run, this);
+		return start(res) ? res : null;
 	}
 
 	@Override
