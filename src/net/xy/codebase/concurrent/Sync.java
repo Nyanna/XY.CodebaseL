@@ -13,7 +13,7 @@ import net.xy.codebase.exec.ThreadUtils;
  * @author Xyan
  *
  */
-public abstract class CASSync {
+public abstract class Sync {
 	/**
 	 * last queued tail node
 	 */

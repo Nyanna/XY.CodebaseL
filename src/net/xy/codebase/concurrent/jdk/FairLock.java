@@ -1,25 +1,9 @@
-package net.xy.codebase.concurrent;
-
-import net.xy.codebase.mem.ConcurrentPool;
+package net.xy.codebase.concurrent.jdk;
 
 /**
  * Sync object for fair locks
  */
-public class FairPooledLock extends AbstractLock {
-	private final ConcurrentPool<Node> pool = new ConcurrentPool<Node>() {
-		@Override
-		protected Node newObject() {
-			return new Node(null, 0);
-		}
-	};
-
-	@Override
-	public Node createNode(final Thread thread, final int waitStatus) {
-		final Node res = pool.obtain();
-		res.reset(thread, waitStatus);
-		return res;
-	}
-
+public class FairLock extends AbstractLock {
 	@Override
 	public void lock() {
 		acquire(1);

@@ -7,7 +7,7 @@ package net.xy.codebase.concurrent;
  * @author Xyan
  *
  */
-public class CASSemaphore extends CASSync {
+public class Semaphore extends Sync {
 	/**
 	 * increments state and wakes next waiting thread
 	 *

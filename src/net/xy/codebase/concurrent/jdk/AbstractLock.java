@@ -1,4 +1,4 @@
-package net.xy.codebase.concurrent;
+package net.xy.codebase.concurrent.jdk;
 
 import java.util.Collection;
 import java.util.List;

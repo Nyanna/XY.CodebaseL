@@ -16,7 +16,7 @@
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
-package net.xy.codebase.concurrent;
+package net.xy.codebase.concurrent.jdk;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;

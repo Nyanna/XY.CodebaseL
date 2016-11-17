@@ -1,4 +1,4 @@
-package net.xy.codebase.concurrent;
+package net.xy.codebase.concurrent.jdk;
 
 /**
  * Sync object for non-fair locks

@@ -13,7 +13,7 @@ public class CASMonitorTest {
 	public void testWaitNCallAll() throws InterruptedException {
 		final CountDownLatch cl1 = new CountDownLatch(5);
 		final CountDownLatch cl2 = new CountDownLatch(5);
-		final CASMonitor cm = new CASMonitor();
+		final Monitor cm = new Monitor();
 		for (int i = 0; i < 5; i++)
 			new Thread() {
 				@Override
@@ -34,7 +34,7 @@ public class CASMonitorTest {
 	@Test
 	public void testModcount() throws InterruptedException {
 		final CountDownLatch cl1 = new CountDownLatch(5);
-		final CASMonitor cm = new CASMonitor();
+		final Monitor cm = new Monitor();
 		Assert.assertEquals(0, cm.getState());
 		for (int i = 0; i < 5; i++)
 			new Thread() {
@@ -51,7 +51,7 @@ public class CASMonitorTest {
 
 	@Test
 	public void testReturnByState() throws InterruptedException {
-		final CASMonitor cm = new CASMonitor();
+		final Monitor cm = new Monitor();
 		final int state = cm.getState();
 		cm.call();
 		cm.await(state);
@@ -60,7 +60,7 @@ public class CASMonitorTest {
 
 	@Test
 	public void testReturnTimeOut() throws InterruptedException {
-		final CASMonitor cm = new CASMonitor();
+		final Monitor cm = new Monitor();
 		final long start = System.currentTimeMillis();
 		final int state = cm.getState();
 		cm.await(state, TimeUnit.MILLISECONDS.toNanos(5));
@@ -70,7 +70,7 @@ public class CASMonitorTest {
 	@Test
 	public void testWaitCycles() throws InterruptedException {
 		final AtomicInteger count = new AtomicInteger();
-		final CASMonitor cm = new CASMonitor();
+		final Monitor cm = new Monitor();
 		final Semaphore sp = new Semaphore(0);
 
 		for (int i = 0; i < 5; i++)

@@ -2,8 +2,8 @@ package net.xy.codebase.collection;
 
 import java.util.concurrent.TimeUnit;
 
-import net.xy.codebase.concurrent.CASMonitor;
-import net.xy.codebase.concurrent.CASSemaphore;
+import net.xy.codebase.concurrent.Monitor;
+import net.xy.codebase.concurrent.Semaphore;
 
 /**
  * implementation is not synchronized by itself!
@@ -16,8 +16,8 @@ public class ParkingQueue<E> {
 	// private static final Logger LOG =
 	// LoggerFactory.getLogger(ParkingQueue.class);
 	private final Queue<E> aq;
-	private final CASSemaphore added = new CASSemaphore();
-	private final CASMonitor empty = new CASMonitor();
+	private final Semaphore added = new Semaphore();
+	private final Monitor empty = new Monitor();
 
 	/**
 	 * default with default ArrayQueue

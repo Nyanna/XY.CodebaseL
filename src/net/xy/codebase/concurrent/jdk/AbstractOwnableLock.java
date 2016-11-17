@@ -16,7 +16,7 @@
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
-package net.xy.codebase.concurrent;
+package net.xy.codebase.concurrent.jdk;
 
 /**
  * A synchronizer that may be exclusively owned by a thread. This class provides

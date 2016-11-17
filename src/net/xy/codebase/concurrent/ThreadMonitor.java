@@ -124,6 +124,11 @@ public class ThreadMonitor {
 		waitAbs(count);
 	}
 
+	/**
+	 * absolute count variant of waiting
+	 * 
+	 * @param count
+	 */
 	public void waitAbs(final int count) {
 		int loop = 0;
 		for (;;) {
