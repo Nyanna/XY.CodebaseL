@@ -6,8 +6,7 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import net.xy.codebase.exec.ThreadUtils;
 
 /**
- * an unboundet self expanding queue up to an maximum. full synchronized when
- * queue don't growth.
+ * An ringbuffer pattern arrayqueue with very hight throughput. Lock & Waitfree.
  *
  * @author Xyan
  *
@@ -16,12 +15,21 @@ import net.xy.codebase.exec.ThreadUtils;
 public class ArrayQueue<E> implements Queue<E> {
 	// private static final Logger LOG =
 	// LoggerFactory.getLogger(ArrayQueue.class);
+	/**
+	 * special raturn value constants for growing capabilities
+	 */
 	protected static final int SIZE_OK = 0, SIZE_MAXED = 1, RESIZED = 2;
 	/**
 	 * backing array container
 	 */
 	protected AtomicReferenceArray<E> elements;
+	/**
+	 * next index to put next element in
+	 */
 	protected final AtomicInteger putIndex = new AtomicInteger();
+	/**
+	 * next index to retrieve object from
+	 */
 	protected final AtomicInteger getIndex = new AtomicInteger();
 
 	/**
@@ -56,6 +64,12 @@ public class ArrayQueue<E> implements Queue<E> {
 		return takeInner();
 	}
 
+	/**
+	 * inner emthod to select index and put object
+	 *
+	 * @param elem
+	 * @return
+	 */
 	protected boolean addInner(final E elem) {
 		int putIdx, loop = 0;
 		for (;;) {
@@ -75,12 +89,23 @@ public class ArrayQueue<E> implements Queue<E> {
 		return true;
 	}
 
+	/**
+	 * limit checking method can be overwritten for growth support
+	 *
+	 * @param nIdx
+	 * @return
+	 */
 	protected int checkLimit(final int nIdx) {
 		if (nIdx == getIndex.get())
 			return SIZE_MAXED;
 		return SIZE_OK;
 	}
 
+	/**
+	 * inner method to select next index and retrieve object
+	 *
+	 * @return
+	 */
 	protected E takeInner() {
 		int getIdx, loop = 0;
 		for (;;) {
@@ -145,7 +170,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	}
 
 	/**
-	 * clears the queue
+	 * clears the queue, is not synchronized
 	 */
 	@Override
 	public void clear() {

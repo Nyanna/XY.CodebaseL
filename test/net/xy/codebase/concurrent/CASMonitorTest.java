@@ -2,13 +2,13 @@ package net.xy.codebase.concurrent;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class CASMonitorTest {
-
 	@Test
 	public void testWaitNCallAll() throws InterruptedException {
 		final CountDownLatch cl1 = new CountDownLatch(5);
@@ -50,6 +50,24 @@ public class CASMonitorTest {
 	}
 
 	@Test
+	public void testReturnByState() throws InterruptedException {
+		final CASMonitor cm = new CASMonitor();
+		final int state = cm.getState();
+		cm.call();
+		cm.await(state);
+		// should run through
+	}
+
+	@Test
+	public void testReturnTimeOut() throws InterruptedException {
+		final CASMonitor cm = new CASMonitor();
+		final long start = System.currentTimeMillis();
+		final int state = cm.getState();
+		cm.await(state, TimeUnit.MILLISECONDS.toNanos(5));
+		Assert.assertTrue(System.currentTimeMillis() >= start + 5);
+	}
+
+	@Test
 	public void testWaitCycles() throws InterruptedException {
 		final AtomicInteger count = new AtomicInteger();
 		final CASMonitor cm = new CASMonitor();
@@ -74,6 +92,4 @@ public class CASMonitorTest {
 		sp.acquire(5);
 		Assert.assertEquals(500, count.get());
 	}
-
-	// TEST timeouts
 }

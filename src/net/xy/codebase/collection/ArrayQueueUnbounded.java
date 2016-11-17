@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import net.xy.codebase.concurrent.ThreadMonitor;
 
 /**
- * an unboundet self expanding queue up to an maximum. full synchronized when
- * queue don't growth.
+ * an unboundet self expanding queue up to an maximum. fully synchronized,
+ * blocks on growth.
  *
  * @author Xyan
  *
