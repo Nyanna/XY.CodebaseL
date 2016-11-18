@@ -48,7 +48,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * inner, initializing common fields
 	 */
 	private InterThreads() {
-		tque = new TimeoutQueue("TimeoutQue-" + hashCode());
+		tque = new TimeoutQueue("InterThreads");
 	}
 
 	/**

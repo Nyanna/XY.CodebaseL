@@ -77,8 +77,12 @@ public class ParkingQueue<E> {
 			if (elem == null) {
 				empty.call();
 
-				final long waitTime = waitMillis - (System.currentTimeMillis() - startTime);
-				if (waitTime >= 0) {
+				if (waitMillis < 0) {
+					added.await(state, TimeUnit.MILLISECONDS.toNanos(waitMillis));
+					continue;
+				}
+				final long waitTime;
+				if ((waitTime = waitMillis - (System.currentTimeMillis() - startTime)) > 0) {
 					added.await(state, TimeUnit.MILLISECONDS.toNanos(waitTime));
 					continue;
 				}
