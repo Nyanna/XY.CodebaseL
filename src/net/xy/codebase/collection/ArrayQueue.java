@@ -74,17 +74,17 @@ public class ArrayQueue<E> implements Queue<E> {
 		int putIdx, loop = 0;
 		for (;;) {
 			putIdx = putIndex.get();
-			final int nIdx = (putIdx + 1) % elements.length();
-			final int checkLimit = checkLimit(nIdx);
+			final int checkLimit = checkLimit(putIdx);
 			if (checkLimit == SIZE_MAXED)
 				return false;
 
-			if (checkLimit == SIZE_OK && putIndex.compareAndSet(putIdx, nIdx))
+			else if (checkLimit == SIZE_OK && putIndex.compareAndSet(putIdx, putIdx + 1))
 				break;
 			loop = ThreadUtils.yieldCAS(loop);
 		}
 
-		while (!elements.compareAndSet(putIdx, null, elem))
+		final int tarIdx = remainder(putIdx, elements.length());
+		while (!elements.compareAndSet(tarIdx, null, elem))
 			ThreadUtils.yield();
 		return true;
 	}
@@ -92,11 +92,11 @@ public class ArrayQueue<E> implements Queue<E> {
 	/**
 	 * limit checking method can be overwritten for growth support
 	 *
-	 * @param nIdx
+	 * @param putIdx
 	 * @return
 	 */
-	protected int checkLimit(final int nIdx) {
-		if (nIdx == getIndex.get())
+	protected int checkLimit(final int putIdx) {
+		if (size(putIdx, getIndex.get()) >= elements.length())
 			return SIZE_MAXED;
 		return SIZE_OK;
 	}
@@ -113,15 +113,15 @@ public class ArrayQueue<E> implements Queue<E> {
 			if (getIdx == putIndex.get())
 				return null;
 
-			final int nIdx = (getIdx + 1) % elements.length();
-			if (getIndex.compareAndSet(getIdx, nIdx))
+			if (getIndex.compareAndSet(getIdx, getIdx + 1))
 				break;
 			loop = ThreadUtils.yieldCAS(loop);
 		}
 
+		final int tarIdx = remainder(getIdx, elements.length());
 		for (;;) {
-			final E res = elements.get(getIdx);
-			if (res != null && elements.compareAndSet(getIdx, res, null))
+			final E res = elements.get(tarIdx);
+			if (res != null && elements.compareAndSet(tarIdx, res, null))
 				return res;
 			ThreadUtils.yield();
 		}
@@ -135,8 +135,8 @@ public class ArrayQueue<E> implements Queue<E> {
 		E res = null;
 		if (size() > 0) {
 			final int length = elements.length();
-			final int tidx = (length + putIndex.get() - 1) % length;
-			res = elements.get(tidx);
+			final int tarIdx = remainder(putIndex.get() - 1, length);
+			res = elements.get(tarIdx);
 		}
 		return res;
 	}
@@ -146,10 +146,12 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public int size() {
-		final int putIdx = putIndex.get();
-		final int getIdx = getIndex.get();
+		return size(putIndex.get(), getIndex.get());
+	}
+
+	private int size(final int putIdx, final int getIdx) {
 		if (putIdx < getIdx)
-			return putIdx + elements.length() - getIdx;
+			return Integer.MAX_VALUE - Math.abs(putIdx - getIdx);
 		else
 			return putIdx - getIdx;
 	}
@@ -161,7 +163,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public boolean isEmpty() {
-		return size() == 0;
+		return putIndex.get() == getIndex.get();
 	}
 
 	@Override
@@ -178,5 +180,14 @@ public class ArrayQueue<E> implements Queue<E> {
 			elements.set(i, null);
 		putIndex.set(0);
 		getIndex.set(0);
+	}
+
+	private static final long IMASK = 0xffffffffL;
+
+	/**
+	 * unsigned modulo/remainder operation
+	 */
+	protected static int remainder(final int number, final int mod) {
+		return (int) ((number & IMASK) % (mod & IMASK));
 	}
 }

@@ -33,6 +33,53 @@ public class ArrayQueueTest {
 	}
 
 	@Test
+	public void testReordering() throws InterruptedException {
+		final ArrayTestQueue aq = new ArrayTestQueue(3);
+		final AtomicInteger added = new AtomicInteger();
+		final AtomicInteger proc = new AtomicInteger();
+		final int amount = 10000000;
+		final int producers = 2;
+		final int consumers = 1;
+		final CountDownLatch ths = new CountDownLatch(consumers);
+		final CountDownLatch thp = new CountDownLatch(producers);
+		for (int i = 0; i < consumers; i++) {
+			new Thread("Consumer") {
+				@Override
+				public void run() {
+					for (;;) {
+						final Integer res = aq.take();
+						if (res != null)
+							Assert.assertEquals(proc.getAndIncrement() % 3, res.intValue());
+						else
+							Thread.yield();
+						if (proc.get() >= amount)
+							break;
+					}
+					ths.countDown();
+				};
+			}.start();
+			ThreadUtils.sleep(new Random().nextInt(10));
+		}
+		for (int i = 0; i < producers; i++) {
+			new Thread("Producer") {
+				@Override
+				public void run() {
+					for (long j = amount / producers; j > 0;)
+						if (aq.add(null)) {
+							j--;
+							added.incrementAndGet();
+						} else
+							ThreadUtils.yield();
+					thp.countDown();
+				};
+			}.start();
+			ThreadUtils.sleep(new Random().nextInt(10));
+		}
+		ths.await();
+		thp.await();
+	}
+
+	@Test
 	public void testGrowth() {
 		final int old = Array.MIN_GROWTH;
 		Array.MIN_GROWTH = 2;

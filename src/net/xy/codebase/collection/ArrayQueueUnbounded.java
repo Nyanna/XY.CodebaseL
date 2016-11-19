@@ -35,8 +35,8 @@ public class ArrayQueueUnbounded<E> extends ArrayQueue<E> {
 	 * @param maxCount
 	 */
 	public ArrayQueueUnbounded(final Class<E> clazz, final int maxCount) {
-		super(clazz, Math.min(maxCount + 1, Array.MIN_GROWTH));
-		this.maxCount = maxCount + 1;
+		super(clazz, Math.min(maxCount, Array.MIN_GROWTH));
+		this.maxCount = maxCount;
 	}
 
 	/**
@@ -71,8 +71,8 @@ public class ArrayQueueUnbounded<E> extends ArrayQueue<E> {
 	}
 
 	@Override
-	protected int checkLimit(final int nIdx) {
-		if (super.checkLimit(nIdx) == SIZE_MAXED)
+	protected int checkLimit(final int putIdx) {
+		if (super.checkLimit(putIdx) == SIZE_MAXED)
 			if (elements.length() >= maxCount)
 				return SIZE_MAXED;
 			else
