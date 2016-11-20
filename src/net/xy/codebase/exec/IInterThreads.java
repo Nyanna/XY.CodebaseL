@@ -167,4 +167,14 @@ public interface IInterThreads<E extends Enum<E>> {
 		 */
 		public void endJob(E target, Runnable job);
 	}
+
+	/**
+	 * thrown by runnables causes an clean end of task proccessing
+	 * 
+	 * @author Xyan
+	 *
+	 */
+	public static class InterruptedException extends RuntimeException {
+		private static final long serialVersionUID = -6268270281416217298L;
+	}
 }

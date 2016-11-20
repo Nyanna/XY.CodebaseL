@@ -419,7 +419,7 @@ public class SerializationContext {
 	 * @param clazz
 	 * @return
 	 */
-	private byte getClassEid(final Class<?> clazz) {
+	public byte getClassEid(final Class<?> clazz) {
 		final Short res = classesToIdx.get(clazz);
 		if (res == null)
 			throw new IllegalArgumentException(
@@ -785,8 +785,7 @@ public class SerializationContext {
 	public class Decoder {
 		private ByteBuffer bb;
 
-		public Decoder() {
-		}
+		public Decoder() {}
 
 		public Decoder(final ByteBuffer bb) {
 			this.bb = bb;
@@ -862,6 +861,12 @@ public class SerializationContext {
 			} else
 				return null;
 		}
+
+		public Class<?> readClassEid() {
+			final byte atype = readByte();
+			final short atypei = (short) (atype & 0xff);
+			return idxToClasses.get(atypei);
+		}
 	}
 
 	/**
@@ -873,8 +878,7 @@ public class SerializationContext {
 	public class Encoder {
 		private ByteBuffer bb;
 
-		public Encoder() {
-		}
+		public Encoder() {}
 
 		public Encoder(final ByteBuffer bb) {
 			this.bb = bb;
@@ -948,6 +952,10 @@ public class SerializationContext {
 				bb.put(ba);
 			} else
 				writeInt(0);
+		}
+
+		public void writeClassEid(final Class<?> target) {
+			writeByte(getClassEid(target)); // write type idendifier
 		}
 	}
 }

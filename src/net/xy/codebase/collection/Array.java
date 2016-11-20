@@ -251,7 +251,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return actual capacity of backend array
 	 */
 	public int capacity() {
-		return getElements().length;
+		return getElements() != null ? getElements().length : 0;
 	}
 
 	public boolean isEmpty() {
@@ -720,6 +720,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	@Override
 	public void encode(final Encoder enc) {
+		enc.writeClassEid(getElements().getClass().getComponentType());
 		enc.writeInt(size());
 		for (int i = 0; i < size(); i++)
 			enc.write(get(i));
@@ -728,8 +729,9 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	@SuppressWarnings("unchecked")
 	@Override
 	public Array<E> decode(final Decoder dec) {
+		final Class<?> comp = dec.readClassEid();
 		final int size = dec.readInt();
-		increase(size);
+		setElementsRaw((E[]) java.lang.reflect.Array.newInstance(comp, size));
 		for (int i = 0; i < size; i++)
 			add((E) dec.read(Object.class));
 		return this;

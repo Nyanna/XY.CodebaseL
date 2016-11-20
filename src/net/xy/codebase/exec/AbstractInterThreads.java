@@ -1,5 +1,8 @@
 package net.xy.codebase.exec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * implementation for inter thread job execution
  *
@@ -9,6 +12,7 @@ package net.xy.codebase.exec;
  *            enum of possible threads
  */
 public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterThreads<E> {
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractInterThreads.class);
 
 	@Override
 	public void doAll(final E target, final int ms) {
@@ -25,28 +29,51 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 	}
 
 	private void doAllMeasured(final E target, final int ms, final IJobObserver<E> obs, final IPerfCounter measure) {
+		boolean loop = true;
 		measure.stopMeasure();
 		for (Runnable job = next(target, ms); job != null; job = next(target, 0)) {
 			measure.startMeasure();
 			if (obs == null)
-				job.run();
+				loop = runGuarded(job);
 			else if (obs.startJob(target, job)) {
-				job.run();
+				loop = runGuarded(job);
 				obs.endJob(target, job);
 			}
 			measure.stopMeasure();
+			if (!loop)
+				break;
 		}
 		measure.startMeasure();
 	}
 
 	private void doAllPlain(final E target, final int ms, final IJobObserver<E> obs) {
-		for (Runnable job = next(target, ms); job != null; job = next(target, 0))
+		boolean loop = true;
+		for (Runnable job = next(target, ms); job != null; job = next(target, 0)) {
 			if (obs == null)
-				job.run();
+				loop = runGuarded(job);
 			else if (obs.startJob(target, job)) {
-				job.run();
+				loop = runGuarded(job);
 				obs.endJob(target, job);
 			}
+			if (!loop)
+				break;
+		}
+	}
+
+	/**
+	 * @param job
+	 * @return true to procceed normaly
+	 */
+	private boolean runGuarded(final Runnable job) {
+		try {
+			job.run();
+		} catch (final InterruptedException ex) {
+			// clean interuped
+			return false;
+		} catch (final Exception e) {
+			LOG.error("Error running job", e);
+		}
+		return true;
 	}
 
 	/**
