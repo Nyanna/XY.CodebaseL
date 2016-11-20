@@ -36,8 +36,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	/**
 	 * empty, use as convenience container
 	 */
-	public Array() {
-	}
+	public Array() {}
 
 	/**
 	 * with initial default capacity
@@ -730,6 +729,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	@Override
 	public Array<E> decode(final Decoder dec) {
 		final int size = dec.readInt();
+		increase(size);
 		for (int i = 0; i < size; i++)
 			add((E) dec.read(Object.class));
 		return this;
