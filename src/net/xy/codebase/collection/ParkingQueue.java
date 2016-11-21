@@ -78,7 +78,7 @@ public class ParkingQueue<E> {
 				empty.call();
 
 				if (waitMillis < 0) {
-					added.await(state, TimeUnit.MILLISECONDS.toNanos(waitMillis));
+					added.await(state, waitMillis);
 					continue;
 				}
 				final long waitTime;
