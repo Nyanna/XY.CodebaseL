@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * runtime in memory code compiler, will method autodetection
- * 
+ *
  * @author Xyan
  *
  */
@@ -36,6 +36,8 @@ public class RuntimeCodeCompiler {
 
 	public RuntimeCodeCompiler() {
 		compiler = ToolProvider.getSystemJavaCompiler();
+		if (compiler == null)
+			throw new IllegalStateException("No compiler found has to be run with an JDK");
 		if (compiler.isSupportedOption("Xlint") > -1)
 			options.add("Xlint:deprecation");
 		resetClassLoader();
@@ -45,7 +47,7 @@ public class RuntimeCodeCompiler {
 		sharedLoader = new CustomClassLoader(compiler.getStandardFileManager(null, null, null));
 	}
 
-	public void execute(final String code, final Object[] params) throws Exception {
+	public void execute(final String code, final Object... params) throws Exception {
 		final String fqn = compile(code, sharedLoader);
 		runClass(sharedLoader.loadClass(fqn), params);
 	}
