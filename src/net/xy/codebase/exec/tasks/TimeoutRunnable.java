@@ -32,7 +32,7 @@ public abstract class TimeoutRunnable implements ITask {
 	 *
 	 * @param timeoutMs
 	 */
-	protected void calculateNext(final long timeoutMs) {
+	public void calculateNext(final long timeoutMs) {
 		next = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
 	}
 
