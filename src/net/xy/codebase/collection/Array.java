@@ -523,7 +523,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	}
 
 	public E peek() {
-		return get(getMaxIdx());
+		return getChecked(getMaxIdx());
 	}
 
 	public E[] shrink() {
