@@ -342,7 +342,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return element at index or null
 	 */
 	public E getChecked(final int index) {
-		return index < capacity() && index >= 0 ? get(index) : null;
+		return index < size() && index >= 0 ? get(index) : null;
 	}
 
 	public void setChecked(final int index, final E value) {
