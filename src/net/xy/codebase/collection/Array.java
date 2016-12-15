@@ -476,6 +476,30 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	}
 
 	/**
+	 * inserts an element at an specific position and shifts all elements
+	 * afterwards
+	 *
+	 * @param index
+	 * @param elem
+	 *            at current index
+	 * @return
+	 */
+	public E shift(final int index, final E elem) {
+		final E value = get(index);
+
+		E last = null;
+		for (int i = index; i < size(); i++) {
+			final E cur = get(i);
+			set(i, last);
+			last = cur;
+		}
+
+		set(index, elem);
+		addChecked(last);
+		return value;
+	}
+
+	/**
 	 * inserts by placing the indexed element on tail
 	 *
 	 * @param index
