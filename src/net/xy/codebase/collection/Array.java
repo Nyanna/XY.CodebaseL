@@ -352,9 +352,15 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * @return
 	 */
 	public E getDirectChecked(final int index) {
-		return index < capacity() && index >= 0 ? get(index) : null;
+		return index < capacity() && index >= 0 ? getElements()[index] : null;
 	}
 
+	/**
+	 * grows if needed
+	 * 
+	 * @param index
+	 * @param value
+	 */
 	public void setChecked(final int index, final E value) {
 		if (index + 1 - capacity() > 0)
 			grow(index + 1, false);

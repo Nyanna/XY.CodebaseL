@@ -9,7 +9,7 @@ public abstract class FactoryArray<T> extends Array<T> {
 	 * @param clazz
 	 */
 	public FactoryArray(final Class<?> clazz) {
-		super(clazz);
+		super(clazz, 0);
 	}
 
 	/**
