@@ -345,6 +345,16 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		return index < size() && index >= 0 ? get(index) : null;
 	}
 
+	/**
+	 * checks by capacity
+	 *
+	 * @param index
+	 * @return
+	 */
+	public E getDirectChecked(final int index) {
+		return index < capacity() && index >= 0 ? get(index) : null;
+	}
+
 	public void setChecked(final int index, final E value) {
 		if (index + 1 - capacity() > 0)
 			grow(index + 1, false);
@@ -362,6 +372,14 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 		if (getMaxIdx() < index)
 			setMaxIdx(index);
 		return old;
+	}
+
+	public void setDirect(final int index, final E value) {
+		if (index + 1 - capacity() > 0)
+			grow(index + 1, false);
+		getElements()[index] = value;
+		if (getMaxIdx() < index)
+			setMaxIdx(index);
 	}
 
 	public void copy(final int index, final int index2) {
