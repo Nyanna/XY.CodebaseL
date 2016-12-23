@@ -101,4 +101,21 @@ public class Primitive {
 		}
 		return hashCode;
 	}
+
+	public static long shiftCircular(final int bits, final int shift) {
+		return Integer.rotateLeft(bits, shift);
+		// return bits >>> shift | bits << Integer.SIZE - shift;
+	}
+
+	public static long shiftCircular(final long bits, final int shift) {
+		return Long.rotateLeft(bits, shift);
+		// return bits >>> shift | bits << Long.SIZE - shift;
+	}
+
+	public static int getColor(final int r, final int g, final int b, final int a) {
+		return Math.min(255, Math.max(0, a) & 0xFF) << 24 | //
+				Math.min(255, Math.max(0, r) & 0xFF) << 16 | //
+				Math.min(255, Math.max(0, g) & 0xFF) << 8 | //
+				Math.min(255, Math.max(0, b) & 0xFF) << 0;
+	}
 }

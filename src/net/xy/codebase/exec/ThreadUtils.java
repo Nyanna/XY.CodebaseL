@@ -53,16 +53,17 @@ public class ThreadUtils {
 
 	public static int randInt(final long gseed, final int n) {
 		final long multiplier = 0x5deece66dL;
-		long seed = (gseed ^ multiplier) & (1L << 48) - 1;
+		final long mask = (1L << 48) - 1;
+		long seed = (gseed ^ multiplier) & mask;
 
 		if ((n & -n) == n) {
-			seed = seed * multiplier + 0xbL & (1L << 48) - 1;
+			seed = seed * multiplier + 0xbL & mask;
 			final int next = (int) (seed >>> 48 - 31);
 			return (int) (n * (long) next >> 31);
 		}
 		int bits, val;
 		do {
-			seed = seed * multiplier + 0xbL & (1L << 48) - 1;
+			seed = seed * multiplier + 0xbL & mask;
 			final int next = (int) (seed >>> 48 - 31);
 			bits = next;
 			val = bits % n;
