@@ -19,13 +19,9 @@ import net.xy.codebase.exec.tasks.ITask;
 public class ExecutionLimiter {
 	private static final Logger LOG = LoggerFactory.getLogger(ExecutionLimiter.class);
 	/**
-	 * amount of requested runs
-	 */
-	private final AtomicInteger calls = new AtomicInteger();
-	/**
 	 * amount of actually running tasks
 	 */
-	private final AtomicInteger running = new AtomicInteger();
+	private final AtomicInteger calls = new AtomicInteger();
 	/**
 	 * target action to run
 	 */
@@ -58,32 +54,19 @@ public class ExecutionLimiter {
 	 * start the action or place an call wish
 	 */
 	public void run() {
-		calls.incrementAndGet();
-		checkDettach();
-	}
-
-	/**
-	 * check to start new tasks
-	 */
-	private void checkDettach() {
-		for (;;) {
-			final int runs = running.get();
-			if (runs >= amount && running.compareAndSet(runs, runs)) {
-				if (LOG.isTraceEnabled())
-					LOG.trace("concurrent runnings reached [" + runnable + "][" + runnable.getClass().getSimpleName()
-							+ "]");
-				return;
-			} else if (running.compareAndSet(runs, runs + 1)) {
-				// start runnable
-				if (LOG.isTraceEnabled())
-					LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
-				if (!runnable.schedule(capsule)) {
-					running.set(runs - 1);
-					LOG.error("Error starting limiter, decrementing");
-				}
-				return;
-			} else if (LOG.isTraceEnabled())
-				LOG.trace("Inefficient loop repeat [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
+		final int runs = calls.getAndIncrement();
+		if (runs >= amount) {
+			if (LOG.isTraceEnabled())
+				LOG.trace(
+						"concurrent runnings reached [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
+			return;
+		} else {
+			// start runnable
+			if (LOG.isTraceEnabled())
+				LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
+			if (!runnable.schedule(capsule))
+				LOG.error("Error starting limiter, decrementing [" + this + "]");
+			return;
 		}
 	}
 
@@ -111,16 +94,12 @@ public class ExecutionLimiter {
 		@Override
 		public void run() {
 			for (;;) {
-				final int cals = calls.get();
-				if (cals > 1) {
-					if (!calls.compareAndSet(cals, cals - 1))
-						continue;
+				int cals = calls.get();
+				if (cals > 0 && calls.compareAndSet(cals, cals - 1))
 					runGuarded();
-					running.decrementAndGet();
-					if (cals > 1)
-						checkDettach();
-				}
-				break;
+				cals = calls.get();
+				if (cals == 0 && calls.compareAndSet(cals, cals))
+					break;
 			}
 		}
 
