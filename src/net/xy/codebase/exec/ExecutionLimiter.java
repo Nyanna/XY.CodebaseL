@@ -21,6 +21,7 @@ public class ExecutionLimiter {
 	/**
 	 * amount of actually running tasks
 	 */
+	private final AtomicInteger runs = new AtomicInteger();
 	private final AtomicInteger calls = new AtomicInteger();
 	/**
 	 * target action to run
@@ -51,22 +52,35 @@ public class ExecutionLimiter {
 	}
 
 	/**
-	 * start the action or place an call wish
+	 * start the action
 	 */
 	public void run() {
-		final int runs = calls.getAndIncrement();
-		if (runs >= amount) {
-			if (LOG.isTraceEnabled())
-				LOG.trace(
-						"concurrent runnings reached [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
-			return;
-		} else {
-			// start runnable
-			if (LOG.isTraceEnabled())
-				LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
-			if (!runnable.schedule(capsule))
-				LOG.error("Error starting limiter, decrementing [" + this + "]");
-			return;
+		run(1);
+	}
+
+	public void run(final int count) {
+		for (int i = 0; i < Math.min(count, amount); i++) {
+			calls.incrementAndGet();
+			for (;;) {
+				final int runs = this.runs.get();
+				if (runs >= amount) {
+					if (this.runs.compareAndSet(runs, runs)) {
+						if (LOG.isTraceEnabled())
+							LOG.trace("concurrent runnings reached [" + runnable + "]["
+									+ runnable.getClass().getSimpleName() + "]");
+						break;
+					}
+				} else if (this.runs.compareAndSet(runs, runs + 1)) {
+					// start runnable
+					if (LOG.isTraceEnabled())
+						LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
+					if (!runnable.schedule(capsule)) {
+						this.runs.decrementAndGet();
+						LOG.error("Error starting limiter, decrementing [" + this + "]");
+					}
+					break;
+				}
+			}
 		}
 	}
 
@@ -94,11 +108,12 @@ public class ExecutionLimiter {
 		@Override
 		public void run() {
 			for (;;) {
-				int cals = calls.get();
-				if (cals > 0 && calls.compareAndSet(cals, cals - 1))
-					runGuarded();
-				cals = calls.get();
-				if (cals == 0 && calls.compareAndSet(cals, cals))
+				final int run = runs.get();
+				final int call = calls.get();
+				if (call > 0) {
+					if (calls.compareAndSet(call, call - 1))
+						runGuarded();
+				} else if (runs.compareAndSet(run, run - 1))
 					break;
 			}
 		}
