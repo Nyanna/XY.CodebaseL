@@ -53,6 +53,7 @@ public class TypeParser {
 	private static final Pattern PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD);
 	private static final Pattern PT_BOOL = Pattern.compile("(true|false)", MOD);
 	private static final Pattern PT_CHAR = Pattern.compile("('.{1}')", MOD);
+	private static final Pattern PT_HEXINT = Pattern.compile("(#[0-9A-F]{1,10})", MOD);
 	// calls an converter like factory method accepting string returning object
 	private static final Pattern PT_CONVERTER = Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD);
 	// creates via reflection an instance with an string constructor
@@ -282,6 +283,9 @@ public class TypeParser {
 			match = PT_INT.matcher(string);
 			if (match.matches())
 				return Integer.valueOf(match.group(1));
+			match = PT_HEXINT.matcher(string);
+			if (match.matches())
+				return Integer.decode(match.group(1));
 			match = PT_LONG.matcher(string);
 			if (match.matches())
 				return Long.valueOf(match.group(1).substring(0, match.group(1).length() - 1));

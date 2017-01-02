@@ -113,9 +113,9 @@ public class Primitive {
 	}
 
 	public static int getColor(final int r, final int g, final int b, final int a) {
-		return Math.min(255, Math.max(0, a) & 0xFF) << 24 | //
-				Math.min(255, Math.max(0, r) & 0xFF) << 16 | //
-				Math.min(255, Math.max(0, g) & 0xFF) << 8 | //
-				Math.min(255, Math.max(0, b) & 0xFF) << 0;
+		return (Math.min(255, Math.max(0, a)) & 0xFF) << 24 | //
+				(Math.min(255, Math.max(0, r)) & 0xFF) << 16 | //
+				(Math.min(255, Math.max(0, g)) & 0xFF) << 8 | //
+				(Math.min(255, Math.max(0, b)) & 0xFF) << 0;
 	}
 }
