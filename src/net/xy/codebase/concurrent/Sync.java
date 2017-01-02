@@ -1,6 +1,5 @@
 package net.xy.codebase.concurrent;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
@@ -52,35 +51,27 @@ public abstract class Sync {
 	 * inner stack context wait method
 	 *
 	 * @param state
-	 * @param nanoTime
+	 * @param nTime
+	 *            to wait in nanos
 	 */
-	private void awaitInner(final int state, final long nanoTime) {
+	private void awaitInner(final int state, final long nTime) {
 		final Thread th = Thread.currentThread();
-		final long startTime = System.nanoTime();
-		long waitTime = 0;
+		final long sTime = System.nanoTime();
+		long wTime = 0; // waittime
 
 		final Slot sl = enque(th);
 		for (;;) {
-			if (state != getState() || //
-					nanoTime >= 0 && (waitTime = nanoTime - (System.nanoTime() - startTime)) <= 0)
+			if (state != getState())
+				break;
+			if (nTime >= 0 && (wTime = nTime - (System.nanoTime() - sTime)) <= 0)
 				break;
 
-			// thread is wakeable from here
-			sl.setWaiting();
-			if (state != getState())
-				; // skip
-			else if (nanoTime < 0)
+			sl.setWaiting(state);
+			if (nTime < 0)
 				LockSupport.park(this);
 			else
-				LockSupport.parkNanos(this, waitTime);
-			if (!sl.wake())
-				LockSupport.unpark(th);
-			sl.resetWaked();
-			// thread is wakeable to here
-
-			// cuz only first wake creates permit
-			// cleanup my state use any left permit
-			LockSupport.park(this);
+				LockSupport.parkNanos(this, wTime);
+			sl.setRuning();
 		}
 		dequeue(sl, th);
 	}
@@ -139,7 +130,7 @@ public abstract class Sync {
 	 *
 	 * @return true on waking at least one thread
 	 */
-	public abstract boolean call();
+	public abstract void call();
 
 	/**
 	 * wakes up first found thread starting at the given node
@@ -162,12 +153,10 @@ public abstract class Sync {
 	 * @param nd
 	 * @return
 	 */
-	protected boolean wakeAll(Slot nd) {
-		boolean res = false;
+	protected void wakeAll(Slot nd) {
 		if (nd != null)
 			for (; nd != null; nd = nd.getNext())
-				res |= nd.wake();
-		return res;
+				nd.wake();
 	}
 
 	/**
@@ -184,8 +173,7 @@ public abstract class Sync {
 		/**
 		 * threads waiting state
 		 */
-		private final AtomicBoolean waiting = new AtomicBoolean();
-		private final AtomicBoolean waked = new AtomicBoolean();
+		private final AtomicInteger waiting = new AtomicInteger();
 		/**
 		 * next bound node in slot chain
 		 */
@@ -198,31 +186,23 @@ public abstract class Sync {
 		 * @return true when a thread was waked up
 		 */
 		public boolean wake() {
-			final Thread th = thread.get();
-			if (waiting.compareAndSet(true, false)) {
-				LockSupport.unpark(th);
-				waked.set(true);
-				return true;
-			}
-			return false;
+			final int state = waiting.get();
+			final boolean res = state != 0 && waiting.compareAndSet(state, 0);
+			LockSupport.unpark(thread.get());
+			return res;
 		}
 
 		/**
 		 * set waiting state to true
+		 *
+		 * @param state
 		 */
-		public void setWaiting() {
-			waiting.set(true);
+		public void setWaiting(final int state) {
+			waiting.set(state);
 		}
 
-		/**
-		 * blocks until holding thread called unpark
-		 */
-		public void resetWaked() {
-			for (int loop = 0;;) {
-				if (waked.compareAndSet(true, false))
-					return;
-				loop = ThreadUtils.yieldCAS(loop);
-			}
+		public void setRuning() {
+			waiting.set(0);
 		}
 
 		/**

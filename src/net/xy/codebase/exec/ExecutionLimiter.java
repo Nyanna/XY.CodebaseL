@@ -51,35 +51,37 @@ public class ExecutionLimiter {
 			capsule = new LimitedRunnable(runnable);
 	}
 
+	public void run(final int amount) {
+		calls.addAndGet(amount - 1);
+		run();
+	}
+
 	/**
 	 * start the action
 	 */
 	public void run() {
-		run(1);
-	}
+		calls.incrementAndGet();
 
-	public void run(final int count) {
-		for (int i = 0; i < Math.min(count, amount); i++) {
-			calls.incrementAndGet();
-			for (;;) {
-				final int runs = this.runs.get();
-				if (runs >= amount) {
-					if (this.runs.compareAndSet(runs, runs)) {
-						if (LOG.isTraceEnabled())
-							LOG.trace("concurrent runnings reached [" + runnable + "]["
-									+ runnable.getClass().getSimpleName() + "]");
-						break;
-					}
-				} else if (this.runs.compareAndSet(runs, runs + 1)) {
-					// start runnable
+		for (;;) {
+			final int runs = this.runs.get();
+			if (runs >= amount) {
+				if (this.runs.compareAndSet(runs, runs)) {
 					if (LOG.isTraceEnabled())
-						LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
-					if (!runnable.schedule(capsule)) {
-						this.runs.decrementAndGet();
-						LOG.error("Error starting limiter, decrementing [" + this + "]");
-					}
+						LOG.trace("concurrent runnings reached [" + runnable + "]["
+								+ runnable.getClass().getSimpleName() + "]");
 					break;
 				}
+			} else if (this.runs.compareAndSet(runs, runs + 1)) {
+				// start runnable
+				if (LOG.isTraceEnabled())
+					LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
+				if (!runnable.schedule(capsule)) {
+					this.runs.decrementAndGet();
+					LOG.error("Error starting limiter, decrementing [" + this + "]");
+					break;
+				} else if (calls.get() <= 10)
+					// no further starts
+					break;
 			}
 		}
 	}
@@ -113,8 +115,11 @@ public class ExecutionLimiter {
 				if (call > 0) {
 					if (calls.compareAndSet(call, call - 1))
 						runGuarded();
-				} else if (runs.compareAndSet(run, run - 1))
+				} else if (runs.compareAndSet(run, run - 1)) {
+					if (LOG.isTraceEnabled())
+						LOG.trace("Stopping limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
 					break;
+				}
 			}
 		}
 

@@ -16,8 +16,8 @@ public class Monitor extends Sync {
 	 * @return
 	 */
 	@Override
-	public boolean call() {
+	public void call() {
 		modCounter.incrementAndGet();
-		return wakeAll(tail.get());
+		wakeAll(tail.get());
 	}
 }

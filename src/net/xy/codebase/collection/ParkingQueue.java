@@ -2,6 +2,9 @@ package net.xy.codebase.collection;
 
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.xy.codebase.concurrent.Monitor;
 import net.xy.codebase.concurrent.Semaphore;
 
@@ -13,8 +16,7 @@ import net.xy.codebase.concurrent.Semaphore;
  * @param <E>
  */
 public class ParkingQueue<E> {
-	// private static final Logger LOG =
-	// LoggerFactory.getLogger(ParkingQueue.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ParkingQueue.class);
 	private final Queue<E> aq;
 	private final Semaphore added = new Semaphore();
 	private final Monitor empty = new Monitor();
@@ -48,6 +50,8 @@ public class ParkingQueue<E> {
 		final boolean res = aq.add(elem);
 		if (res)
 			added.call();
+		else
+			LOG.warn("ParkinArrayQueue is full droping [" + elem + "]");
 		return res;
 	}
 

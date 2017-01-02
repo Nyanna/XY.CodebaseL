@@ -14,8 +14,8 @@ public class Semaphore extends Sync {
 	 * @return
 	 */
 	@Override
-	public boolean call() {
+	public void call() {
 		modCounter.incrementAndGet();
-		return wakeNext(tail.get());
+		wakeNext(tail.get());
 	}
 }
