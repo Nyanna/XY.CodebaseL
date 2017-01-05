@@ -19,6 +19,10 @@ public class Primitive {
 		return x < y ? -1 : x == y ? 0 : 1;
 	}
 
+	public static int compare(final double x, final double y) {
+		return x < y ? -1 : x == y ? 0 : 1;
+	}
+
 	public static boolean equals(final float a, final float b) {
 		return Math.abs(a - b) < 0.0001f;
 	}
