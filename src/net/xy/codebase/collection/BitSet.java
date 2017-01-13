@@ -1,14 +1,12 @@
 package net.xy.codebase.collection;
 
-import java.io.Serializable;
+import net.xy.codebase.io.Serializable;
 
+import net.xy.codebase.io.Externalize;
 import net.xy.codebase.io.SerializationContext.Decoder;
 import net.xy.codebase.io.SerializationContext.Encoder;
-import net.xy.codebase.io.SerializationContext.Externalize;
 
 public class BitSet implements Serializable, Externalize<BitSet> {
-	private static final long serialVersionUID = -3097711895125159466L;
-
 	private byte[] array = null;
 
 	public boolean get(final int idx) {

@@ -8,8 +8,6 @@ package net.xy.codebase.collection;
  * @param <T>
  */
 public class EmptyArray<T> extends Array<T> {
-	private static final long serialVersionUID = 3208157688923221294L;
-
 	/**
 	 * default 0 size
 	 *

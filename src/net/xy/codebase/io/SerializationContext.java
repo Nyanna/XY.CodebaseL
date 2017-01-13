@@ -14,7 +14,7 @@ package net.xy.codebase.io;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.Serializable;
+import net.xy.codebase.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -762,18 +762,6 @@ public class SerializationContext {
 		else if (clazz.isArray())
 			return arrayEid;
 		return getClassEid(clazz);
-	}
-
-	/**
-	 * interface for custom serializable objects
-	 *
-	 * @author Xyan
-	 *
-	 */
-	public static interface Externalize<T> {
-		public void encode(Encoder enc);
-
-		public T decode(Decoder dec);
 	}
 
 	/**

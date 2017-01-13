@@ -1,8 +1,6 @@
 package net.xy.codebase.collection;
 
 public abstract class FactoryArray<T> extends Array<T> {
-	private static final long serialVersionUID = -2045447636906674316L;
-
 	/**
 	 * with initial default capacity
 	 *

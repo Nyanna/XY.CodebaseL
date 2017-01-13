@@ -1,6 +1,6 @@
 package net.xy.codebase.collection;
 
-import java.io.Serializable;
+import net.xy.codebase.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
@@ -9,13 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.clone.Cloneable;
+import net.xy.codebase.io.Externalize;
 import net.xy.codebase.io.SerializationContext.Decoder;
 import net.xy.codebase.io.SerializationContext.Encoder;
-import net.xy.codebase.io.SerializationContext.Externalize;
 
 public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externalize<Array<E>>, Cloneable<Array<E>> {
 	private static final Logger LOG = LoggerFactory.getLogger(Array.class);
-	private static final long serialVersionUID = -4019349541696506832L;
 	public static int MIN_GROWTH = 32;
 	public static final Array<?> EMPTY = new EmptyArray<Object>(Object.class);
 
@@ -430,9 +429,11 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	public boolean contains(final E value) {
 		int i = getMaxIdx();
-		while (i >= 0)
-			if (get(i--) == value)
+		while (i >= 0) {
+			final E val = get(i--);
+			if (val == value)
 				return true;
+		}
 		return false;
 	}
 

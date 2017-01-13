@@ -1,10 +1,9 @@
 package net.xy.codebase.collection;
 
-import java.io.Serializable;
+import net.xy.codebase.io.Serializable;
 import java.util.Arrays;
 
 public class FloatArray implements Serializable {
-	private static final long serialVersionUID = -4019349541696506832L;
 	public static int MIN_GROWTH = 32;
 
 	private int maxIdx = -1;

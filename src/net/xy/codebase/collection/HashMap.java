@@ -1,7 +1,7 @@
 package net.xy.codebase.collection;
 
 import java.io.IOException;
-import java.io.Serializable;
+import net.xy.codebase.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -11,9 +11,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import net.xy.codebase.io.Externalize;
 import net.xy.codebase.io.SerializationContext.Decoder;
 import net.xy.codebase.io.SerializationContext.Encoder;
-import net.xy.codebase.io.SerializationContext.Externalize;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class HashMap<K, V> implements Serializable, Externalize {
@@ -836,8 +836,6 @@ public class HashMap<K, V> implements Serializable, Externalize {
 				s.writeObject(e.getValue());
 			}
 	}
-
-	private static final long serialVersionUID = 362498820763181265L;
 
 	/**
 	 * Reconstitute the <tt>HashMap</tt> instance from a stream (i.e.,
