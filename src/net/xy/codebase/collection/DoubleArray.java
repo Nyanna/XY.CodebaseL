@@ -2,16 +2,16 @@ package net.xy.codebase.collection;
 
 import java.util.Arrays;
 
-public class ShortArray implements ITypeArray {
+public class DoubleArray implements ITypeArray {
 	public static int MIN_GROWTH = 32;
 
 	private int maxIdx = -1;
-	private short[] elements;
+	protected double[] elements;
 
 	/**
 	 * empty, use as convenience container
 	 */
-	public ShortArray() {
+	public DoubleArray() {
 		this(MIN_GROWTH);
 	}
 
@@ -21,8 +21,8 @@ public class ShortArray implements ITypeArray {
 	 * @param clazz
 	 * @param capacity
 	 */
-	public ShortArray(final int capacity) {
-		final short[] arr = new short[capacity];
+	public DoubleArray(final int capacity) {
+		final double[] arr = new double[capacity];
 		elements = arr;
 	}
 
@@ -31,7 +31,7 @@ public class ShortArray implements ITypeArray {
 	 *
 	 * @param elementData
 	 */
-	public ShortArray(final short[] elementData) {
+	public DoubleArray(final double[] elementData) {
 		elements = elementData;
 		maxIdx = elementData.length - 1;
 	}
@@ -42,7 +42,7 @@ public class ShortArray implements ITypeArray {
 	 * @param e
 	 * @return
 	 */
-	public int add(final short e) {
+	public int add(final double e) {
 		elements[++maxIdx] = e;
 		return maxIdx;
 	}
@@ -75,7 +75,7 @@ public class ShortArray implements ITypeArray {
 	 * @param amount
 	 * @return added index
 	 */
-	public int addChecked(final short e) {
+	public int addChecked(final double e) {
 		ensureCapacity(size() + 1);
 		return add(e);
 	}
@@ -135,7 +135,7 @@ public class ShortArray implements ITypeArray {
 	 * nulls all field in the array
 	 */
 	public void clear() {
-		fill((short) 0);
+		fill(0d);
 		rewind();
 	}
 
@@ -143,17 +143,17 @@ public class ShortArray implements ITypeArray {
 	 * nulls all fields up to the current maximum element
 	 */
 	public void clean() {
-		fill((short) 0, maxIdx);
+		fill(0d, maxIdx);
 		rewind();
 	}
 
-	public void fill(final short value) {
+	public void fill(final double value) {
 		final int len = capacity();
 		fill(value, len);
 	}
 
-	public void fill(final short value, final int len) {
-		final short[] array = getElements();
+	public void fill(final double value, final int len) {
+		final double[] array = getElements();
 
 		if (len > 0)
 			array[0] = value;
@@ -162,7 +162,7 @@ public class ShortArray implements ITypeArray {
 			System.arraycopy(array, 0, array, i, len - i < i ? len - i : i);
 	}
 
-	public short get(final int index) {
+	public double get(final int index) {
 		return elements[index];
 	}
 
@@ -172,11 +172,11 @@ public class ShortArray implements ITypeArray {
 	 * @param index
 	 * @return element at index or null
 	 */
-	public short getChecked(final int index) {
-		return index < elements.length ? elements[index] : (short) 0;
+	public double getChecked(final int index) {
+		return index < elements.length ? elements[index] : 0d;
 	}
 
-	public void set(final int index, final short value) {
+	public void set(final int index, final double value) {
 		elements[index] = value;
 	}
 
@@ -186,7 +186,7 @@ public class ShortArray implements ITypeArray {
 	 * @param index
 	 * @param value
 	 */
-	public void setChecked(final int index, final short value) {
+	public void setChecked(final int index, final double value) {
 		if (index + 1 - capacity() > 0)
 			grow(index + 1, false);
 		set(index, value);
@@ -195,31 +195,31 @@ public class ShortArray implements ITypeArray {
 	// public void insert (int index, T value)
 	// public int lastIndexOf (T value, boolean identity)
 
-	public void addAll(final ShortArray array) {
+	public void addAll(final DoubleArray array) {
 		addAll(array, 0, array.size());
 	}
 
-	public void addAll(final short[] array) {
+	public void addAll(final double[] array) {
 		addAll(array, 0, array.length);
 	}
 
-	public void addAll(final ShortArray array, final int start, final int length) {
+	public void addAll(final DoubleArray array, final int start, final int length) {
 		addAll(array.elements, start, length);
 	}
 
-	public void addAll(final short[] array, final int start, final int count) {
+	public void addAll(final double[] array, final int start, final int count) {
 		ensureAdd(count);
 		System.arraycopy(array, start, elements, size(), count);
 		maxIdx += count;
 	}
 
 	public void swap(final int idx1, final int idx2) {
-		final short tmp = elements[idx1];
+		final double tmp = elements[idx1];
 		elements[idx1] = elements[idx2];
 		elements[idx2] = tmp;
 	}
 
-	public boolean contains(final short value) {
+	public boolean contains(final double value) {
 		int i = maxIdx;
 		while (i >= 0)
 			if (elements[i--] == value)
@@ -227,24 +227,24 @@ public class ShortArray implements ITypeArray {
 		return false;
 	}
 
-	public short containsEquals(final short value) {
+	public double containsEquals(final double value) {
 		int i = maxIdx;
 		while (i >= 0) {
-			short res;
+			double res;
 			if (value == (res = elements[i--]))
 				return res;
 		}
 		return -1;
 	}
 
-	public int indexOf(final short value) {
+	public int indexOf(final double value) {
 		for (int i = 0; i <= maxIdx; i++)
 			if (elements[i] == value)
 				return i;
 		return -1;
 	}
 
-	public int indexOfEquals(final short value) {
+	public int indexOfEquals(final double value) {
 		for (int i = 0; i <= maxIdx; i++)
 			if (value == elements[i])
 				return i;
@@ -257,10 +257,10 @@ public class ShortArray implements ITypeArray {
 	 * @param index
 	 * @return
 	 */
-	public short removeIndex(final int index) {
-		final short value = elements[index];
+	public double removeIndex(final int index) {
+		final double value = elements[index];
 		elements[index] = elements[maxIdx];
-		elements[maxIdx] = 0;
+		elements[maxIdx] = 0f;
 		maxIdx--;
 		return value;
 	}
@@ -271,40 +271,40 @@ public class ShortArray implements ITypeArray {
 	 * @param elem
 	 * @return
 	 */
-	public short remove(final short elem) {
+	public double remove(final double elem) {
 		final int index = indexOf(elem);
 		if (index != -1)
 			return removeIndex(index);
-		return 0;
+		return 0f;
 	}
 
-	public short cutIndex(final int index) {
-		final short value = elements[index];
+	public double cutIndex(final int index) {
+		final double value = elements[index];
 		System.arraycopy(elements, index + 1, elements, index, size() - index);
-		elements[maxIdx] = 0;
+		elements[maxIdx] = 0f;
 		maxIdx--;
 		return value;
 	}
 
-	public short pop() {
-		final short item = elements[maxIdx];
-		elements[maxIdx] = 0;
+	public double pop() {
+		final double item = elements[maxIdx];
+		elements[maxIdx] = 0f;
 		--maxIdx;
 		return item;
 	}
 
-	public short peek() {
+	public double peek() {
 		return elements[maxIdx];
 	}
 
-	public short[] shrink() {
+	public double[] shrink() {
 		if (elements.length != size())
 			return resize(size());
 		return elements;
 	}
 
-	public short[] resize(final int newSize) {
-		final short[] newItems = new short[newSize];
+	public double[] resize(final int newSize) {
+		final double[] newItems = new double[newSize];
 		System.arraycopy(elements, 0, newItems, 0, Math.min(size(), newItems.length));
 		return elements = newItems;
 	}
@@ -312,7 +312,7 @@ public class ShortArray implements ITypeArray {
 	/**
 	 * @return backend byte array
 	 */
-	public short[] getElements() {
+	public double[] getElements() {
 		return elements;
 	}
 
@@ -321,7 +321,7 @@ public class ShortArray implements ITypeArray {
 	 *
 	 * @param elements
 	 */
-	public void setElements(final short[] elements) {
+	public void setElements(final double[] elements) {
 		this.elements = elements;
 		maxIdx = elements != null ? elements.length - 1 : -1;
 	}
@@ -330,17 +330,17 @@ public class ShortArray implements ITypeArray {
 	public boolean equals(final Object object) {
 		if (object == this)
 			return true;
-		if (!(object instanceof ShortArray))
+		if (!(object instanceof DoubleArray))
 			return false;
-		final ShortArray array = (ShortArray) object;
+		final DoubleArray array = (DoubleArray) object;
 		final int n = maxIdx;
 		if (n != array.maxIdx)
 			return false;
-		final short[] items1 = elements;
-		final short[] items2 = array.elements;
+		final double[] items1 = elements;
+		final double[] items2 = array.elements;
 		for (int i = 0; i < n; i++) {
-			final short o1 = items1[i];
-			final short o2 = items2[i];
+			final double o1 = items1[i];
+			final double o2 = items2[i];
 			if (o1 != o2)
 				return false;
 		}

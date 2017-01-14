@@ -7,7 +7,7 @@ package net.xy.codebase.collection;
  *
  * @param <T>
  */
-public class EmptyArray<T> extends Array<T> {
+public class EmptyArray<T> extends Array<T>implements ITypeArray {
 	/**
 	 * default 0 size
 	 *

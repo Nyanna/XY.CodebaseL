@@ -9,11 +9,10 @@ import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.clone.Cloneable;
 import net.xy.codebase.io.Externalize;
-import net.xy.codebase.io.Serializable;
 import net.xy.codebase.io.SerializationContext.Decoder;
 import net.xy.codebase.io.SerializationContext.Encoder;
 
-public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externalize<Array<E>>, Cloneable<Array<E>> {
+public class Array<E> implements Iterable<E>, Iterator<E>, ITypeArray, Externalize<Array<E>>, Cloneable<Array<E>> {
 	private static final Logger LOG = LoggerFactory.getLogger(Array.class);
 	public static int MIN_GROWTH = 32;
 	public static final Array<?> EMPTY = new EmptyArray<Object>(Object.class);

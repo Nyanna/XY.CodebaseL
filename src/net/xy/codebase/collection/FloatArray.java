@@ -1,9 +1,8 @@
 package net.xy.codebase.collection;
 
-import net.xy.codebase.io.Serializable;
 import java.util.Arrays;
 
-public class FloatArray implements Serializable {
+public class FloatArray implements ITypeArray {
 	public static int MIN_GROWTH = 32;
 
 	private int maxIdx = -1;
@@ -136,8 +135,7 @@ public class FloatArray implements Serializable {
 	 * nulls all field in the array
 	 */
 	public void clear() {
-		for (int i = 0; i < elements.length; i++)
-			elements[i] = 0f;
+		fill(0f);
 		rewind();
 	}
 
@@ -145,9 +143,23 @@ public class FloatArray implements Serializable {
 	 * nulls all fields up to the current maximum element
 	 */
 	public void clean() {
-		for (int i = 0; i <= maxIdx; i++)
-			elements[i] = 0f;
+		fill(0f, maxIdx);
 		rewind();
+	}
+
+	public void fill(final float value) {
+		final int len = capacity();
+		fill(value, len);
+	}
+
+	public void fill(final float value, final int len) {
+		final float[] array = getElements();
+
+		if (len > 0)
+			array[0] = value;
+
+		for (int i = 1; i < len; i += i)
+			System.arraycopy(array, 0, array, i, len - i < i ? len - i : i);
 	}
 
 	public float get(final int index) {
@@ -161,11 +173,23 @@ public class FloatArray implements Serializable {
 	 * @return element at index or null
 	 */
 	public float getChecked(final int index) {
-		return index < elements.length ? elements[index] : null;
+		return index < elements.length ? elements[index] : 0f;
 	}
 
 	public void set(final int index, final float value) {
 		elements[index] = value;
+	}
+
+	/**
+	 * grows if needed
+	 *
+	 * @param index
+	 * @param value
+	 */
+	public void setChecked(final int index, final float value) {
+		if (index + 1 - capacity() > 0)
+			grow(index + 1, false);
+		set(index, value);
 	}
 
 	// public void insert (int index, T value)
