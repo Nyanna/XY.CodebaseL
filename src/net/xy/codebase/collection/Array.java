@@ -1,6 +1,5 @@
 package net.xy.codebase.collection;
 
-import net.xy.codebase.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
@@ -10,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.clone.Cloneable;
 import net.xy.codebase.io.Externalize;
+import net.xy.codebase.io.Serializable;
 import net.xy.codebase.io.SerializationContext.Decoder;
 import net.xy.codebase.io.SerializationContext.Encoder;
 
@@ -268,8 +268,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * nulls all field in the array
 	 */
 	public void clear() {
-		for (int i = 0; i < capacity(); i++)
-			set(i, null);
+		fill(null);
 		reset();
 	}
 
@@ -277,8 +276,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	 * nulls all fields up to the current maximum element
 	 */
 	public void clean() {
-		for (int i = 0; i <= getMaxIdx(); i++)
-			set(i, null);
+		fill(null, getMaxIdx());
 		reset();
 	}
 
@@ -356,7 +354,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 
 	/**
 	 * grows if needed
-	 * 
+	 *
 	 * @param index
 	 * @param value
 	 */
@@ -618,6 +616,21 @@ public class Array<E> implements Iterable<E>, Iterator<E>, Serializable, Externa
 	@Override
 	public void remove() {
 		removeIndex(getItIdx());
+	}
+
+	public void fill(final E value) {
+		final int len = capacity();
+		fill(value, len);
+	}
+
+	public void fill(final E value, final int len) {
+		final E[] array = getElements();
+
+		if (len > 0)
+			array[0] = value;
+
+		for (int i = 1; i < len; i += i)
+			System.arraycopy(array, 0, array, i, len - i < i ? len - i : i);
 	}
 
 	@Override
