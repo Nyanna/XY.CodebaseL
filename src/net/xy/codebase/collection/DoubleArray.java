@@ -90,7 +90,7 @@ public class DoubleArray implements ITypeArray {
 			grow(minCapacity, true);
 	}
 
-	protected void grow(final int minCapacity, final boolean minGrowth) {
+	protected synchronized void grow(final int minCapacity, final boolean minGrowth) {
 		// overflow-conscious code
 		final int oldCapacity = elements.length;
 		int newCapacity;
