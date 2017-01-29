@@ -14,7 +14,6 @@ package net.xy.codebase.io;
 
 import java.io.EOFException;
 import java.io.IOException;
-import net.xy.codebase.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -117,7 +116,7 @@ public class SerializationContext {
 	private boolean isSerializable(final Class<?> cl) {
 		if (cl != null) {
 			for (final Class<?> ifc : cl.getInterfaces())
-				if (Serializable.class.equals(ifc) || isSerializable(ifc))
+				if (Serializable.class.equals(ifc) || java.io.Serializable.class.equals(ifc) || isSerializable(ifc))
 					return true;
 			if (isSerializable(cl.getSuperclass()))
 				return true;
@@ -198,8 +197,12 @@ public class SerializationContext {
 			throws IOException, IllegalArgumentException, IllegalAccessException {
 		try {
 			write(out, target);
+		} catch (final IllegalArgumentException ex) {
+			throw new IllegalArgumentException(
+					"Error serializing object [obj=" + target.getClass().getCanonicalName() + "]", ex);
 		} catch (final IllegalStateException ex) {
-			LOG.error("Error serialiting object [" + ex.getMessage() + "]");
+			LOG.error("Error serializing object [msg=" + ex.getMessage() + "][obj="
+					+ target.getClass().getCanonicalName() + "]");
 			throw ex;
 		}
 	}
@@ -368,6 +371,8 @@ public class SerializationContext {
 				} catch (final UnserializableException ex) {
 					ex.addTarget(target);
 					throw ex;
+				} catch (final Exception ex2) {
+					throw new IllegalArgumentException("Error serializing field [" + field.getName() + "]", ex2);
 				}
 			}
 	}
