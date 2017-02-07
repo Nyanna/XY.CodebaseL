@@ -9,7 +9,7 @@ import net.xy.codebase.exec.IInterThreads;
  * @author Xyan
  *
  */
-public class InterThreadTimeoutable<E extends Enum<E>> extends TimeoutRunnable implements ICoveredRunnable {
+public class InterThreadTimeoutable<E extends Enum<E>> extends TimeoutStopable implements ICoveredRunnable {
 	/**
 	 * target thread
 	 */
@@ -38,7 +38,7 @@ public class InterThreadTimeoutable<E extends Enum<E>> extends TimeoutRunnable i
 	}
 
 	@Override
-	public void run() {
+	protected void runInner() {
 		it.run(thread, run);
 	}
 
