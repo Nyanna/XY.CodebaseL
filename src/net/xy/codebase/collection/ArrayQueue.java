@@ -172,14 +172,12 @@ public class ArrayQueue<E> implements Queue<E> {
 	}
 
 	/**
-	 * clears the queue, is not synchronized
+	 * clears the queue
 	 */
 	@Override
 	public void clear() {
-		for (int i = 0; i < elements.length(); i++)
-			elements.set(i, null);
-		putIndex.set(0);
-		getIndex.set(0);
+		while (take() != null)
+			;
 	}
 
 	private static final long IMASK = 0xffffffffL;
