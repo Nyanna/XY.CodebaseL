@@ -78,6 +78,7 @@ public class TypeParser {
 	// Pattern.compile("\\{(.*)\\}:([a-zA-Z0-9.$]+)", MOD);
 	private Map<String, ITypeConverter<?>> customFConverters;
 	private Map<Class<?>, IStringConverter<?>> customBConverters;
+	private Map<Class<?>, String> customNConverters;
 
 	private final DecimalFormat floatFormat = new DecimalFormat("0.#####", DecimalFormatSymbols.getInstance(Locale.US));
 
@@ -122,6 +123,9 @@ public class TypeParser {
 	public void add(final String name, final Class<?> clazz, final IObjectConverter<?> parser) {
 		add(clazz, parser);
 		add(name, parser);
+		if (customNConverters == null)
+			customNConverters = new HashMap<Class<?>, String>();
+		customNConverters.put(clazz, name);
 	}
 
 	/**
@@ -321,9 +325,13 @@ public class TypeParser {
 		if (value == null)
 			return "";
 		else if (customBConverters != null && (conv = customBConverters.get(value.getClass())) != null) {
+			final String name = customNConverters.get(value.getClass());
 			@SuppressWarnings("unchecked")
 			final String res = conv.toString(value);
-			return res;
+			final StringBuilder resb = new StringBuilder(res);
+			if (name != null)
+				resb.append(":").append(name);
+			return resb.toString();
 		} else if (value.getClass().isArray()) {
 			final Class<?> clazz = value.getClass().getComponentType();
 
