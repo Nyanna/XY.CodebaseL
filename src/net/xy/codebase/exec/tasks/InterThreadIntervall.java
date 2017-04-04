@@ -20,7 +20,7 @@ public class InterThreadIntervall<E extends Enum<E>> extends RecurringTask imple
 	/**
 	 * back reference
 	 */
-	private final IInterThreads<E> it;
+	private IInterThreads<E> it;
 
 	/**
 	 * default, with timed first run
@@ -38,6 +38,10 @@ public class InterThreadIntervall<E extends Enum<E>> extends RecurringTask imple
 		this.run = run;
 		this.thread = thread;
 		this.it = it;
+	}
+
+	protected void setInter(final IInterThreads<E> inter) {
+		this.it = inter;
 	}
 
 	/**
