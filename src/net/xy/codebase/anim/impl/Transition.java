@@ -29,6 +29,10 @@ public class Transition extends AbstractAnimation {
 	 * graph for calculation
 	 */
 	private Graph graph;
+	/**
+	 * incremental mode
+	 */
+	private boolean incremental;
 
 	/**
 	 * instantly set to new value on step
@@ -138,16 +142,30 @@ public class Transition extends AbstractAnimation {
 	}
 
 	/**
+	 * for stateless paradigms use inkremental mode this will use Field.add
+	 * instead of Field.set
+	 * 
+	 * @param incremental
+	 */
+	public void setIncremental(final boolean incremental) {
+		this.incremental = incremental;
+	}
+
+	/**
 	 * core method to calculate an animation step
 	 */
 	@Override
 	public void step(final IActor actor, final IAnimationContext ac) {
 		final double interpolate = graph.value(actor, ac);
-		final Double oldVal = field.get(actor, ac);
-		final boolean changed = oldVal == null
-				|| Double.compare(interpolate, Double.NaN) != 0 && !Primitive.equals(oldVal.doubleValue(), interpolate);
-		if (changed)
-			field.set(actor, interpolate, ac);
+		if (incremental)
+			field.add(actor, interpolate, ac);
+		else {
+			final Double oldVal = field.get(actor, ac);
+			final boolean changed = oldVal == null || Double.compare(interpolate, Double.NaN) != 0
+					&& !Primitive.equals(oldVal.doubleValue(), interpolate);
+			if (changed)
+				field.set(actor, interpolate, ac);
+		}
 		if (graph.isEnd(actor, ac))
 			end(actor);
 	}

@@ -8,7 +8,7 @@ import net.xy.codebase.collection.Array;
 
 /**
  * default implementation for an animation remembering actor
- * 
+ *
  * @author Xyan
  *
  */
@@ -109,7 +109,7 @@ public class Actor implements IActor {
 	}
 
 	@Override
-	public IAnimation addTransition(final INumericAttribute field, final double start, final double target,
+	public Transition addTransition(final INumericAttribute field, final double start, final double target,
 			final long duration) {
 		final Transition res = new Transition(field, start, target, duration);
 		addAnimation(res);
@@ -117,7 +117,7 @@ public class Actor implements IActor {
 	}
 
 	@Override
-	public IAnimation addTransition(final INumericAttribute field, final double target, final long duration) {
+	public Transition addTransition(final INumericAttribute field, final double target, final long duration) {
 		final Transition res = new Transition(field, target, duration);
 		addAnimation(res);
 		return res;

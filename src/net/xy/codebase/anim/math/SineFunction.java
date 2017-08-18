@@ -22,6 +22,7 @@ public class SineFunction implements IFunction {
 	public double getVal(final IActor a, final IAnimationContext ac, final IAxis x, final IAxis y) {
 		final double time = x.getVal(a, ac);
 		final double p = Math.sin(Math.PI * 2d * (time % intervallMs / intervallMs) + Math.PI * shift);
-		return y.getMin(a, ac) + y.getMax(a, ac) * p;
+		final double res = y.getMin(a, ac) + y.getMax(a, ac) * p;
+		return res;
 	}
 }

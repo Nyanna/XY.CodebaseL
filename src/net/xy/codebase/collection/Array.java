@@ -34,7 +34,8 @@ public class Array<E> implements Iterable<E>, Iterator<E>, ITypeArray, Externali
 	/**
 	 * empty, use as convenience container
 	 */
-	public Array() {}
+	public Array() {
+	}
 
 	/**
 	 * with initial default capacity

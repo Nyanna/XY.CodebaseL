@@ -1,8 +1,10 @@
 package net.xy.codebase.anim;
 
+import net.xy.codebase.anim.impl.Transition;
+
 /**
  * everything that can be animated is a actor
- * 
+ *
  * @author Xyan
  *
  */
@@ -14,10 +16,10 @@ public interface IActor {
 
 	public IAnimation addAnimation(IAnimation anim);
 
-	public IAnimation addTransition(final INumericAttribute field, final double start, final double target,
+	public Transition addTransition(final INumericAttribute field, final double start, final double target,
 			final long duration);
 
-	public IAnimation addTransition(final INumericAttribute field, final double target, final long duration);
+	public Transition addTransition(final INumericAttribute field, final double target, final long duration);
 
 	public IActor clearAnimations();
 
