@@ -46,7 +46,7 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 	public synchronized E take() {
 		final E elem = super.take();
 		if (elem != null)
-			if (set.remove(elem)) {
+			if (!set.remove(elem)) {
 				LOG.error("Error element in queue which was not added or has changed, reset [" + elem + "]");
 				set.clear();
 				clear();

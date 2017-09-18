@@ -39,8 +39,26 @@ public class HashSet<K> {
 	 * @serial
 	 */
 	private final float loadFactor;
+	/**
+	 * customizable hash and equals strategy
+	 */
+	private IHashStrategy<K, K> stra;
 
-	public HashSet(int initialCapacity, final float loadFactor, final Class<K> clazz) {
+	public HashSet(final int initialCapacity, final float loadFactor, final Class<K> clazz) {
+		this(initialCapacity, loadFactor, clazz, new IHashStrategy<K, K>() {
+			@Override
+			public int hashCode(final K key) {
+				return hash(key.hashCode());
+			}
+
+			@Override
+			public boolean equals(final K e, final K key) {
+				return e.equals(key);
+			}
+		});
+	}
+
+	public HashSet(int initialCapacity, final float loadFactor, final Class<K> clazz, final IHashStrategy<K, K> stra) {
 		if (initialCapacity < 0)
 			throw new IllegalArgumentException("Illegal initial capacity: " + initialCapacity);
 		if (initialCapacity > MAXIMUM_CAPACITY)
@@ -56,6 +74,7 @@ public class HashSet<K> {
 		this.loadFactor = loadFactor;
 		threshold = (int) (capacity * loadFactor);
 		table = (K[][]) Array.newInstance(clazz, capacity, 1);
+		this.stra = stra;
 	}
 
 	public HashSet(final Class<K> clazz, final int capacity) {
@@ -64,6 +83,10 @@ public class HashSet<K> {
 
 	public HashSet(final Class<K> clazz) {
 		this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, clazz);
+	}
+
+	public HashSet(final Class<K> clazz, final IHashStrategy<K, K> stra) {
+		this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, clazz, stra);
 	}
 
 	public int size() {
@@ -75,11 +98,11 @@ public class HashSet<K> {
 	}
 
 	public boolean contains(final K key) {
-		final int hash = hash(key.hashCode());
+		final int hash = stra.hashCode(key);
 		final K[] b = table[indexFor(hash, table.length)];
 		for (int i = 0; i < b.length; i++) {
 			final K e = b[i];
-			if (e != null && e.equals(key))
+			if (e != null && stra.equals(e, key))
 				return true;
 		}
 		return false;
@@ -93,8 +116,8 @@ public class HashSet<K> {
 		return res;
 	}
 
-	private static <K> boolean putInner(final K key, final K[][] table) {
-		final int hash = hash(key.hashCode());
+	private boolean putInner(final K key, final K[][] table) {
+		final int hash = stra.hashCode(key);
 		final int index = indexFor(hash, table.length);
 		K[] b = table[index];
 
@@ -105,7 +128,7 @@ public class HashSet<K> {
 				if (firstNull == -1)
 					firstNull = i;
 				continue;
-			} else if (e.equals(key))
+			} else if (stra.equals(e, key))
 				return false;
 		}
 
@@ -147,14 +170,14 @@ public class HashSet<K> {
 		}
 	}
 
-	public boolean remove(final Object key) {
-		final int hash = hash(key.hashCode());
+	public boolean remove(final K key) {
+		final int hash = stra.hashCode(key);
 		final int index = indexFor(hash, table.length);
 		final K[] b = table[index];
 
 		for (int i = 0; i < b.length; i++) {
 			final K e = b[i];
-			if (e != null && e.equals(key)) {
+			if (e != null && stra.equals(e, key)) {
 				b[i] = null;
 				size--;
 				return true;
@@ -238,5 +261,13 @@ public class HashSet<K> {
 
 	private static int indexFor(final int h, final int length) {
 		return h & length - 1;
+	}
+
+	public static interface IHashStrategy<K, V> {
+
+		public int hashCode(K key);
+
+		public boolean equals(K e, K key);
+
 	}
 }
