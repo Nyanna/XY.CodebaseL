@@ -1,8 +1,5 @@
 package net.xy.codebase.collection;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +16,7 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 	/**
 	 * backed set
 	 */
-	private final Map<E, E> set = new HashMap<E, E>();
+	private final HashSet<E> set;
 
 	/**
 	 * default
@@ -29,11 +26,12 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 	 */
 	public ArrayQueueSet(final Class<E> clazz, final int maxCount) {
 		super(clazz, maxCount);
+		set = new HashSet<E>(clazz);
 	}
 
 	@Override
 	public synchronized boolean add(final E elem) {
-		if (set.put(elem, elem) == null) {
+		if (set.put(elem)) {
 			final boolean added = super.add(elem);
 			if (!added) {
 				set.remove(elem);
@@ -48,7 +46,7 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 	public synchronized E take() {
 		final E elem = super.take();
 		if (elem != null)
-			if (set.remove(elem) == null) {
+			if (set.remove(elem)) {
 				LOG.error("Error element in queue which was not added or has changed, reset [" + elem + "]");
 				set.clear();
 				clear();
