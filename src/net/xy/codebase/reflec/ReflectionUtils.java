@@ -9,7 +9,7 @@ public class ReflectionUtils {
 		Class<?> curClass = obj instanceof Class ? (Class<?>) obj : obj.getClass();
 		Object curObject = obj instanceof Class ? null : obj;
 		Field curField = null;
-		Object lastObject;
+		Object lastObject = curObject;
 
 		for (final String field : fields)
 			try {
@@ -36,7 +36,7 @@ public class ReflectionUtils {
 			} catch (final IllegalAccessException e) {
 				throw new IllegalArgumentException("Field is not accessible [" + field + "][" + fqn + "]", e);
 			}
-		return new InstanceField(curField, curObject);
+		return new InstanceField(curField, lastObject);
 	}
 
 	public static class InstanceField {
