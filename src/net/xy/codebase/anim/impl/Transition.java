@@ -144,11 +144,13 @@ public class Transition extends AbstractAnimation {
 	/**
 	 * for stateless paradigms use inkremental mode this will use Field.add
 	 * instead of Field.set
-	 * 
+	 *
 	 * @param incremental
+	 * @return
 	 */
-	public void setIncremental(final boolean incremental) {
+	public Transition setIncremental(final boolean incremental) {
 		this.incremental = incremental;
+		return this;
 	}
 
 	/**

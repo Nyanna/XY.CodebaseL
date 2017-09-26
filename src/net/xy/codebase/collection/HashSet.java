@@ -97,15 +97,15 @@ public class HashSet<K> {
 		return size == 0;
 	}
 
-	public boolean contains(final K key) {
+	public K contains(final K key) {
 		final int hash = stra.hashCode(key);
 		final K[] b = table[indexFor(hash, table.length)];
 		for (int i = 0; i < b.length; i++) {
 			final K e = b[i];
 			if (e != null && stra.equals(e, key))
-				return true;
+				return e;
 		}
-		return false;
+		return null;
 	}
 
 	public boolean put(final K key) {

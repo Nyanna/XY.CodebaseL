@@ -425,14 +425,14 @@ public class Array<E> implements Iterable<E>, Iterator<E>, ITypeArray, Externali
 		set(idx2, tmp);
 	}
 
-	public boolean contains(final E value) {
+	public E contains(final E value) {
 		int i = getMaxIdx();
 		while (i >= 0) {
 			final E val = get(i--);
 			if (val == value)
-				return true;
+				return val;
 		}
-		return false;
+		return null;
 	}
 
 	public E containsEquals(final E value) {

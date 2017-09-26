@@ -16,6 +16,18 @@ public class ArraySet<E> extends Array<E> {
 	}
 
 	@Override
+	public E removeIndex(final int index) {
+		final E res = super.removeIndex(index);
+		set.remove(res);
+		return res;
+	}
+
+	@Override
+	public E contains(final E e) {
+		return set.contains(e);
+	}
+
+	@Override
 	public void rewind() {
 		super.rewind();
 		set.clear();
