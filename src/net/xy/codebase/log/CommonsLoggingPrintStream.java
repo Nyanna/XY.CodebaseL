@@ -57,7 +57,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 	}
 
 	private CommonsLoggingPrintStream(final LoggingOutputStream los) {
-		super(los, true);
+		super(los, false);
 		outputStream = los;
 	}
 
@@ -362,6 +362,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println();
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -373,6 +374,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -384,6 +386,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -395,6 +398,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -406,6 +410,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -417,6 +422,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -428,6 +434,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -439,6 +446,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -450,6 +458,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -461,6 +470,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		try {
 			setNameOfCaller(lock);
 			super.println(x);
+			flush();
 		} finally {
 			lock.unlock();
 		}
@@ -486,6 +496,7 @@ public class CommonsLoggingPrintStream extends PrintStream {
 		} finally {
 			lock.unlock();
 		}
+
 	}
 
 	@Override
