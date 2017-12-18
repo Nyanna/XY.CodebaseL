@@ -1,5 +1,6 @@
 package net.xy.codebase.exec;
 
+import net.xy.codebase.exec.TimeoutQueue.IQueueObserver;
 import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.RecurringTask;
 import net.xy.codebase.exec.tasks.TimeoutRunnable;
@@ -31,20 +32,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param ms
 	 *            -1 waits until one job gots collected, 0 to try and return
 	 */
-	public void doAll(E target, int ms);
-
-	/**
-	 * waits up to ms for at least one job to execute up to all jobs in que are
-	 * executed
-	 *
-	 * @param target
-	 * @param ms
-	 *            -1 waits until one job gots collected, 0 to try and return
-	 * @param obs
-	 *            (optional) job observer
-	 *
-	 */
-	public void doAll(E target, int ms, IJobObserver<E> obs);
+	public void doAll(E target, int ms, IPerfCounter measure);
 
 	/**
 	 * put an job in this target threads category queue
@@ -144,33 +132,57 @@ public interface IInterThreads<E extends Enum<E>> {
 	 */
 	public boolean start(ITask task);
 
+	public void setObserver(IJobObserver<E> obs);
+
+	public IJobObserver<E> getObserver();
+
 	/**
 	 * interceptor interface for progress listenting
 	 *
 	 * @author Xyan
 	 *
 	 */
-	public static interface IJobObserver<E> {
+	public static interface IJobObserver<E> extends IQueueObserver {
 		/**
 		 *
 		 * @param target
 		 * @param job
+		 * @param measure
 		 * @return when false job gots skipped
 		 */
-		public boolean startJob(E target, Runnable job);
+		public boolean jobStart(E target, Runnable job, IPerfCounter measure);
 
 		/**
 		 * after the job gets executed
 		 *
 		 * @param target
 		 * @param job
+		 * @param measure
+		 * @param duration
 		 */
-		public void endJob(E target, Runnable job);
+		public void jobEnd(E target, Runnable job, IPerfCounter measure, long duration);
+
+		/**
+		 * called when an task has to be droped
+		 *
+		 * @param target
+		 * @param job
+		 * @param size
+		 */
+		public void jobDroped(E target, Runnable job, int size);
+
+		/**
+		 * called when an job was added to the queue
+		 * 
+		 * @param target
+		 * @param job
+		 */
+		public void jobAdded(E target, Runnable job);
 	}
 
 	/**
 	 * thrown by runnables causes an clean end of task proccessing
-	 * 
+	 *
 	 * @author Xyan
 	 *
 	 */

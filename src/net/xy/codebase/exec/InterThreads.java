@@ -14,7 +14,6 @@ import net.xy.codebase.exec.tasks.InterThreadSchedulable;
 import net.xy.codebase.exec.tasks.InterThreadTimeoutable;
 import net.xy.codebase.exec.tasks.PriorityInterThreadRunnable;
 import net.xy.codebase.exec.tasks.RecurringTask;
-import net.xy.codebase.util.StringUtil;
 
 /**
  * implementation for inter thread job execution
@@ -29,20 +28,11 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	/**
 	 * thread job category stores
 	 */
-	private EnumMap<E, TrackingQueue> ctxs;
+	protected EnumMap<E, TrackingQueue> ctxs;
 	/**
 	 * timeout queue for delayed task execution
 	 */
 	private final TimeoutQueue tque;
-	/**
-	 * for diagnostics output
-	 */
-	private StringUtil sb;
-	/**
-	 * for failure logging
-	 */
-	private long lastDropMessage;
-	private int lastDropCounter;
 
 	/**
 	 * inner, initializing common fields
@@ -63,7 +53,6 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		ctxs = new EnumMap<E, TrackingQueue>(enun);
 		for (final E val : evals)
 			ctxs.put(val, new TrackingQueue(new ParkingQueue<Runnable>(Runnable.class, capacity)));
-		addDiagnosticTask();
 	}
 
 	/**
@@ -76,53 +65,12 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		ctxs = new EnumMap<E, TrackingQueue>(enun);
 		for (final Entry<E, ParkingQueue<Runnable>> val : giv.entrySet())
 			ctxs.put(val.getKey(), new TrackingQueue(val.getValue()));
-		addDiagnosticTask();
 	}
 
-	private void addDiagnosticTask() {
-		if (LOG.isDebugEnabled())
-			LOG.debug("Created task broker [" + ctxs.size() + "][" + this + "]");
-		tque.add(5 * 1000, new Runnable() {
-			@Override
-			public void run() {
-				printDiagnostics();
-			}
-		});
-	}
-
-	protected void printDiagnostics() {
-		if (!LOG.isDebugEnabled())
-			return;
-		if (sb == null)
-			sb = new StringUtil();
-		sb.setLength(0);
-
-		sb.append("Tasks ques:\n");
-		for (final Entry<E, TrackingQueue> entry : ctxs.entrySet()) {
-			final TrackingQueue que = entry.getValue();
-			sb.padRight(12, entry.getKey()).append("|");
-			sb.padLeft(3, que.size()).append(" q|");
-			sb.append("+").padLeft(6, que.added.get()).append(" ad|");
-			sb.padLeft(7, que.removed.get()).append(" re|");
-			sb.append("\n");
-			que.reset();
-		}
-
-		sb.setLength(sb.length() - 1);
-		LOG.info(sb.toString());
-	}
-
-	private void taskDroped(final E target, final Runnable job, final int size) {
-		final long now = System.currentTimeMillis();
-		if (lastDropMessage < now - 100) {
-			lastDropMessage = now;
-			if (lastDropCounter > 0) {
-				LOG.error("Thread overloaded droping job and others [" + lastDropCounter + "][" + job + "]");
-				lastDropCounter = 0;
-			} else
-				LOG.error("Target thread too full droping job [" + target + "][" + size + "][" + job + "]");
-		} else
-			lastDropCounter++;
+	@Override
+	public void setObserver(final net.xy.codebase.exec.IInterThreads.IJobObserver<E> obs) {
+		super.setObserver(obs);
+		tque.setObserver(obs);
 	}
 
 	/**
@@ -131,6 +79,10 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 */
 	protected TrackingQueue get(final E target) {
 		return ctxs.get(target);
+	}
+
+	public int getQueueAmount() {
+		return ctxs.size();
 	}
 
 	@Override
@@ -142,9 +94,13 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	public boolean run(final E target, final Runnable job) {
 		final TrackingQueue que = get(target);
 		if (!que.add(job)) {
-			taskDroped(target, job, que.size());
+			if (obs != null)
+				obs.jobDroped(target, job, que.size());
+			else
+				LOG.error("Target thread too full droping job [" + target + "][" + que.size() + "][" + job + "]");
 			return false;
-		}
+		} else if (obs != null)
+			obs.jobAdded(target, job);
 		return true;
 	}
 

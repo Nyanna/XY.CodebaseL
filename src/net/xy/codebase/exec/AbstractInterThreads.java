@@ -13,47 +13,28 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterThreads<E> {
 	private static final Logger LOG = LoggerFactory.getLogger(AbstractInterThreads.class);
+	protected IJobObserver<E> obs = new JobObserver<E>();
 
 	@Override
-	public void doAll(final E target, final int ms) {
-		doAll(target, ms, null);
+	public void setObserver(final IJobObserver<E> obs) {
+		this.obs = obs;
 	}
 
 	@Override
-	public void doAll(final E target, final int ms, final IJobObserver<E> obs) {
-		final IPerfCounter measure = getMeasure();
-		if (measure != null)
-			doAllMeasured(target, ms, obs, measure);
-		else
-			doAllPlain(target, ms, obs);
+	public IJobObserver<E> getObserver() {
+		return obs;
 	}
 
-	private void doAllMeasured(final E target, final int ms, final IJobObserver<E> obs, final IPerfCounter measure) {
-		boolean loop = true;
-		measure.stopMeasure();
-		for (Runnable job = next(target, ms); job != null; job = next(target, 0)) {
-			measure.startMeasure();
-			if (obs == null)
-				loop = runGuarded(job);
-			else if (obs.startJob(target, job)) {
-				loop = runGuarded(job);
-				obs.endJob(target, job);
-			}
-			measure.stopMeasure();
-			if (!loop)
-				break;
-		}
-		measure.startMeasure();
-	}
-
-	private void doAllPlain(final E target, final int ms, final IJobObserver<E> obs) {
+	@Override
+	public void doAll(final E target, final int ms, final IPerfCounter measure) {
 		boolean loop = true;
 		for (Runnable job = next(target, ms); job != null; job = next(target, 0)) {
 			if (obs == null)
 				loop = runGuarded(job);
-			else if (obs.startJob(target, job)) {
+			else if (obs.jobStart(target, job, measure)) {
+				final long start = System.nanoTime();
 				loop = runGuarded(job);
-				obs.endJob(target, job);
+				obs.jobEnd(target, job, measure, System.nanoTime() - start);
 			}
 			if (!loop)
 				break;
@@ -74,12 +55,5 @@ public abstract class AbstractInterThreads<E extends Enum<E>> implements IInterT
 			LOG.error("Error running job", e);
 		}
 		return true;
-	}
-
-	/**
-	 * @return an possibly present counter object or null
-	 */
-	protected IPerfCounter getMeasure() {
-		return null;
 	}
 }

@@ -1,6 +1,6 @@
 package net.xy.codebase.exec;
 
-public class ThreadExtended extends Thread {
+public class ThreadExtended extends Thread implements IThreadExtended {
 	private final String name;
 
 	public ThreadExtended(final String name, final boolean deamon) {
@@ -9,6 +9,7 @@ public class ThreadExtended extends Thread {
 		setDaemon(deamon);
 	}
 
+	@Override
 	public String getThreadName() {
 		return name;
 	}

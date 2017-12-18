@@ -28,6 +28,7 @@ public class TimeoutQueue {
 	 * timer thread
 	 */
 	private final QueueTimer timer;
+	private IQueueObserver obs;
 
 	/**
 	 * default
@@ -55,13 +56,20 @@ public class TimeoutQueue {
 		addDiagnosticTask();
 	}
 
+	public void setObserver(final IQueueObserver obs) {
+		this.obs = obs;
+		timer.setObserver(obs);
+	}
+
 	private void addDiagnosticTask() {
 		add(30 * 1000, new Runnable() {
 			@Override
 			public void run() {
-				if (LOG.isDebugEnabled())
-					LOG.debug("TQueue size [" + queue.size() + "][exec=" + timer.getResetExecCount() + "]["
-							+ timer.getName() + "]");
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("TQueue size [" + queue.size() + "][exec=" + timer.getExecCount() + "][" + timer.getName()
+							+ "]");
+					timer.resetExecCount();
+				}
 			}
 		});
 	}
@@ -83,6 +91,8 @@ public class TimeoutQueue {
 		}
 		if (!res)
 			LOG.error("Error inserting task into timeout que [" + t + "][" + timer.getName() + "]");
+		else if (obs != null)
+			obs.taskAdded(t);
 		return res;
 	}
 
@@ -127,6 +137,10 @@ public class TimeoutQueue {
 		 * amount of executed tasks
 		 */
 		private int execCount = 0;
+		/**
+		 * task observer
+		 */
+		private IQueueObserver obs;
 
 		/**
 		 * to get post initialized by extern queue
@@ -137,15 +151,16 @@ public class TimeoutQueue {
 			this(null, name);
 		}
 
-		/**
-		 * returns and resets amount of executed tasks
-		 *
-		 * @return
-		 */
-		public int getResetExecCount() {
-			final int tex = execCount;
+		public void setObserver(final IQueueObserver obs) {
+			this.obs = obs;
+		}
+
+		public void resetExecCount() {
 			execCount = 0;
-			return tex;
+		}
+
+		public int getExecCount() {
+			return execCount;
 		}
 
 		/**
@@ -174,13 +189,14 @@ public class TimeoutQueue {
 			ITask nt = null;
 			try {
 				while (running) {
+					long wns = 0;
 					synchronized (tq) {
 						if ((nt = tq.peek()) == null) {
 							tq.wait();
 							continue;
 						}
 
-						final long wns = nt.nextRun() - System.nanoTime();
+						wns = nt.nextRun() - System.nanoTime();
 						if (wns > 0l) {
 							final long wms = TimeUnit.NANOSECONDS.toMillis(wns);
 							final int wmn = (int) (wns % 1000000);
@@ -189,7 +205,7 @@ public class TimeoutQueue {
 						} else
 							removeHead(nt);
 					}
-					timedOut(nt);
+					timedOut(nt, wns);
 				}
 			} catch (final InterruptedException e) {
 				e.printStackTrace();
@@ -210,11 +226,12 @@ public class TimeoutQueue {
 		 * check and try to run the next task
 		 *
 		 * @param nt
+		 * @param wns
 		 * @return null on success or the new queue head
 		 */
-		private void timedOut(final ITask nt) {
+		private void timedOut(final ITask nt, final long wns) {
 			execCount++;
-			run(nt);
+			run(nt, wns);
 			if (nt.isRecurring())
 				synchronized (tq.queue) {
 					tq.queue.add(nt);
@@ -226,13 +243,18 @@ public class TimeoutQueue {
 		 *
 		 * @param t
 		 */
-		private void run(final ITask t) {
+		private void run(final ITask t, final long wns) {
 			try {
+				if (obs != null)
+					obs.taskStarted(t, wns);
 				if (LOG.isTraceEnabled())
 					LOG.trace("firing task [" + t + "]");
 				t.run();
 			} catch (final Exception e) {
 				LOG.error("Error running task", e);
+			} finally {
+				if (obs != null)
+					obs.taskStoped(t);
 			}
 		}
 
@@ -258,5 +280,36 @@ public class TimeoutQueue {
 		public int compare(final ITask t1, final ITask t2) {
 			return Primitive.compare(t1.nextRun(), t2.nextRun());
 		}
+	}
+
+	/**
+	 * observer interface for timeout queue
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public static interface IQueueObserver {
+
+		/**
+		 * task was added to que
+		 *
+		 * @param t
+		 */
+		public void taskAdded(ITask t);
+
+		/**
+		 * task was started maybe with a letency
+		 *
+		 * @param t
+		 * @param latency
+		 */
+		public void taskStarted(ITask t, long latency);
+
+		/**
+		 * task finished and returned, also exeptionally
+		 *
+		 * @param t
+		 */
+		public void taskStoped(ITask t);
 	}
 }
