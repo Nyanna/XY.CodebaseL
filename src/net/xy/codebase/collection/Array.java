@@ -27,7 +27,7 @@ public class Array<E> implements Iterable<E>, Iterator<E>, ITypeArray, Externali
 		return (Array<T>) EMPTY;
 	}
 
-	private int maxIdx = -1;
+	private int size = 0;
 	private transient int itIdx = 0;
 	private E[] elements;
 
@@ -206,15 +206,15 @@ public class Array<E> implements Iterable<E>, Iterator<E>, ITypeArray, Externali
 	 * @return
 	 */
 	public int size() {
-		return getMaxIdx() + 1;
+		return size;
 	}
 
 	protected int getMaxIdx() {
-		return maxIdx;
+		return size - 1;
 	}
 
 	protected void setMaxIdx(final int idx) {
-		maxIdx = idx;
+		size = idx + 1;
 	}
 
 	protected void setItIdx(final int itIdx) {
@@ -577,6 +577,12 @@ public class Array<E> implements Iterable<E>, Iterator<E>, ITypeArray, Externali
 		if (capacity() != size())
 			return resize(size());
 		return getElements();
+	}
+
+	public static <E> E[] shrinkOrNull(final Array<E> arr) {
+		if (!arr.isEmpty())
+			return arr.shrink();
+		return null;
 	}
 
 	public E[] shrinkedCopy() {

@@ -35,39 +35,39 @@ public class TypeParser {
 	private static final int MOD = Pattern.CASE_INSENSITIVE;
 	private static final String ARRAY_DELIMITER = ",";
 	// stricts
-	private static final Pattern PT_STRICT_STRING = Pattern.compile("(.*):String", MOD);
-	private static final Pattern PT_STRICT_BYTE = Pattern.compile("([0-9\\-]{1,3}):Byte", MOD);
-	private static final Pattern PT_STRICT_SHORT = Pattern.compile("([0-9\\-]{1,5}):Short", MOD);
-	private static final Pattern PT_STRICT_INT = Pattern.compile("([0-9\\-]{1,10}):Integer", MOD);
-	private static final Pattern PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,21}):Long", MOD);
-	private static final Pattern PT_STRICT_FLOAT = Pattern.compile("([0-9,\\-fE]+):Float", MOD);
-	private static final Pattern PT_STRICT_DOUBLE = Pattern.compile("([0-9.,\\-d]+):Double", MOD);
-	private static final Pattern PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD);
-	private static final Pattern PT_STRICT_CHAR = Pattern.compile("(.{1}):Char", MOD);
-	private static final Pattern PT_STRING = Pattern.compile("(\".*\")", MOD);
-	private static final Pattern PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD);
-	private static final Pattern PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD);
-	private static final Pattern PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD);
-	private static final Pattern PT_LONG = Pattern.compile("([0-9\\-l]{1,21})", MOD);
-	private static final Pattern PT_FLOAT = Pattern.compile("(-?[0-9.,]+E?[0-9]*f?)", MOD);
-	private static final Pattern PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD);
-	private static final Pattern PT_BOOL = Pattern.compile("(true|false)", MOD);
-	private static final Pattern PT_CHAR = Pattern.compile("('.{1}')", MOD);
-	private static final Pattern PT_HEXINT = Pattern.compile("(#[0-9A-F]{1,10})", MOD);
+	private static final Matcher PT_STRICT_STRING = Pattern.compile("(.*):String", MOD).matcher("");
+	private static final Matcher PT_STRICT_BYTE = Pattern.compile("([0-9\\-]{1,3}):Byte", MOD).matcher("");
+	private static final Matcher PT_STRICT_SHORT = Pattern.compile("([0-9\\-]{1,5}):Short", MOD).matcher("");
+	private static final Matcher PT_STRICT_INT = Pattern.compile("([0-9\\-]{1,10}):Integer", MOD).matcher("");
+	private static final Matcher PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,21}):Long", MOD).matcher("");
+	private static final Matcher PT_STRICT_FLOAT = Pattern.compile("([0-9,\\-fE]+):Float", MOD).matcher("");
+	private static final Matcher PT_STRICT_DOUBLE = Pattern.compile("([0-9.,\\-d]+):Double", MOD).matcher("");
+	private static final Matcher PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD).matcher("");
+	private static final Matcher PT_STRICT_CHAR = Pattern.compile("(.{1}):Char", MOD).matcher("");
+	private static final Matcher PT_STRING = Pattern.compile("(\".*\")", MOD).matcher("");
+	private static final Matcher PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD).matcher("");
+	private static final Matcher PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD).matcher("");
+	private static final Matcher PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD).matcher("");
+	private static final Matcher PT_LONG = Pattern.compile("([0-9\\-l]{1,21})", MOD).matcher("");
+	private static final Matcher PT_FLOAT = Pattern.compile("(-?[0-9.,]+E?[0-9]*f?)", MOD).matcher("");
+	private static final Matcher PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD).matcher("");
+	private static final Matcher PT_BOOL = Pattern.compile("(true|false)", MOD).matcher("");
+	private static final Matcher PT_CHAR = Pattern.compile("('.{1}')", MOD).matcher("");
+	private static final Matcher PT_HEXINT = Pattern.compile("(#[0-9A-F]{1,10})", MOD).matcher("");
 	// calls an converter like factory method accepting string returning object
-	private static final Pattern PT_CONVERTER = Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD);
+	private static final Matcher PT_CONVERTER = Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD).matcher("");
 	// creates via reflection an instance with an string constructor
-	private static final Pattern PT_CUSTOM = Pattern.compile("(.*):([a-zA-Z0-9]+)", MOD);
+	private static final Matcher PT_CUSTOM = Pattern.compile("(.*):([a-zA-Z0-9]+)", MOD).matcher("");
 	// returns as lists
-	private static final Pattern PT_ARRAY_STRING_SIMPLE = Pattern.compile("\\{(.*)\\}", MOD);
-	private static final Pattern PT_ARRAY_STRING = Pattern.compile("\\{(.*)\\}:String", MOD);
-	private static final Pattern PT_ARRAY_BYTE = Pattern.compile("\\{(.*)\\}:Byte", MOD);
-	private static final Pattern PT_ARRAY_SHORT = Pattern.compile("\\{(.*)\\}:Short", MOD);
-	private static final Pattern PT_ARRAY_INT = Pattern.compile("\\{(.*)\\}:Integer", MOD);
-	private static final Pattern PT_ARRAY_LONG = Pattern.compile("\\{(.*)\\}:Long", MOD);
-	private static final Pattern PT_ARRAY_FLOAT = Pattern.compile("\\{(.*)\\}:Float", MOD);
-	private static final Pattern PT_ARRAY_DOUBLE = Pattern.compile("\\{(.*)\\}:Double", MOD);
-	private static final Pattern PT_ARRAY_BOOL = Pattern.compile("\\{(.*)\\}:Boolean", MOD);
+	private static final Matcher PT_ARRAY_STRING_SIMPLE = Pattern.compile("\\{(.*)\\}", MOD).matcher("");
+	private static final Matcher PT_ARRAY_STRING = Pattern.compile("\\{(.*)\\}:String", MOD).matcher("");
+	private static final Matcher PT_ARRAY_BYTE = Pattern.compile("\\{(.*)\\}:Byte", MOD).matcher("");
+	private static final Matcher PT_ARRAY_SHORT = Pattern.compile("\\{(.*)\\}:Short", MOD).matcher("");
+	private static final Matcher PT_ARRAY_INT = Pattern.compile("\\{(.*)\\}:Integer", MOD).matcher("");
+	private static final Matcher PT_ARRAY_LONG = Pattern.compile("\\{(.*)\\}:Long", MOD).matcher("");
+	private static final Matcher PT_ARRAY_FLOAT = Pattern.compile("\\{(.*)\\}:Float", MOD).matcher("");
+	private static final Matcher PT_ARRAY_DOUBLE = Pattern.compile("\\{(.*)\\}:Double", MOD).matcher("");
+	private static final Matcher PT_ARRAY_BOOL = Pattern.compile("\\{(.*)\\}:Boolean", MOD).matcher("");
 
 	/**
 	 * if true disable implecite relaxed checking
@@ -176,10 +176,10 @@ public class TypeParser {
 			return null;
 		Matcher match;
 		string = string.trim();
-		match = PT_ARRAY_STRING.matcher(string);
+		match = PT_ARRAY_STRING.reset(string);
 		if (match.matches())
 			return match.group(1).split(ARRAY_DELIMITER);
-		match = PT_ARRAY_BYTE.matcher(string);
+		match = PT_ARRAY_BYTE.reset(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
 			final byte[] res = new byte[vals.length];
@@ -187,7 +187,7 @@ public class TypeParser {
 				res[i] = Byte.valueOf(vals[i].trim());
 			return res;
 		}
-		match = PT_ARRAY_SHORT.matcher(string);
+		match = PT_ARRAY_SHORT.reset(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
 			final short[] res = new short[vals.length];
@@ -195,7 +195,7 @@ public class TypeParser {
 				res[i] = Short.valueOf(vals[i].trim());
 			return res;
 		}
-		match = PT_ARRAY_INT.matcher(string);
+		match = PT_ARRAY_INT.reset(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
 			final int[] res = new int[vals.length];
@@ -203,7 +203,7 @@ public class TypeParser {
 				res[i] = Integer.valueOf(vals[i].trim());
 			return res;
 		}
-		match = PT_ARRAY_LONG.matcher(string);
+		match = PT_ARRAY_LONG.reset(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
 			final long[] res = new long[vals.length];
@@ -211,7 +211,7 @@ public class TypeParser {
 				res[i] = Long.valueOf(vals[i].trim());
 			return res;
 		}
-		match = PT_ARRAY_FLOAT.matcher(string);
+		match = PT_ARRAY_FLOAT.reset(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
 			final float[] res = new float[vals.length];
@@ -219,7 +219,7 @@ public class TypeParser {
 				res[i] = Float.valueOf(vals[i].trim());
 			return res;
 		}
-		match = PT_ARRAY_DOUBLE.matcher(string);
+		match = PT_ARRAY_DOUBLE.reset(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
 			final double[] res = new double[vals.length];
@@ -227,7 +227,7 @@ public class TypeParser {
 				res[i] = Double.valueOf(vals[i].trim());
 			return res;
 		}
-		match = PT_ARRAY_BOOL.matcher(string);
+		match = PT_ARRAY_BOOL.reset(string);
 		if (match.matches()) {
 			final String[] vals = match.group(1).split(ARRAY_DELIMITER);
 			final boolean[] res = new boolean[vals.length];
@@ -235,77 +235,77 @@ public class TypeParser {
 				res[i] = Boolean.valueOf(vals[i].trim());
 			return res;
 		}
-		match = PT_STRICT_STRING.matcher(string);
+		match = PT_STRICT_STRING.reset(string);
 		if (match.matches())
 			return match.group(1);
-		match = PT_STRICT_BYTE.matcher(string);
+		match = PT_STRICT_BYTE.reset(string);
 		if (match.matches())
 			return Byte.valueOf(match.group(1));
-		match = PT_STRICT_SHORT.matcher(string);
+		match = PT_STRICT_SHORT.reset(string);
 		if (match.matches())
 			return Short.valueOf(match.group(1));
-		match = PT_STRICT_INT.matcher(string);
+		match = PT_STRICT_INT.reset(string);
 		if (match.matches())
 			return Integer.valueOf(match.group(1));
-		match = PT_STRICT_LONG.matcher(string);
+		match = PT_STRICT_LONG.reset(string);
 		if (match.matches())
 			return Long.valueOf(match.group(1));
-		match = PT_STRICT_FLOAT.matcher(string);
+		match = PT_STRICT_FLOAT.reset(string);
 		if (match.matches())
 			return Float.valueOf(match.group(1).replace(ARRAY_DELIMITER, ".").replace("f", ""));
-		match = PT_STRICT_DOUBLE.matcher(string);
+		match = PT_STRICT_DOUBLE.reset(string);
 		if (match.matches())
 			return Double.valueOf(match.group(1).replace(ARRAY_DELIMITER, "."));
-		match = PT_STRICT_BOOL.matcher(string);
+		match = PT_STRICT_BOOL.reset(string);
 		if (match.matches())
 			return Boolean.valueOf(match.group(1));
-		match = PT_STRICT_CHAR.matcher(string);
+		match = PT_STRICT_CHAR.reset(string);
 		if (match.matches())
 			return Character.valueOf(match.group(1).charAt(0));
-		match = PT_CUSTOM.matcher(string);
+		match = PT_CUSTOM.reset(string);
 		if (customFConverters != null && match.matches()) {
 			final ITypeConverter<?> conv = customFConverters.get(match.group(2));
 			if (conv != null)
 				return conv.parse(match.group(1));
 		}
-		match = PT_CONVERTER.matcher(string);
+		match = PT_CONVERTER.reset(string);
 		if (match.matches()) {
 			final Class<?> clazz = loader.loadClass(match.group(2));
 			final Constructor<?> con = clazz.getConstructor(String.class);
 			return con.newInstance(match.group(1));
 		}
 		if (!STRICT) {
-			match = PT_STRING.matcher(string);
+			match = PT_STRING.reset(string);
 			if (match.matches())
 				return match.group(1);
-			match = PT_BYTE.matcher(string);
+			match = PT_BYTE.reset(string);
 			if (match.matches())
 				return Byte.valueOf(match.group(1));
-			match = PT_SHORT.matcher(string);
+			match = PT_SHORT.reset(string);
 			if (match.matches())
 				return Short.valueOf(match.group(1));
-			match = PT_INT.matcher(string);
+			match = PT_INT.reset(string);
 			if (match.matches())
 				return Integer.valueOf(match.group(1));
-			match = PT_HEXINT.matcher(string);
+			match = PT_HEXINT.reset(string);
 			if (match.matches())
 				return Integer.decode(match.group(1));
-			match = PT_LONG.matcher(string);
+			match = PT_LONG.reset(string);
 			if (match.matches())
 				return Long.valueOf(match.group(1).substring(0, match.group(1).length() - 1));
-			match = PT_FLOAT.matcher(string);
+			match = PT_FLOAT.reset(string);
 			if (match.matches())
 				return Float.valueOf(match.group(1).replace(ARRAY_DELIMITER, ".").replace("f", ""));
-			match = PT_DOUBLE.matcher(string);
+			match = PT_DOUBLE.reset(string);
 			if (match.matches())
 				return Double.valueOf(match.group(1).replace(ARRAY_DELIMITER, "."));
-			match = PT_BOOL.matcher(string);
+			match = PT_BOOL.reset(string);
 			if (match.matches())
 				return Boolean.valueOf(match.group(1));
-			match = PT_CHAR.matcher(string);
+			match = PT_CHAR.reset(string);
 			if (match.matches())
 				return Character.valueOf(match.group(1).charAt(0));
-			match = PT_ARRAY_STRING_SIMPLE.matcher(string);
+			match = PT_ARRAY_STRING_SIMPLE.reset(string);
 			if (match.matches())
 				return Arrays.asList(match.group(1).split(ARRAY_DELIMITER));
 		}

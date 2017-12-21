@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.Primitive;
+import net.xy.codebase.mem.IObjectPool;
+import net.xy.codebase.mem.ObjectPool;
 
 /**
  * main class for efficient serialization with minimal overhead
@@ -47,6 +49,8 @@ public class SerializationContext {
 	 */
 	private final Map<Class<?>, Short> classesToIdx = new HashMap<Class<?>, Short>();
 	private final Map<Short, Class<?>> idxToClasses = new HashMap<Short, Class<?>>();
+	private HashMap<Byte, IExternalizer<?>> externalizers;
+	protected IObjectPool pool = ObjectPool.INSTANCE;
 	/*
 	 * primitive type constants
 	 */
@@ -105,6 +109,19 @@ public class SerializationContext {
 					}
 		if (noSri)
 			throw new IllegalArgumentException("Tried not non serializable classes");
+	}
+
+	/**
+	 * register a external proccessor to serialize object
+	 *
+	 * @param clazz
+	 * @param ext
+	 */
+	public <CL> void registerExternalizer(final Class<CL> clazz, final IExternalizer<CL> ext) {
+		final byte eid = getClassEid(clazz);
+		if (externalizers == null)
+			externalizers = new HashMap<Byte, IExternalizer<?>>();
+		externalizers.put(eid, ext);
 	}
 
 	/**
@@ -331,11 +348,14 @@ public class SerializationContext {
 			writeArray(out, target, aeid, compClass);
 			break;
 		default:
+			IExternalizer<?> ext;
 			final Class<?> tcl = target.getClass();
 			if (tcl.isEnum())
 				out.writeByte((byte) ((Enum<?>) target).ordinal());
 			else if (target instanceof Externalize)
 				writeCustom(out, (Externalize<?>) target);
+			else if (externalizers != null && (ext = externalizers.get(eid)) != null)
+				writeCustom(target, out, ext);
 			else
 				writeFields(out, target, tcl);
 		}
@@ -349,6 +369,18 @@ public class SerializationContext {
 	 */
 	private void writeCustom(final Encoder out, final Externalize<?> target) {
 		target.encode(out);
+	}
+
+	/**
+	 * write external by custom implementation
+	 *
+	 * @param target
+	 * @param out
+	 * @param ext
+	 */
+	@SuppressWarnings("rawtypes")
+	private void writeCustom(final Object target, final Encoder out, final IExternalizer ext) {
+		ext.encode(target, out);
 	}
 
 	/**
@@ -543,22 +575,22 @@ public class SerializationContext {
 			return Boolean.FALSE;
 		case byteEid:
 		case pByteEid:
-			return Byte.valueOf(in.readByte());
+			return pool.getByte(in.readByte());
 		case shortEid:
 		case pShortEid:
-			return Short.valueOf(in.readShort());
+			return pool.getShort(in.readShort());
 		case intEid:
 		case pIntEid:
-			return Integer.valueOf(in.readInt());
+			return pool.getInteger(in.readInt());
 		case longEid:
 		case pLongEid:
-			return Long.valueOf(in.readLong());
+			return pool.getLong(in.readLong());
 		case floatEid:
 		case pFloatEid:
-			return Float.valueOf(in.readFloat());
+			return pool.getFloat(in.readFloat());
 		case doubleEid:
 		case pDoubleEid:
-			return Double.valueOf(in.readDouble());
+			return pool.getDouble(in.readDouble());
 		case stringEid:
 			return in.readUTF();
 		case charEid:
@@ -589,11 +621,17 @@ public class SerializationContext {
 				return cl.getEnumConstants()[in.readByte()];
 			else {
 				// recursive object
-				final Object target = inst(cl);
-				if (target instanceof Externalize)
-					readExtern(in, (Externalize<?>) target);
-				else
-					readFields(in, cl, target);
+				Object target;
+				IExternalizer<?> ext;
+				if (externalizers != null && (ext = externalizers.get(type)) != null)
+					target = readCustom(in, ext);
+				else {
+					target = inst(cl);
+					if (target instanceof Externalize)
+						readExtern(in, (Externalize<?>) target);
+					else
+						readFields(in, cl, target);
+				}
 				return filter(target);
 			}
 		}
@@ -607,6 +645,17 @@ public class SerializationContext {
 	 */
 	private void readExtern(final Decoder in, final Externalize<?> target) {
 		target.decode(in);
+	}
+
+	/**
+	 * external custom read
+	 * 
+	 * @param in
+	 * @param ext
+	 * @return
+	 */
+	private Object readCustom(final Decoder in, final IExternalizer<?> ext) {
+		return ext.decode(in);
 	}
 
 	/**
@@ -778,7 +827,8 @@ public class SerializationContext {
 	public class Decoder {
 		private ByteBuffer bb;
 
-		public Decoder() {}
+		public Decoder() {
+		}
 
 		public Decoder(final ByteBuffer bb) {
 			this.bb = bb;
@@ -871,7 +921,8 @@ public class SerializationContext {
 	public class Encoder {
 		private ByteBuffer bb;
 
-		public Encoder() {}
+		public Encoder() {
+		}
 
 		public Encoder(final ByteBuffer bb) {
 			this.bb = bb;
