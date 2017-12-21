@@ -35,7 +35,7 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 			final boolean added = super.add(elem);
 			if (!added) {
 				set.remove(elem);
-				LOG.error("Queue rejected addition cuz too full [" + elem + "]");
+				LOG.error("Queue rejected addition cuz too full [" + elem + "][" + getClass().getSimpleName() + "]");
 			}
 			return added;
 		}
