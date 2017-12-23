@@ -603,7 +603,8 @@ public class SerializationContext {
 			final short atypei = (short) (atype & 0xff);
 			final Class<?> comp = idxToClasses.get(atypei);
 			if (comp == null) {
-				LOG.error("Error array component class id not in Serialization context [" + atypei + "]");
+				LOG.error("Error array component class id not in Serialization context [" + atypei + "]["
+						+ idxToClasses.size() + "]");
 				return null;
 			}
 			if (atype == nullEid)
@@ -615,7 +616,8 @@ public class SerializationContext {
 			final short typei = (short) (type & 0xff);
 			final Class<?> cl = idxToClasses.get(typei);
 			if (cl == null) {
-				LOG.error("Error class id not in Serialization context [" + typei + "]", new Exception());
+				LOG.error("Error class id not in Serialization context [" + typei + "][" + idxToClasses.size() + "]",
+						new Exception());
 				return null;
 			} else if (cl.isEnum())
 				return cl.getEnumConstants()[in.readByte()];
@@ -649,7 +651,7 @@ public class SerializationContext {
 
 	/**
 	 * external custom read
-	 * 
+	 *
 	 * @param in
 	 * @param ext
 	 * @return
