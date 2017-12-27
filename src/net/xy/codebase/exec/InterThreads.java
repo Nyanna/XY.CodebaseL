@@ -28,7 +28,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	/**
 	 * thread job category stores
 	 */
-	protected EnumMap<E, TrackingQueue> ctxs;
+	protected EnumMap<E, TrackingQueue<Runnable>> ctxs;
 	/**
 	 * timeout queue for delayed task execution
 	 */
@@ -45,14 +45,14 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * default
 	 *
 	 * @param enun
-	 * @param capacity
+	 * @param maxCapacity
 	 */
-	public InterThreads(final Class<E> enun, final int capacity) {
+	public InterThreads(final Class<E> enun, final int maxCapacity) {
 		this();
 		final E[] evals = enun.getEnumConstants();
-		ctxs = new EnumMap<E, TrackingQueue>(enun);
+		ctxs = new EnumMap<E, TrackingQueue<Runnable>>(enun);
 		for (final E val : evals)
-			ctxs.put(val, new TrackingQueue(new ParkingQueue<Runnable>(Runnable.class, capacity)));
+			ctxs.put(val, new TrackingQueue<Runnable>(new ParkingQueue<Runnable>(Runnable.class, maxCapacity)));
 	}
 
 	/**
@@ -62,9 +62,9 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 */
 	public InterThreads(final Class<E> enun, final EnumMap<E, ParkingQueue<Runnable>> giv) {
 		this();
-		ctxs = new EnumMap<E, TrackingQueue>(enun);
+		ctxs = new EnumMap<E, TrackingQueue<Runnable>>(enun);
 		for (final Entry<E, ParkingQueue<Runnable>> val : giv.entrySet())
-			ctxs.put(val.getKey(), new TrackingQueue(val.getValue()));
+			ctxs.put(val.getKey(), new TrackingQueue<Runnable>(val.getValue()));
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	 * @param target
 	 * @return the tragte thread queue
 	 */
-	protected TrackingQueue get(final E target) {
+	protected TrackingQueue<Runnable> get(final E target) {
 		return ctxs.get(target);
 	}
 
@@ -87,12 +87,19 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 	@Override
 	public Runnable next(final E target, final int ms) {
-		return get(target).take(ms);
+		final TrackingQueue<Runnable> que = get(target);
+		if (que == null)
+			throw new IllegalArgumentException("Target job queue don't exists [" + target + "]");
+		return que.take(ms);
 	}
 
 	@Override
 	public boolean run(final E target, final Runnable job) {
-		final TrackingQueue que = get(target);
+		final TrackingQueue<Runnable> que = get(target);
+		if (que == null) {
+			LOG.error("Target job queue don't exists [" + target + "][" + job + "]");
+			return false;
+		}
 		if (!que.add(job)) {
 			if (obs != null)
 				obs.jobDroped(target, job, que.size());
@@ -117,6 +124,11 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	@Override
 	public ExecutionThrottler getThrottler(final E thread, final Runnable run, final int intervallMs) {
 		return new ExecutionThrottler(new InterThreadSchedulable<E>(thread, run, this), intervallMs);
+	}
+
+	@Override
+	public ExecutionLimiter getLimiter(final E thread, final Runnable run, final int amount) {
+		return new ExecutionLimiter(new InterThreadRunnable<E>(thread, run, this), amount);
 	}
 
 	@Override

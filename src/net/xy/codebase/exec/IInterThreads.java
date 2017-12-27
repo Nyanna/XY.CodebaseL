@@ -79,6 +79,17 @@ public interface IInterThreads<E extends Enum<E>> {
 	 *
 	 * @param thread
 	 * @param run
+	 * @param amount
+	 *            of concurrent runnables
+	 * @return null on failure
+	 */
+	public ExecutionLimiter getLimiter(E thread, Runnable run, int amount);
+
+	/**
+	 * gets an concurrency limiter for parallel execution by specific amounts
+	 *
+	 * @param thread
+	 * @param run
 	 * @param priority
 	 * @param amount
 	 *            of concurrent runnables
@@ -173,7 +184,7 @@ public interface IInterThreads<E extends Enum<E>> {
 
 		/**
 		 * called when an job was added to the queue
-		 * 
+		 *
 		 * @param target
 		 * @param job
 		 */

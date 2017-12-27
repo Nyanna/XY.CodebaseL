@@ -36,11 +36,11 @@ public class ArrayQueue<E> implements Queue<E> {
 	 * default
 	 *
 	 * @param clazz
-	 * @param maxCount
+	 * @param capacity
 	 */
 	// @SuppressWarnings("unchecked")
-	public ArrayQueue(final Class<E> clazz, final int maxCount) {
-		elements = new AtomicReferenceArray<E>(maxCount);
+	public ArrayQueue(final Class<E> clazz, final int capacity) {
+		elements = new AtomicReferenceArray<E>(capacity);
 	}
 
 	/**

@@ -13,10 +13,10 @@ public class PriorityArrayQueues<E> implements Queue<E> {
 	private final ArrayQueue<E>[] aqs;
 
 	@SuppressWarnings("unchecked")
-	public PriorityArrayQueues(final int levels, final int capacities, final Class<E> clazz) {
+	public PriorityArrayQueues(final int levels, final int maxCapaciti, final Class<E> clazz) {
 		this(new ArrayQueue[levels]);
 		for (int i = 0; i < aqs.length; i++)
-			aqs[i] = new ArrayQueue<E>(clazz, capacities);
+			aqs[i] = new ArrayQueue<E>(clazz, maxCapaciti);
 	}
 
 	public PriorityArrayQueues(final ArrayQueue<E>[] aqs) {
