@@ -1,8 +1,12 @@
 package net.xy.codebase.mem;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.xy.codebase.collection.ArrayQueue;
 
 public abstract class ConcurrentPool<R> {
+	private static final Logger LOG = LoggerFactory.getLogger(ConcurrentPool.class);
 	private final ArrayQueue<Object> pool;
 
 	public ConcurrentPool() {
@@ -22,6 +26,7 @@ public abstract class ConcurrentPool<R> {
 	}
 
 	public void free(final R entry) {
-		pool.add(entry);
+		if (!pool.add(entry))
+			LOG.warn("ConcurrentPool is overflowing dropping freeed element [" + this + "][" + entry + "]");
 	}
 }

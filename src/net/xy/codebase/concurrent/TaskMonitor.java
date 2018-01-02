@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.xy.codebase.exec.IPerfCounter;
 import net.xy.codebase.exec.PerfCounter;
 
-public class TaskMonitor {
+public class TaskMonitor implements ITaskMonitor {
 	private final PerfCounter perf = new PerfCounter(0.05f);
 
 	private final AtomicInteger running = new AtomicInteger(0);
@@ -18,6 +18,10 @@ public class TaskMonitor {
 		this.maxRunning = maxRunning;
 	}
 
+	/* (non-Javadoc)
+	 * @see net.xy.codebase.concurrent.ITaskMonitor#aquiere()
+	 */
+	@Override
 	public boolean aquiere() {
 		for (;;) {
 			final int runs = running.get();
@@ -30,10 +34,18 @@ public class TaskMonitor {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see net.xy.codebase.concurrent.ITaskMonitor#finished()
+	 */
+	@Override
 	public void finished() {
 		running.decrementAndGet();
 	}
 
+	/* (non-Javadoc)
+	 * @see net.xy.codebase.concurrent.ITaskMonitor#getPerf()
+	 */
+	@Override
 	public IPerfCounter getPerf() {
 		return perf;
 	}

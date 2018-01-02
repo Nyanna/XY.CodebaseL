@@ -1,27 +1,25 @@
 package net.xy.codebase.concurrent;
 
+import net.xy.codebase.exec.IPerfCounter;
 import net.xy.codebase.exec.PerfCounter;
 
-public class SharedTaskMonitor implements ITaskMonitor {
+public class NeverTaskMonitor implements ITaskMonitor {
 	private final PerfCounter perf = new PerfCounter(0.05f);
-	private final ITaskMonitor dele;
 
-	public SharedTaskMonitor(final ITaskMonitor dele) {
-		this.dele = dele;
+	public NeverTaskMonitor() {
 	}
 
 	@Override
 	public boolean aquiere() {
-		return dele.aquiere();
+		return false;
 	}
 
 	@Override
 	public void finished() {
-		dele.finished();
 	}
 
 	@Override
-	public PerfCounter getPerf() {
+	public IPerfCounter getPerf() {
 		return perf;
 	}
 }
