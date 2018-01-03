@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import net.xy.codebase.Primitive;
 import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.RecurringTaskCapsule;
+import net.xy.codebase.exec.tasks.TimeoutRunnable;
 
 /**
  * timeout queue implementation threadsafe based on task objects which must
@@ -28,7 +29,18 @@ public class TimeoutQueue {
 	 * timer thread
 	 */
 	private final QueueTimer timer;
-	private IQueueObserver obs;
+	/**
+	 * observe queue task processing
+	 */
+	private IQueueTaskObserver obs;
+	/**
+	 * observes tq lifecycle
+	 */
+	private IQueueObserver qobs;
+	/**
+	 * diagnostics timer
+	 */
+	private RecurringTaskCapsule diagnostic;
 
 	/**
 	 * default
@@ -56,13 +68,22 @@ public class TimeoutQueue {
 		addDiagnosticTask();
 	}
 
-	public void setObserver(final IQueueObserver obs) {
+	public void setObserver(final IQueueTaskObserver obs) {
+		if (this.obs != null && obs != null)
+			throw new IllegalStateException("There is already an observer registered [" + this.obs + "]");
 		this.obs = obs;
 		timer.setObserver(obs);
 	}
 
+	public void setQueueObserver(final IQueueObserver qobs) {
+		if (this.qobs != null && qobs != null)
+			throw new IllegalStateException("There is already an queue observer registered [" + this.qobs + "]");
+		this.qobs = qobs;
+		timer.setQueueObserver(qobs);
+	}
+
 	private void addDiagnosticTask() {
-		add(30 * 1000, new Runnable() {
+		diagnostic = add(30 * 1000, new Runnable() {
 			@Override
 			public void run() {
 				if (LOG.isDebugEnabled()) {
@@ -81,6 +102,8 @@ public class TimeoutQueue {
 	 */
 	public boolean add(final ITask t) {
 		boolean res = false;
+		if (!isRunning())
+			return res;
 		if (LOG.isTraceEnabled())
 			LOG.trace("add task [" + t + "]");
 
@@ -108,10 +131,36 @@ public class TimeoutQueue {
 	}
 
 	/**
+	 * @return queue size
+	 */
+	public int size() {
+		return queue.size();
+	}
+
+	/**
+	 * @return true when timer thread is looping
+	 */
+	public boolean isRunning() {
+		return timer.isRunning() || timer.isAlive();
+	}
+
+	/**
 	 * stops proccessing
 	 */
 	public void shutdown() {
-		timer.shutdown();
+		if (diagnostic != null)
+			diagnostic.stop();
+		final TimeoutRunnable poison = new TimeoutRunnable(100) {
+			@Override
+			public void run() {
+				if (size() > 0) {
+					calculateNext(100);
+					add(this);
+				} else
+					timer.shutdown();
+			}
+		};
+		add(poison);
 	}
 
 	/**
@@ -140,7 +189,11 @@ public class TimeoutQueue {
 		/**
 		 * task observer
 		 */
-		private IQueueObserver obs;
+		private IQueueTaskObserver obs;
+		/**
+		 * observes tq lifecycle
+		 */
+		private IQueueObserver qobs;
 
 		/**
 		 * to get post initialized by extern queue
@@ -151,8 +204,12 @@ public class TimeoutQueue {
 			this(null, name);
 		}
 
-		public void setObserver(final IQueueObserver obs) {
+		public void setObserver(final IQueueTaskObserver obs) {
 			this.obs = obs;
+		}
+
+		public void setQueueObserver(final IQueueObserver qobs) {
+			this.qobs = qobs;
 		}
 
 		public void resetExecCount() {
@@ -170,7 +227,7 @@ public class TimeoutQueue {
 		 * @param name
 		 */
 		public QueueTimer(final TimeoutQueue queue, final String name) {
-			super(name + " " + TimeoutQueue.class.getSimpleName() + "-" + ++COUNTER, true);
+			super(name + " " + TimeoutQueue.class.getSimpleName() + "-" + ++COUNTER, false);
 			setQueue(queue);
 		}
 
@@ -188,7 +245,7 @@ public class TimeoutQueue {
 			final PriorityQueue<ITask> tq = this.tq.queue;
 			ITask nt = null;
 			try {
-				while (running) {
+				while (isRunning()) {
 					long wns = 0;
 					synchronized (tq) {
 						if ((nt = tq.peek()) == null) {
@@ -207,6 +264,10 @@ public class TimeoutQueue {
 					}
 					timedOut(nt, wns);
 				}
+				LOG.info("Exit TimeOutQueue Timer Thread [" + getName() + "]");
+				if (qobs != null)
+					qobs.queueExited();
+
 			} catch (final InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -267,6 +328,13 @@ public class TimeoutQueue {
 				tq.queue.notify();
 			}
 		}
+
+		/**
+		 * @return while loop is active
+		 */
+		public boolean isRunning() {
+			return running;
+		}
 	}
 
 	/**
@@ -288,7 +356,7 @@ public class TimeoutQueue {
 	 * @author Xyan
 	 *
 	 */
-	public static interface IQueueObserver {
+	public static interface IQueueTaskObserver {
 
 		/**
 		 * task was added to que
@@ -311,5 +379,15 @@ public class TimeoutQueue {
 		 * @param t
 		 */
 		public void taskStoped(ITask t);
+	}
+
+	/**
+	 * observer interface for timeoutqueue lifecycle
+	 *
+	 * @author Xyan
+	 *
+	 */
+	public static interface IQueueObserver {
+		public void queueExited();
 	}
 }

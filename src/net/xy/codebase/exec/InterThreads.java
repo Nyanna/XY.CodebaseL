@@ -32,7 +32,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	/**
 	 * timeout queue for delayed task execution
 	 */
-	private final TimeoutQueue tque;
+	protected final TimeoutQueue tque;
 
 	/**
 	 * inner, initializing common fields
@@ -158,5 +158,9 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	@Override
 	public boolean start(final ITask task) {
 		return tque.add(task);
+	}
+
+	public void shutdown() {
+		tque.shutdown();
 	}
 }

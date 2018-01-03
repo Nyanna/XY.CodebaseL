@@ -164,7 +164,8 @@ public class ExecutionThrottler {
 
 		private void runGuarded() {
 			try {
-				runnable.run();
+				if (enabled)
+					runnable.run();
 			} catch (final Exception e) {
 				LOG.error("Error running throttled", e);
 			}

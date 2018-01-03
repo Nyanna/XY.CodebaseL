@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class RecurringTask implements ITask {
 	private final int intervallMs;
 	private long nextRun;
-	private volatile boolean recurring = true;
+	private volatile boolean stoped = false;
 
 	public RecurringTask(final int intervallMs) {
 		this.intervallMs = intervallMs;
@@ -19,11 +19,13 @@ public abstract class RecurringTask implements ITask {
 
 	@Override
 	public boolean isRecurring() {
-		return recurring;
+		return !stoped;
 	}
 
 	@Override
 	public long nextRun() {
+		if (stoped)
+			return 0;
 		return nextRun;
 	}
 
@@ -37,7 +39,7 @@ public abstract class RecurringTask implements ITask {
 
 	@Override
 	public void run() {
-		if (recurring) {
+		if (!stoped) {
 			calcNextRun(intervallMs);
 			innerRun();
 		}
@@ -46,8 +48,8 @@ public abstract class RecurringTask implements ITask {
 	protected abstract void innerRun();
 
 	public boolean stop() {
-		if (recurring) {
-			recurring = false;
+		if (!stoped) {
+			stoped = true;
 			return true;
 		}
 		return false;

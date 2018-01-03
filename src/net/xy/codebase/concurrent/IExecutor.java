@@ -2,18 +2,23 @@ package net.xy.codebase.concurrent;
 
 public interface IExecutor<E> {
 
-	int getThreadCount();
+	public int getThreadCount();
 
-	int getWorkCount();
+	public int getWorkCount();
 
-	int getIdleCount();
+	public int getIdleCount();
 
-	void check();
+	public void check();
 
-	void setCoreAmount(int coreAmount);
+	public void setCoreAmount(int coreAmount);
 
-	void setMaxAmount(int maxAmount);
+	public void setMaxAmount(int maxAmount);
 
-	void shutdown();
+	public void shutdown();
+
+	/**
+	 * removes self timers from timeout queue
+	 */
+	public void prepareSutdown();
 
 }

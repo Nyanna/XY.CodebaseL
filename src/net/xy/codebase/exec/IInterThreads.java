@@ -1,9 +1,9 @@
 package net.xy.codebase.exec;
 
-import net.xy.codebase.exec.TimeoutQueue.IQueueObserver;
+import net.xy.codebase.exec.TimeoutQueue.IQueueTaskObserver;
 import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.RecurringTask;
-import net.xy.codebase.exec.tasks.TimeoutRunnable;
+import net.xy.codebase.exec.tasks.TimeoutStopable;
 
 /**
  * interface for cross thread task execution
@@ -106,7 +106,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 *            in milliseconds
 	 * @return null on failure
 	 */
-	public TimeoutRunnable runLater(E thread, Runnable run, int timeout);
+	public TimeoutStopable runLater(E thread, Runnable run, int timeout);
 
 	/**
 	 * starts an intervall regulary dilivering runnables to target thread
@@ -153,7 +153,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @author Xyan
 	 *
 	 */
-	public static interface IJobObserver<E> extends IQueueObserver {
+	public static interface IJobObserver<E> extends IQueueTaskObserver {
 		/**
 		 *
 		 * @param target

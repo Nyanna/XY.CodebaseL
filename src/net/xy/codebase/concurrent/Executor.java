@@ -132,6 +132,11 @@ public abstract class Executor<E> implements IExecutor<E> {
 		this.maxAmount = maxAmount;
 	}
 
+	@Override
+	public void prepareSutdown() {
+		threadChecker.stop();
+	}
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -139,8 +144,10 @@ public abstract class Executor<E> implements IExecutor<E> {
 	 */
 	@Override
 	public void shutdown() {
-		threadChecker.stop();
 		shutdown = true;
+		check();
+		added.callAll();
+		LOG.info("Calling all executor threads for shutdown");
 	}
 
 	public static enum State {

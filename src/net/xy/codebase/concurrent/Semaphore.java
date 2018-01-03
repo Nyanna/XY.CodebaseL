@@ -18,4 +18,9 @@ public class Semaphore extends Sync {
 		modCounter.incrementAndGet();
 		wakeNext(tail.get());
 	}
+
+	public void callAll() {
+		modCounter.incrementAndGet();
+		wakeAll(tail.get());
+	}
 }

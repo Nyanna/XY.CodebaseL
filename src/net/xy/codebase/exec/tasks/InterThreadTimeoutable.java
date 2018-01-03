@@ -46,4 +46,9 @@ public class InterThreadTimeoutable<E extends Enum<E>> extends TimeoutStopable i
 	public Runnable getRunnable() {
 		return run;
 	}
+
+	@Override
+	public String toString() {
+		return "InterThreadTimeoutable: " + run.toString() + "," + thread;
+	}
 }

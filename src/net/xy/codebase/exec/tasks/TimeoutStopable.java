@@ -21,6 +21,13 @@ public abstract class TimeoutStopable extends TimeoutRunnable {
 		super(timeoutMs);
 	}
 
+	@Override
+	public long nextRun() {
+		if (isStoped())
+			return 0;
+		return super.nextRun();
+	}
+
 	/**
 	 * true when stoped
 	 *
