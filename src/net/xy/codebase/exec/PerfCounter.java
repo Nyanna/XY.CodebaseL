@@ -72,7 +72,7 @@ public class PerfCounter implements IPerfCounter {
 	public void startMeasure(final long nanoTime) {
 		if (measureStart != 0) {
 			measureStart = 0;
-			LOG.error("Error started measure twice, ignore last measure");
+			LOG.error("Error started measure twice, ignore last measure", new Exception());
 		}
 		measureStart = nanoTime;
 	}

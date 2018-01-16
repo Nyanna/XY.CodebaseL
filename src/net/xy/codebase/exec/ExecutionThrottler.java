@@ -187,7 +187,7 @@ public class ExecutionThrottler {
 
 		@Override
 		public long nextRun() {
-			return nextRun;
+			return !enabled ? 0 : nextRun;
 		}
 
 		@Override

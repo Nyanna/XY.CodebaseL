@@ -18,7 +18,7 @@ public abstract class Executor<E> implements IExecutor<E> {
 	private int coreAmount = Runtime.getRuntime().availableProcessors() * 2;
 	private int maxAmount = coreAmount * 2;
 
-	private boolean shutdown = false;
+	private volatile boolean shutdown = false;
 	private RecurringTask threadChecker;
 
 	public Executor(final InterThreads<?> inter) {
@@ -145,7 +145,6 @@ public abstract class Executor<E> implements IExecutor<E> {
 	@Override
 	public void shutdown() {
 		shutdown = true;
-		check();
 		added.callAll();
 		LOG.info("Calling all executor threads for shutdown");
 	}
