@@ -5,7 +5,7 @@ import java.util.Arrays;
 public class DoubleArray implements ITypeArray {
 	public static int MIN_GROWTH = 32;
 
-	private int maxIdx = -1;
+	private int size;
 	protected double[] elements;
 
 	/**
@@ -33,7 +33,7 @@ public class DoubleArray implements ITypeArray {
 	 */
 	public DoubleArray(final double[] elementData) {
 		elements = elementData;
-		maxIdx = elementData.length - 1;
+		size = elementData.length;
 	}
 
 	/**
@@ -43,8 +43,8 @@ public class DoubleArray implements ITypeArray {
 	 * @return
 	 */
 	public int add(final double e) {
-		elements[++maxIdx] = e;
-		return maxIdx;
+		elements[size++] = e;
+		return getMaxIdx();
 	}
 
 	/**
@@ -110,7 +110,11 @@ public class DoubleArray implements ITypeArray {
 	 * @return
 	 */
 	public int size() {
-		return maxIdx + 1;
+		return size;
+	}
+
+	protected int getMaxIdx() {
+		return size - 1;
 	}
 
 	/**
@@ -128,7 +132,7 @@ public class DoubleArray implements ITypeArray {
 	 * resets the position counter to begin adding the first element again
 	 */
 	public void rewind() {
-		maxIdx = -1;
+		size = 0;
 	}
 
 	/**
@@ -143,7 +147,7 @@ public class DoubleArray implements ITypeArray {
 	 * nulls all fields up to the current maximum element
 	 */
 	public void clean() {
-		fill(0d, maxIdx);
+		fill(0d, getMaxIdx());
 		rewind();
 	}
 
@@ -210,7 +214,7 @@ public class DoubleArray implements ITypeArray {
 	public void addAll(final double[] array, final int start, final int count) {
 		ensureAdd(count);
 		System.arraycopy(array, start, elements, size(), count);
-		maxIdx += count;
+		size += count;
 	}
 
 	public void swap(final int idx1, final int idx2) {
@@ -220,7 +224,7 @@ public class DoubleArray implements ITypeArray {
 	}
 
 	public boolean contains(final double value) {
-		int i = maxIdx;
+		int i = getMaxIdx();
 		while (i >= 0)
 			if (elements[i--] == value)
 				return true;
@@ -228,7 +232,7 @@ public class DoubleArray implements ITypeArray {
 	}
 
 	public double containsEquals(final double value) {
-		int i = maxIdx;
+		int i = getMaxIdx();
 		while (i >= 0) {
 			double res;
 			if (value == (res = elements[i--]))
@@ -238,14 +242,14 @@ public class DoubleArray implements ITypeArray {
 	}
 
 	public int indexOf(final double value) {
-		for (int i = 0; i <= maxIdx; i++)
+		for (int i = 0; i < size; i++)
 			if (elements[i] == value)
 				return i;
 		return -1;
 	}
 
 	public int indexOfEquals(final double value) {
-		for (int i = 0; i <= maxIdx; i++)
+		for (int i = 0; i < size; i++)
 			if (value == elements[i])
 				return i;
 		return -1;
@@ -259,9 +263,10 @@ public class DoubleArray implements ITypeArray {
 	 */
 	public double removeIndex(final int index) {
 		final double value = elements[index];
+		final int maxIdx = getMaxIdx();
 		elements[index] = elements[maxIdx];
-		elements[maxIdx] = 0f;
-		maxIdx--;
+		elements[getMaxIdx()] = 0f;
+		size--;
 		return value;
 	}
 
@@ -281,20 +286,21 @@ public class DoubleArray implements ITypeArray {
 	public double cutIndex(final int index) {
 		final double value = elements[index];
 		System.arraycopy(elements, index + 1, elements, index, size() - index);
-		elements[maxIdx] = 0f;
-		maxIdx--;
+		elements[getMaxIdx()] = 0f;
+		size--;
 		return value;
 	}
 
 	public double pop() {
+		final int maxIdx = getMaxIdx();
 		final double item = elements[maxIdx];
 		elements[maxIdx] = 0f;
-		--maxIdx;
+		size--;
 		return item;
 	}
 
 	public double peek() {
-		return elements[maxIdx];
+		return elements[getMaxIdx()];
 	}
 
 	public double[] shrink() {
@@ -323,7 +329,7 @@ public class DoubleArray implements ITypeArray {
 	 */
 	public void setElements(final double[] elements) {
 		this.elements = elements;
-		maxIdx = elements != null ? elements.length - 1 : -1;
+		size = elements != null ? elements.length : 0;
 	}
 
 	@Override
@@ -333,8 +339,8 @@ public class DoubleArray implements ITypeArray {
 		if (!(object instanceof DoubleArray))
 			return false;
 		final DoubleArray array = (DoubleArray) object;
-		final int n = maxIdx;
-		if (n != array.maxIdx)
+		final int n = size;
+		if (n != array.size)
 			return false;
 		final double[] items1 = elements;
 		final double[] items2 = array.elements;

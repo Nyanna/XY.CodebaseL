@@ -66,10 +66,9 @@ public class Actor implements IActor {
 	@Override
 	public boolean containsAnimation(final String id) {
 		synchronized (this) {
-			if (anims != null)
-				for (int i = 0; i < anims.size(); i++)
-					if (id.equals(anims.get(i).getId()))
-						return true;
+			for (int i = 0; anims != null && i < anims.size(); i++)
+				if (id.equals(anims.get(i).getId()))
+					return true;
 		}
 		return false;
 	}
@@ -77,12 +76,11 @@ public class Actor implements IActor {
 	@Override
 	public IAnimation getAnimation(final String id) {
 		synchronized (this) {
-			if (anims != null)
-				for (int i = 0; i < anims.size(); i++) {
-					final IAnimation anim = anims.get(i);
-					if (id.equals(anim.getId()))
-						return anim;
-				}
+			for (int i = 0; anims != null && i < anims.size(); i++) {
+				final IAnimation anim = anims.get(i);
+				if (id.equals(anim.getId()))
+					return anim;
+			}
 		}
 		return null;
 	}
