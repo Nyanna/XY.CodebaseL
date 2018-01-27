@@ -37,9 +37,8 @@ public class AxisAnimation extends AbstractAnimation {
 	@Override
 	public void step(final IActor actor, final IAnimationContext ac) {
 		final double interpolate = axis.getVal(actor, ac);
-		final Double oldVal = field.get(actor, ac);
-		final boolean changed = oldVal == null
-				|| Double.compare(interpolate, Double.NaN) != 0 && !Primitive.equals(oldVal.doubleValue(), interpolate);
+		final double oldVal = field.get(actor, ac);
+		final boolean changed = Double.compare(interpolate, Double.NaN) != 0 && !Primitive.equals(oldVal, interpolate);
 		if (changed)
 			field.set(actor, interpolate, ac);
 	}

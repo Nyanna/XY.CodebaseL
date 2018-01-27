@@ -1,7 +1,6 @@
 package net.xy.codebase.collection;
 
 import java.io.IOException;
-import net.xy.codebase.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -12,6 +11,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import net.xy.codebase.io.Externalize;
+import net.xy.codebase.io.Serializable;
 import net.xy.codebase.io.SerializationContext.Decoder;
 import net.xy.codebase.io.SerializationContext.Encoder;
 
@@ -427,7 +427,7 @@ public class HashMap<K, V> implements Serializable, Externalize {
 		while (e != null) {
 			final Entry<K, V> next = e.next;
 			Object k;
-			if (e.hash == hash && ((k = e.key) == key || key != null && key.equals(k))) {
+			if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
 				modCount++;
 				size--;
 				if (prev == e)

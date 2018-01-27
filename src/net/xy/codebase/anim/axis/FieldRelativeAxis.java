@@ -39,8 +39,7 @@ public class FieldRelativeAxis extends AbstractAxis {
 
 	@Override
 	public double getVal(final IActor actor, final IAnimationContext ac) {
-		final Double oval = field.get(actor, ac);
-		final double val = oval != null ? oval : 0d;
+		final double val = field.get(actor, ac);
 		if (val < minVal)
 			return minVal;
 		if (val > maxVal)

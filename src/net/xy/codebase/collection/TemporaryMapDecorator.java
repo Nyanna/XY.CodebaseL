@@ -36,7 +36,7 @@ public class TemporaryMapDecorator<Key, Value> implements Map<Key, Value> {
 			if (val == null || val.getCreationOff() + timeout < creationOff) {
 				i.remove();
 				if (obs != null)
-					obs.removed(key, val.getValue());
+					obs.removed(key, val != null ? val.getValue() : null);
 			}
 		}
 	}

@@ -67,8 +67,7 @@ public class CapedFieldRelativeAxis extends AbstractAxis {
 
 	@Override
 	public double getVal(final IActor actor, final IAnimationContext ac) {
-		final Double oval = field.get(actor, ac);
-		final double val = oval != null ? oval : 0d;
+		final double val = field.get(actor, ac);
 		if (!Double.isNaN(upperBound) && val > upperBound)
 			return Double.NaN;
 		if (!Double.isNaN(lowerBound) && val < lowerBound)

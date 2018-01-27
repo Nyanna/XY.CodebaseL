@@ -39,8 +39,7 @@ public class FieldRangeAxis extends AbstractAxis {
 
 	@Override
 	public double getVal(final IActor actor, final IAnimationContext ac) {
-		final Double oval = field.get(actor, ac);
-		return oval != null ? oval : 0d;
+		return field.get(actor, ac);
 	}
 
 	@Override

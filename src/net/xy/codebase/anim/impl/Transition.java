@@ -162,9 +162,9 @@ public class Transition extends AbstractAnimation {
 		if (incremental)
 			field.add(actor, interpolate, ac);
 		else {
-			final Double oldVal = field.get(actor, ac);
-			final boolean changed = oldVal == null || Double.compare(interpolate, Double.NaN) != 0
-					&& !Primitive.equals(oldVal.doubleValue(), interpolate);
+			final double oldVal = field.get(actor, ac);
+			final boolean changed = Double.compare(interpolate, Double.NaN) != 0
+					&& !Primitive.equals(oldVal, interpolate);
 			if (changed)
 				field.set(actor, interpolate, ac);
 		}
