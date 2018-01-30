@@ -71,15 +71,16 @@ public class ArrayQueue<E> implements Queue<E> {
 	 * @return
 	 */
 	protected boolean addInner(final E elem) {
-		int putIdx, loop = 0;
+		int putIdx, getIdx, loop = 0;
 		for (;;) {
 			putIdx = putIndex.get();
-			final int checkLimit = checkLimit(putIdx);
-			if (checkLimit == SIZE_MAXED)
-				return false;
+			final int checkLimit = checkLimit(putIdx, getIdx = getIndex.get());
+			if (putIndex.compareAndSet(putIdx, putIdx) && getIndex.compareAndSet(getIdx, getIdx))
+				if (checkLimit == SIZE_MAXED)
+					return false;
 
-			else if (checkLimit == SIZE_OK && putIndex.compareAndSet(putIdx, putIdx + 1))
-				break;
+				else if (checkLimit == SIZE_OK && putIndex.compareAndSet(putIdx, putIdx + 1))
+					break;
 			loop = ThreadUtils.yieldCAS(loop);
 		}
 
@@ -95,8 +96,8 @@ public class ArrayQueue<E> implements Queue<E> {
 	 * @param putIdx
 	 * @return
 	 */
-	protected int checkLimit(final int putIdx) {
-		if (size(putIdx, getIndex.get()) >= elements.length())
+	protected int checkLimit(final int putIdx, final int getIdx) {
+		if (size(putIdx, getIdx) >= elements.length())
 			return SIZE_MAXED;
 		return SIZE_OK;
 	}

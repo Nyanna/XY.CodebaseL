@@ -22,15 +22,16 @@ public class ArrayTestQueue extends ArrayQueue<Integer> {
 	 */
 	@Override
 	protected boolean addInner(final Integer elem) {
-		int putIdx, loop = 0;
+		int putIdx, getIdx, loop = 0;
 		for (;;) {
 			putIdx = putIndex.get();
-			final int checkLimit = checkLimit(putIdx);
-			if (checkLimit == SIZE_MAXED)
-				return false;
+			final int checkLimit = checkLimit(putIdx, getIdx = getIndex.get());
+			if (putIndex.compareAndSet(putIdx, putIdx) && getIndex.compareAndSet(getIdx, getIdx))
+				if (checkLimit == SIZE_MAXED)
+					return false;
 
-			else if (checkLimit == SIZE_OK && putIndex.compareAndSet(putIdx, putIdx + 1))
-				break;
+				else if (checkLimit == SIZE_OK && putIndex.compareAndSet(putIdx, putIdx + 1))
+					break;
 			loop = ThreadUtils.yieldCAS(loop);
 		}
 
