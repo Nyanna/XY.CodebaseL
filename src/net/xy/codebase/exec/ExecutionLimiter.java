@@ -32,6 +32,10 @@ public class ExecutionLimiter {
 	 * maximum amount of concurrently running
 	 */
 	private final int amount;
+	/**
+	 * for stopping throttler
+	 */
+	private boolean enabled = true;
 
 	/**
 	 * default
@@ -57,12 +61,21 @@ public class ExecutionLimiter {
 	}
 
 	/**
+	 * for stopping or desabling throttler
+	 *
+	 * @param enabled
+	 */
+	public void setEnabled(final boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	/**
 	 * start the action
 	 */
 	public void run() {
 		calls.incrementAndGet();
 
-		for (;;) {
+		while (enabled) {
 			final int runs = this.runs.get();
 			if (runs >= amount) {
 				if (this.runs.compareAndSet(runs, runs)) {
@@ -109,7 +122,7 @@ public class ExecutionLimiter {
 
 		@Override
 		public void run() {
-			for (;;) {
+			while (enabled) {
 				final int run = runs.get();
 				final int call = calls.get();
 				if (call > 0) {
@@ -125,7 +138,8 @@ public class ExecutionLimiter {
 
 		private void runGuarded() {
 			try {
-				runnable.run();
+				if (enabled)
+					runnable.run();
 			} catch (final Exception e) {
 				LOG.error("Error running limited", e);
 			}
