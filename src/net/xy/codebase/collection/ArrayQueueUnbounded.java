@@ -71,8 +71,8 @@ public class ArrayQueueUnbounded<E> extends ArrayQueue<E> {
 	}
 
 	@Override
-	protected int checkLimit(final int putIdx, final int getIdx) {
-		if (super.checkLimit(putIdx, getIdx) == SIZE_MAXED)
+	protected int checkLimit(final int size) {
+		if (super.checkLimit(size) == SIZE_MAXED)
 			if (elements.length() >= maxCount)
 				return SIZE_MAXED;
 			else

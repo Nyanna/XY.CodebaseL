@@ -1,6 +1,7 @@
 package net.xy.codebase.exec;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +21,15 @@ public class PerfCounter implements IPerfCounter {
 	/**
 	 * timestamp of last stop call
 	 */
-	private long measureStop;
+	private final AtomicLong measureStop = new AtomicLong();
 	/**
 	 * sum of measure for average
 	 */
-	private long measureSum;
+	private final AtomicLong measureSum = new AtomicLong();
+	/**
+	 * time when the loop last time was force to stop in multithreding mode
+	 */
+	private final AtomicLong lastLoopStoped = new AtomicLong();
 
 	/**
 	 * last loop time
@@ -85,10 +90,23 @@ public class PerfCounter implements IPerfCounter {
 	@Override
 	public void stopMeasure(final long nanoTime) {
 		if (measureStart != 0) {
-			measureSum += nanoTime - measureStart;
+			measureSum.addAndGet(nanoTime - measureStart);
 			measureStart = 0;
-			measureStop = nanoTime;
+			measureStop.set(nanoTime);
 		}
+	}
+
+	/**
+	 * for multithreading mode
+	 */
+	@Override
+	public void countMeasure(final long nanoTime, final long measureStart) {
+		measureSum.addAndGet(nanoTime - measureStart);
+		measureStop.set(nanoTime);
+
+		final long lastLoop = lastLoopStoped.get();
+		if (lastLoop < nanoTime - 100000000 && lastLoopStoped.compareAndSet(lastLoop, nanoTime)) // 100ms
+			endLoop(nanoTime);
 	}
 
 	@Override
@@ -100,8 +118,7 @@ public class PerfCounter implements IPerfCounter {
 	public void endLoop(final long nanoTime) {
 		stopMeasure(nanoTime);
 
-		lastLoopSum = measureSum;
-		measureSum = 0;
+		lastLoopSum = measureSum.getAndSet(0);
 
 		intvalSum *= frame;
 		overallSum *= frame;
@@ -154,12 +171,12 @@ public class PerfCounter implements IPerfCounter {
 
 	@Override
 	public long lastUpdate() {
-		return TimeUnit.NANOSECONDS.toMicros(measureStop);
+		return TimeUnit.NANOSECONDS.toMicros(measureStop.get());
 	}
 
 	@Override
 	public long lastUpdateAge(final long nanoTime) {
-		return TimeUnit.NANOSECONDS.toMicros(nanoTime - measureStop);
+		return TimeUnit.NANOSECONDS.toMicros(nanoTime - measureStop.get());
 	}
 
 	@Override

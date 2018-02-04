@@ -30,11 +30,6 @@ public class TrackingJobObserver<J> extends JobObserver<J> {
 	}
 
 	@Override
-	public boolean jobStart(final J target, final Runnable job, final IPerfCounter measure) {
-		return super.jobStart(target, job, measure);
-	}
-
-	@Override
 	public void jobEnd(final J target, final Runnable job, final IPerfCounter measure, final long duration) {
 		super.jobEnd(target, job, measure, duration);
 		trackEnd(target, job, duration);

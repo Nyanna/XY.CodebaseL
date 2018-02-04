@@ -10,4 +10,18 @@ public interface ITaskMonitor {
 
 	IPerfCounter getPerf();
 
+	/**
+	 * actuall running threads with tasks from this stripe
+	 *
+	 * @return
+	 */
+	int getCurrent();
+
+	/**
+	 * last check of the stripe in ts
+	 * 
+	 * @return
+	 */
+	long getLastChecked();
+
 }

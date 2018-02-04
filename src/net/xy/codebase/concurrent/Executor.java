@@ -7,37 +7,22 @@ import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.exec.IInterThreads.InterruptedException;
 import net.xy.codebase.exec.InterThreads;
-import net.xy.codebase.exec.tasks.RecurringTask;
+import net.xy.codebase.exec.tasks.ScheduledTask;
 
-public abstract class Executor<E> implements IExecutor<E> {
+public abstract class Executor implements IExecutor {
 	private static final Logger LOG = LoggerFactory.getLogger(Executor.class);
 	private final Semaphore added = new Semaphore();
 	private final AtomicInteger exitThreads = new AtomicInteger(0);
 	private int threadCount = 0;
 
-	private int coreAmount = Runtime.getRuntime().availableProcessors() * 2;
-	private int maxAmount = coreAmount * 2;
+	private int coreAmount = Math.max(2, Runtime.getRuntime().availableProcessors() - 1);
+	private int maxAmount = Math.max(coreAmount, Runtime.getRuntime().availableProcessors());
 
 	private volatile boolean shutdown = false;
-	private RecurringTask threadChecker;
+	private ScheduledTask threadChecker;
 
 	public Executor(final InterThreads<?> inter) {
-		inter.start(threadChecker = new RecurringTask(200) {
-			@Override
-			protected void innerRun() {
-				if (threadCount == 0 || threadCount < maxAmount && getWorkCount() > threadCount * 0.8f) {
-					threadCount++;
-					final Thread th = createThread(new Worker());
-					th.setDaemon(false);
-					th.start();
-					if (LOG.isDebugEnabled())
-						LOG.debug("Thread for executor was created [" + th + "]");
-				} else if (threadCount > coreAmount && getIdleCount() > threadCount * 0.8f) {
-					threadCount--;
-					exitThreads.incrementAndGet();
-				}
-			}
-		});
+		inter.start(threadChecker = new ThreadManager(200));
 	}
 
 	/*
@@ -80,11 +65,9 @@ public abstract class Executor<E> implements IExecutor<E> {
 		added.call();
 	}
 
-	protected abstract E next();
+	protected abstract void next(Worker worker);
 
 	protected abstract Thread createThread(Runnable run);
-
-	protected abstract void runTask(final E job);
 
 	private boolean endThread() {
 		final int count = exitThreads.get();
@@ -166,17 +149,17 @@ public abstract class Executor<E> implements IExecutor<E> {
 		public void run() {
 			while (true) {
 				final int state = added.getState(); // for null job
-				E job;
-				while ((job = next()) != null) {
-					vote(State.Working);
-					check(); // cuz maybe enabled new ones
-					runTask(job);
-				}
+				next(this);
 				vote(State.Idle);
 				if (endThread())
 					return;
 				added.await(state); // runs when job was not initially null
 			}
+		}
+
+		public void jobAccepted() {
+			vote(State.Working);
+			check(); // cuz maybe enabled new ones
 		}
 
 		public boolean vote(final State vote) {
@@ -190,4 +173,24 @@ public abstract class Executor<E> implements IExecutor<E> {
 		}
 	}
 
+	public class ThreadManager extends ScheduledTask {
+		private ThreadManager(final int intervallMs) {
+			super(intervallMs);
+		}
+
+		@Override
+		protected void innerRun() {
+			if (threadCount == 0 || threadCount < maxAmount && getWorkCount() > threadCount * 0.8f) {
+				threadCount++;
+				final Thread th = createThread(new Worker());
+				th.setDaemon(false);
+				th.start();
+				if (LOG.isDebugEnabled())
+					LOG.debug("Thread for executor was created [" + th + "]");
+			} else if (threadCount > coreAmount && getIdleCount() > threadCount * 0.8f) {
+				threadCount--;
+				exitThreads.incrementAndGet();
+			}
+		}
+	}
 }

@@ -2,8 +2,7 @@ package net.xy.codebase.exec;
 
 import net.xy.codebase.exec.TimeoutQueue.IQueueTaskObserver;
 import net.xy.codebase.exec.tasks.ITask;
-import net.xy.codebase.exec.tasks.RecurringTask;
-import net.xy.codebase.exec.tasks.TimeoutStopable;
+import net.xy.codebase.exec.tasks.ScheduledTask;
 
 /**
  * interface for cross thread task execution
@@ -44,38 +43,29 @@ public interface IInterThreads<E extends Enum<E>> {
 	public boolean run(E target, Runnable job);
 
 	/**
-	 * gets an bounded throtler for the target thread
+	 * gets an bounded throtler for the target thread. Has builtin IPriority
+	 * support.
 	 *
 	 * @param thread
 	 * @param run
 	 * @return null on failure
 	 */
-	public ExecutionThrottler getThrottler(E thread, Runnable run);
+	public ExecutionThrottler throttled(E thread, Runnable run);
 
 	/**
-	 * gets an bounded throtler for the target thread with an specific minimum
-	 * intervall
+	 * gets an bounded throtler for the target thread with an specific minimum.
+	 * Has builtin IPriority support. intervall
 	 *
 	 * @param thread
 	 * @param run
 	 * @param intervallMs
 	 * @return null on failure
 	 */
-	public ExecutionThrottler getThrottler(E thread, Runnable run, int intervallMs);
+	public ExecutionThrottler throttled(E thread, Runnable run, int intervallMs);
 
 	/**
-	 * gets an bounded throtler for the target thread supporting priority
-	 * execution used bei priority thread worker queues
-	 *
-	 * @param thread
-	 * @param run
-	 * @param priority
-	 * @return null on failure
-	 */
-	public ExecutionThrottler getPriorityThrottler(E thread, Runnable run, int priority);
-
-	/**
-	 * gets an concurrency limiter for parallel execution by specific amounts
+	 * gets an concurrency limiter for parallel execution by specific amounts.
+	 * Has builtin IPriority support.
 	 *
 	 * @param thread
 	 * @param run
@@ -83,19 +73,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 *            of concurrent runnables
 	 * @return null on failure
 	 */
-	public ExecutionLimiter getLimiter(E thread, Runnable run, int amount);
-
-	/**
-	 * gets an concurrency limiter for parallel execution by specific amounts
-	 *
-	 * @param thread
-	 * @param run
-	 * @param priority
-	 * @param amount
-	 *            of concurrent runnables
-	 * @return null on failure
-	 */
-	public ExecutionLimiter getPriorityLimiter(E thread, Runnable run, int priority, int amount);
+	public ExecutionLimiter limited(E thread, Runnable run, int amount);
 
 	/**
 	 * enques an runnable for later execution
@@ -106,7 +84,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 *            in milliseconds
 	 * @return null on failure
 	 */
-	public TimeoutStopable runLater(E thread, Runnable run, int timeout);
+	public ScheduledTask runLater(E thread, Runnable run, int timeout);
 
 	/**
 	 * starts an intervall regulary dilivering runnables to target thread
@@ -118,7 +96,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 *            intervall to run at in milliseconds
 	 * @return null on failure
 	 */
-	public RecurringTask startIntervall(E thread, Runnable run, int intervall);
+	public ScheduledTask runIntervall(E thread, Runnable run, int intervall);
 
 	/**
 	 * starts an intervall regulary dilivering runnables to target thread, with
@@ -133,7 +111,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 *            intervall to run at in milliseconds
 	 * @return null on failure
 	 */
-	public RecurringTask startDelayed(E thread, Runnable run, int startDelay, int intervall);
+	public ScheduledTask runDelayedIntervall(E thread, Runnable run, int startDelay, int intervall);
 
 	/**
 	 * start self supplied recuring task

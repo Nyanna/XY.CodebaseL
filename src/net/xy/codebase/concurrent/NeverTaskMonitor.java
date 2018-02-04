@@ -3,7 +3,7 @@ package net.xy.codebase.concurrent;
 import net.xy.codebase.exec.IPerfCounter;
 import net.xy.codebase.exec.PerfCounter;
 
-public class NeverTaskMonitor implements ITaskMonitor {
+public class NeverTaskMonitor extends AbstractTaskMonitor {
 	private final PerfCounter perf = new PerfCounter(0.05f);
 
 	public NeverTaskMonitor() {
@@ -11,6 +11,7 @@ public class NeverTaskMonitor implements ITaskMonitor {
 
 	@Override
 	public boolean aquiere() {
+		super.aquiere();
 		return false;
 	}
 
@@ -21,5 +22,15 @@ public class NeverTaskMonitor implements ITaskMonitor {
 	@Override
 	public IPerfCounter getPerf() {
 		return perf;
+	}
+
+	@Override
+	public int getCurrent() {
+		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("NeverTaskMonitor []");
 	}
 }

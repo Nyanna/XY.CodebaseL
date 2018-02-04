@@ -31,6 +31,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	 * next index to retrieve object from
 	 */
 	protected final AtomicInteger getIndex = new AtomicInteger();
+	protected final AtomicInteger size = new AtomicInteger();
 
 	/**
 	 * default
@@ -71,17 +72,16 @@ public class ArrayQueue<E> implements Queue<E> {
 	 * @return
 	 */
 	protected boolean addInner(final E elem) {
-		int putIdx, getIdx, loop = 0;
+		int putIdx;
 		for (;;) {
-			putIdx = putIndex.get();
-			final int checkLimit = checkLimit(putIdx, getIdx = getIndex.get());
-			if (putIndex.compareAndSet(putIdx, putIdx) && getIndex.compareAndSet(getIdx, getIdx))
-				if (checkLimit == SIZE_MAXED)
-					return false;
-
-				else if (checkLimit == SIZE_OK && putIndex.compareAndSet(putIdx, putIdx + 1))
-					break;
-			loop = ThreadUtils.yieldCAS(loop);
+			final int s = size.get();
+			if (SIZE_MAXED == checkLimit(s))
+				return false;
+			else if (size.compareAndSet(s, s + 1)) {
+				putIdx = putIndex.getAndIncrement();
+				break;
+			}
+			ThreadUtils.yield();
 		}
 
 		final int tarIdx = remainder(putIdx, elements.length());
@@ -93,11 +93,11 @@ public class ArrayQueue<E> implements Queue<E> {
 	/**
 	 * limit checking method can be overwritten for growth support
 	 *
-	 * @param putIdx
+	 * @param size
 	 * @return
 	 */
-	protected int checkLimit(final int putIdx, final int getIdx) {
-		if (size(putIdx, getIdx) >= elements.length())
+	protected int checkLimit(final int size) {
+		if (size >= elements.length())
 			return SIZE_MAXED;
 		return SIZE_OK;
 	}
@@ -108,15 +108,17 @@ public class ArrayQueue<E> implements Queue<E> {
 	 * @return
 	 */
 	protected E takeInner() {
-		int getIdx, loop = 0;
+		int getIdx;
 		for (;;) {
-			getIdx = getIndex.get();
-			if (getIdx == putIndex.get())
+			final int s = size.get();
+			if (s == 0)
 				return null;
 
-			if (getIndex.compareAndSet(getIdx, getIdx + 1))
+			if (size.compareAndSet(s, s - 1)) {
+				getIdx = getIndex.getAndIncrement();
 				break;
-			loop = ThreadUtils.yieldCAS(loop);
+			}
+			ThreadUtils.yield();
 		}
 
 		final int tarIdx = remainder(getIdx, elements.length());

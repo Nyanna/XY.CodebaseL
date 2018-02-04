@@ -25,7 +25,8 @@ public class ArrayTestQueue extends ArrayQueue<Integer> {
 		int putIdx, getIdx, loop = 0;
 		for (;;) {
 			putIdx = putIndex.get();
-			final int checkLimit = checkLimit(putIdx, getIdx = getIndex.get());
+			getIdx = getIndex.get(); // old broken !!
+			final int checkLimit = checkLimit(-1);
 			if (putIndex.compareAndSet(putIdx, putIdx) && getIndex.compareAndSet(getIdx, getIdx))
 				if (checkLimit == SIZE_MAXED)
 					return false;

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.xy.codebase.exec.IPerfCounter;
 import net.xy.codebase.exec.PerfCounter;
 
-public class TaskMonitor implements ITaskMonitor {
+public class TaskMonitor extends AbstractTaskMonitor {
 	private final PerfCounter perf = new PerfCounter(0.05f);
 
 	private final AtomicInteger running = new AtomicInteger(0);
@@ -18,11 +18,14 @@ public class TaskMonitor implements ITaskMonitor {
 		this.maxRunning = maxRunning;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 *
 	 * @see net.xy.codebase.concurrent.ITaskMonitor#aquiere()
 	 */
 	@Override
 	public boolean aquiere() {
+		super.aquiere();
 		for (;;) {
 			final int runs = running.get();
 			if (runs < maxRunning) {
@@ -34,7 +37,9 @@ public class TaskMonitor implements ITaskMonitor {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 *
 	 * @see net.xy.codebase.concurrent.ITaskMonitor#finished()
 	 */
 	@Override
@@ -42,7 +47,14 @@ public class TaskMonitor implements ITaskMonitor {
 		running.decrementAndGet();
 	}
 
-	/* (non-Javadoc)
+	@Override
+	public int getCurrent() {
+		return running.get();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
 	 * @see net.xy.codebase.concurrent.ITaskMonitor#getPerf()
 	 */
 	@Override
@@ -52,5 +64,10 @@ public class TaskMonitor implements ITaskMonitor {
 
 	public void setMaxRunning(final int maxRunning) {
 		this.maxRunning = maxRunning;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("TaskMonitor [running=%s, maxRunning=%s]", running, maxRunning);
 	}
 }

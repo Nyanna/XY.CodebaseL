@@ -1,16 +1,17 @@
 package net.xy.codebase.exec;
 
 import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.Primitive;
+import net.xy.codebase.concurrent.Monitor;
 import net.xy.codebase.exec.tasks.ITask;
-import net.xy.codebase.exec.tasks.RecurringTaskCapsule;
-import net.xy.codebase.exec.tasks.TimeoutRunnable;
+import net.xy.codebase.exec.tasks.ScheduledTask;
+import net.xy.codebase.exec.tasks.ScheduledTaskAdapter;
 
 /**
  * timeout queue implementation threadsafe based on task objects which must
@@ -24,7 +25,7 @@ public class TimeoutQueue {
 	/**
 	 * ordered task queue
 	 */
-	private final PriorityQueue<ITask> queue;
+	private final PriorityBlockingQueue<ITask> queue;
 	/**
 	 * timer thread
 	 */
@@ -40,18 +41,17 @@ public class TimeoutQueue {
 	/**
 	 * diagnostics timer
 	 */
-	private RecurringTaskCapsule diagnostic;
+	private ScheduledTask diagnostic;
+	/**
+	 * for waits in empty ques
+	 */
+	private final Monitor isFilled = new Monitor();
 
 	/**
 	 * default
 	 */
 	public TimeoutQueue(final String name) {
-		queue = new PriorityQueue<ITask>(100, new TaskComparator());
-		timer = new QueueTimer(this, name);
-		timer.start();
-		if (LOG.isDebugEnabled())
-			LOG.debug("Created named TimeOutQueue [" + name + "][" + timer.getName() + "]");
-		addDiagnosticTask();
+		this(new QueueTimer(name));
 	}
 
 	/**
@@ -60,11 +60,14 @@ public class TimeoutQueue {
 	 * @param thread
 	 */
 	public TimeoutQueue(final QueueTimer thread) {
-		queue = new PriorityQueue<ITask>(100, new TaskComparator());
+		queue = new PriorityBlockingQueue<ITask>(100, new TaskComparator());
 		timer = thread;
 		timer.setQueue(this);
+		timer.setPriority(Thread.MAX_PRIORITY);
+		if (!timer.isAlive())
+			timer.start();
 		if (LOG.isDebugEnabled())
-			LOG.debug("Created unnamed TimeOutQueue [" + thread + "][" + timer.getName() + "]");
+			LOG.debug("Created TimeOutQueue [" + thread + "][" + timer.getName() + "]");
 		addDiagnosticTask();
 	}
 
@@ -72,7 +75,6 @@ public class TimeoutQueue {
 		if (this.obs != null && obs != null)
 			throw new IllegalStateException("There is already an observer registered [" + this.obs + "]");
 		this.obs = obs;
-		timer.setObserver(obs);
 	}
 
 	public void setQueueObserver(final IQueueObserver qobs) {
@@ -83,14 +85,23 @@ public class TimeoutQueue {
 	}
 
 	private void addDiagnosticTask() {
-		diagnostic = add(30 * 1000, new Runnable() {
+		add(diagnostic = new ScheduledTask(30 * 1000) {
+			private long lastRun = System.currentTimeMillis();
+
 			@Override
-			public void run() {
+			public void innerRun() {
+				final long now = System.currentTimeMillis();
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("TQueue size [" + queue.size() + "][exec=" + timer.getExecCount() + "][" + timer.getName()
 							+ "]");
-					timer.resetExecCount();
+
+					final long deltaT = now - lastRun;
+					final float tps = (float) timer.getExecCount() / deltaT * 1000;
+					LOG.debug("TQueue avr [" + tps + "][exec=" + timer.getExecCount() + "][delta=" + deltaT + "]["
+							+ timer.getName() + "]");
 				}
+				timer.resetExecCount();
+				lastRun = now;
 			}
 		});
 	}
@@ -106,12 +117,11 @@ public class TimeoutQueue {
 			return res;
 		if (LOG.isTraceEnabled())
 			LOG.trace("add task [" + t + "]");
+		t.setQueue(this);
 
-		synchronized (queue) {
-			res = queue.add(t);
-			if (queue.peek() == t)
-				queue.notify();
-		}
+		res = queue.add(t);
+		if (queue.peek() == t)
+			isFilled.call();
 		if (!res)
 			LOG.error("Error inserting task into timeout que [" + t + "][" + timer.getName() + "]");
 		else if (obs != null)
@@ -125,9 +135,29 @@ public class TimeoutQueue {
 	 * @param intervall
 	 * @param run
 	 */
-	public RecurringTaskCapsule add(final int intervall, final Runnable run) {
-		final RecurringTaskCapsule cap = new RecurringTaskCapsule(intervall, run);
+	public ScheduledTaskAdapter add(final int intervall, final Runnable run) {
+		final ScheduledTaskAdapter cap = new ScheduledTaskAdapter(intervall, 0, run);
 		return add(cap) ? cap : null;
+	}
+
+	/**
+	 * catches the run
+	 *
+	 * @param t
+	 */
+	private void run(final ITask t, final long wns) {
+		try {
+			if (obs != null)
+				obs.taskStarted(t, wns);
+			if (LOG.isTraceEnabled())
+				LOG.trace("firing task [" + t + "]");
+			t.run();
+		} catch (final Exception e) {
+			LOG.error("Error running task", e);
+		} finally {
+			if (obs != null)
+				obs.taskStoped(t);
+		}
 	}
 
 	/**
@@ -150,11 +180,11 @@ public class TimeoutQueue {
 	public void shutdown() {
 		if (diagnostic != null)
 			diagnostic.stop();
-		final TimeoutRunnable poison = new TimeoutRunnable(100) {
+		final ScheduledTask poison = new ScheduledTask(0, 100) {
 			@Override
-			public void run() {
+			public void innerRun() {
 				if (size() > 0) {
-					calculateNext(100);
+					setNext(100);
 					add(this);
 				} else
 					timer.shutdown();
@@ -173,7 +203,7 @@ public class TimeoutQueue {
 		/**
 		 * counter for threadname numbering
 		 */
-		public static int COUNTER = 0;
+		public static AtomicInteger COUNTER = new AtomicInteger();
 		/**
 		 * ref to parent queue
 		 */
@@ -187,10 +217,6 @@ public class TimeoutQueue {
 		 */
 		private int execCount = 0;
 		/**
-		 * task observer
-		 */
-		private IQueueTaskObserver obs;
-		/**
 		 * observes tq lifecycle
 		 */
 		private IQueueObserver qobs;
@@ -201,11 +227,7 @@ public class TimeoutQueue {
 		 * @param name
 		 */
 		public QueueTimer(final String name) {
-			this(null, name);
-		}
-
-		public void setObserver(final IQueueTaskObserver obs) {
-			this.obs = obs;
+			super(name + " " + TimeoutQueue.class.getSimpleName() + "-" + COUNTER.incrementAndGet(), false);
 		}
 
 		public void setQueueObserver(final IQueueObserver qobs) {
@@ -221,17 +243,6 @@ public class TimeoutQueue {
 		}
 
 		/**
-		 * default
-		 *
-		 * @param queue
-		 * @param name
-		 */
-		public QueueTimer(final TimeoutQueue queue, final String name) {
-			super(name + " " + TimeoutQueue.class.getSimpleName() + "-" + ++COUNTER, false);
-			setQueue(queue);
-		}
-
-		/**
 		 * relocates to antoher queue
 		 *
 		 * @param tq
@@ -242,45 +253,33 @@ public class TimeoutQueue {
 
 		@Override
 		public void run() {
-			final PriorityQueue<ITask> tq = this.tq.queue;
+			final PriorityBlockingQueue<ITask> q = tq.queue;
 			ITask nt = null;
-			try {
-				while (isRunning()) {
-					long wns = 0;
-					synchronized (tq) {
-						if ((nt = tq.peek()) == null) {
-							tq.wait();
-							continue;
-						}
-
-						wns = nt.nextRun() - System.nanoTime();
-						if (wns > 0l) {
-							final long wms = TimeUnit.NANOSECONDS.toMillis(wns);
-							final int wmn = (int) (wns % 1000000);
-							tq.wait(wms, wmn);
-							continue;
-						} else
-							removeHead(nt);
-					}
-					timedOut(nt, wns);
+			while (isRunning()) {
+				final int state = tq.isFilled.getState();
+				if ((nt = q.poll()) == null) {
+					tq.isFilled.await(state);
+					continue;
 				}
-				LOG.info("Exit TimeOutQueue Timer Thread [" + getName() + "]");
-				if (qobs != null)
-					qobs.queueExited();
 
-			} catch (final InterruptedException e) {
-				e.printStackTrace();
+				final long nextRun = nt.nextRun();
+				long wns = 0;
+				if (nextRun > 0 && (wns = nextRun - System.nanoTime()) > 0l) {
+					q.add(nt);
+					tq.isFilled.await(state, wns);
+					continue;
+				}
+
+				// enable on demand
+				// if (wns < -3000000)
+				// LOG.error("Task is out of planning [" + wns / 1000000 + "]["
+				// + nt + "]");
+				timedOut(nt, wns);
 			}
-		}
+			LOG.info("Exit TimeOutQueue Timer Thread [" + getName() + "]");
+			if (qobs != null)
+				qobs.queueExited();
 
-		/**
-		 * remove head elements
-		 *
-		 * @param nt
-		 */
-		private void removeHead(final ITask nt) {
-			if (tq.queue.poll() != nt)
-				throw new RuntimeException("head of que is not current");
 		}
 
 		/**
@@ -292,31 +291,7 @@ public class TimeoutQueue {
 		 */
 		private void timedOut(final ITask nt, final long wns) {
 			execCount++;
-			run(nt, wns);
-			if (nt.isRecurring())
-				synchronized (tq.queue) {
-					tq.queue.add(nt);
-				}
-		}
-
-		/**
-		 * catches the run
-		 *
-		 * @param t
-		 */
-		private void run(final ITask t, final long wns) {
-			try {
-				if (obs != null)
-					obs.taskStarted(t, wns);
-				if (LOG.isTraceEnabled())
-					LOG.trace("firing task [" + t + "]");
-				t.run();
-			} catch (final Exception e) {
-				LOG.error("Error running task", e);
-			} finally {
-				if (obs != null)
-					obs.taskStoped(t);
-			}
+			tq.run(nt, wns);
 		}
 
 		/**
@@ -325,7 +300,7 @@ public class TimeoutQueue {
 		public void shutdown() {
 			synchronized (tq.queue) {
 				running = false;
-				tq.queue.notify();
+				tq.isFilled.call();
 			}
 		}
 
@@ -346,7 +321,9 @@ public class TimeoutQueue {
 	public static class TaskComparator implements Comparator<ITask> {
 		@Override
 		public int compare(final ITask t1, final ITask t2) {
-			return Primitive.compare(t1.nextRun(), t2.nextRun());
+			if (t1 == t2)
+				throw new IllegalStateException("Same object allready in queue");
+			return Primitive.compare(t1.nextRunFixed(), t2.nextRunFixed());
 		}
 	}
 

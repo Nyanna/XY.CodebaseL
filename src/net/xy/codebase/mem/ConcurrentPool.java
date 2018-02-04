@@ -6,7 +6,8 @@ import org.slf4j.LoggerFactory;
 import net.xy.codebase.collection.ArrayQueue;
 
 public abstract class ConcurrentPool<R> {
-	// TODO implement leak diagnostics, maybe per threads
+	// XXX implement leak diagnostics, maybe per threads, workaround by
+	// instacnce counter
 	private static final Logger LOG = LoggerFactory.getLogger(ConcurrentPool.class);
 	private final ArrayQueue<Object> pool;
 

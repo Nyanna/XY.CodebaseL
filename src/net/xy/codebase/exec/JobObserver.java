@@ -10,6 +10,7 @@ import net.xy.codebase.exec.tasks.ITask;
 
 public class JobObserver<J> implements IJobObserver<J> {
 	private static final Logger LOG = LoggerFactory.getLogger(JobObserver.class);
+	private static final long IGNORE_LATENCY = TimeUnit.MILLISECONDS.toNanos(5);
 	/**
 	 * for failure logging
 	 */
@@ -69,7 +70,7 @@ public class JobObserver<J> implements IJobObserver<J> {
 
 	@Override
 	public void taskStarted(final ITask t, final long latency) {
-		if (latency < TimeUnit.MILLISECONDS.toNanos(5))
+		if (latency < IGNORE_LATENCY)
 			return;
 
 		final long now = System.currentTimeMillis();

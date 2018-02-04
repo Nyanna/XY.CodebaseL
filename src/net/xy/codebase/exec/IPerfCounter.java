@@ -100,8 +100,16 @@ public interface IPerfCounter {
 
 	/**
 	 * average usage fraction
-	 * 
+	 *
 	 * @return
 	 */
 	public float getUseAvrFraction();
+
+	/**
+	 * bypass the intern data stores nad just count a measure
+	 * 
+	 * @param nanoTime
+	 * @param measureStart
+	 */
+	public void countMeasure(long nanoTime, long measureStart);
 }

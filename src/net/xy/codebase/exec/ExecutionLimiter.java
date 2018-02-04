@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.collection.IPriority;
 import net.xy.codebase.exec.tasks.ICoveredRunnable;
-import net.xy.codebase.exec.tasks.IScheduleRunnable;
 import net.xy.codebase.exec.tasks.ITask;
 
 /**
@@ -16,7 +15,7 @@ import net.xy.codebase.exec.tasks.ITask;
  * @author Xyan
  *
  */
-public class ExecutionLimiter {
+public class ExecutionLimiter<E extends Enum<E>> {
 	private static final Logger LOG = LoggerFactory.getLogger(ExecutionLimiter.class);
 	/**
 	 * amount of actually running tasks
@@ -24,9 +23,8 @@ public class ExecutionLimiter {
 	private final AtomicInteger runs = new AtomicInteger();
 	private final AtomicInteger calls = new AtomicInteger();
 	/**
-	 * target action to run
+	 * lmiter capsule
 	 */
-	private final IScheduleRunnable runnable;
 	private final LimitedRunnable capsule;
 	/**
 	 * maximum amount of concurrently running
@@ -36,6 +34,14 @@ public class ExecutionLimiter {
 	 * for stopping throttler
 	 */
 	private boolean enabled = true;
+	/**
+	 * executor reference
+	 */
+	private final InterThreads<E> inter;
+	/**
+	 * in this executor stripe
+	 */
+	private final E target;
 
 	/**
 	 * default
@@ -45,10 +51,11 @@ public class ExecutionLimiter {
 	 *            of concurrent running jobs
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends IScheduleRunnable & IPriority> ExecutionLimiter(final IScheduleRunnable runnable,
-			final int amount) {
-		this.runnable = runnable;
+	public <T extends ITask & IPriority> ExecutionLimiter(final Runnable runnable, final int amount,
+			final InterThreads<E> inter, final E target) {
 		this.amount = amount;
+		this.inter = inter;
+		this.target = target;
 		if (runnable instanceof IPriority)
 			capsule = new PriorityLimitedRunnable((T) runnable);
 		else
@@ -80,15 +87,14 @@ public class ExecutionLimiter {
 			if (runs >= amount) {
 				if (this.runs.compareAndSet(runs, runs)) {
 					if (LOG.isTraceEnabled())
-						LOG.trace("concurrent runnings reached [" + runnable + "]["
-								+ runnable.getClass().getSimpleName() + "]");
+						LOG.trace("concurrent runnings reached [" + capsule + "]");
 					break;
 				}
 			} else if (this.runs.compareAndSet(runs, runs + 1)) {
 				// start runnable
 				if (LOG.isTraceEnabled())
-					LOG.trace("Start limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
-				if (!runnable.schedule(capsule)) {
+					LOG.trace("Start limited [" + capsule + "]");
+				if (!inter.run(target, capsule)) {
 					this.runs.decrementAndGet();
 					LOG.error("Error starting limiter, decrementing [" + this + "]");
 					break;
@@ -105,35 +111,35 @@ public class ExecutionLimiter {
 	 * @author Xyan
 	 *
 	 */
-	public class LimitedRunnable implements ITask, ICoveredRunnable {
+	public class LimitedRunnable implements Runnable, ICoveredRunnable {
 		/**
 		 * target action to run
 		 */
-		private final IScheduleRunnable runnable;
+		private final Runnable runnable;
 
 		/**
 		 * default
 		 *
 		 * @param runnable
 		 */
-		public LimitedRunnable(final IScheduleRunnable runnable) {
+		public LimitedRunnable(final Runnable runnable) {
 			this.runnable = runnable;
 		}
 
 		@Override
 		public void run() {
-			while (enabled) {
-				final int run = runs.get();
-				final int call = calls.get();
-				if (call > 0) {
-					if (calls.compareAndSet(call, call - 1))
-						runGuarded();
-				} else if (runs.compareAndSet(run, run - 1)) {
-					if (LOG.isTraceEnabled())
-						LOG.trace("Stopping limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
-					break;
-				}
+			final int run = runs.get();
+			final int call = calls.get();
+			if (call > 0) {
+				if (calls.compareAndSet(call, call - 1))
+					runGuarded();
+			} else if (runs.compareAndSet(run, run - 1)) {
+				if (LOG.isTraceEnabled())
+					LOG.trace("Stopping limited [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
+				return;
 			}
+			if (!inter.run(target, this))
+				LOG.error("Error rescheduling limiter [" + runnable + "][" + runnable.getClass().getSimpleName() + "]");
 		}
 
 		private void runGuarded() {
@@ -143,16 +149,6 @@ public class ExecutionLimiter {
 			} catch (final Exception e) {
 				LOG.error("Error running limited", e);
 			}
-		}
-
-		@Override
-		public boolean isRecurring() {
-			return false;
-		}
-
-		@Override
-		public long nextRun() {
-			return 0;
 		}
 
 		@Override
@@ -178,7 +174,7 @@ public class ExecutionLimiter {
 		 */
 		private final IPriority runnable;
 
-		public <R extends IScheduleRunnable & IPriority> PriorityLimitedRunnable(final R runnable) {
+		public <R extends Runnable & IPriority> PriorityLimitedRunnable(final R runnable) {
 			super(runnable);
 			this.runnable = runnable;
 		}

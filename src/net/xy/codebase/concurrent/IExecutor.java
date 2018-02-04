@@ -1,6 +1,6 @@
 package net.xy.codebase.concurrent;
 
-public interface IExecutor<E> {
+public interface IExecutor {
 
 	public int getThreadCount();
 

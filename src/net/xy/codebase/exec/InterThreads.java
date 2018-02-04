@@ -8,12 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.collection.ParkingQueue;
 import net.xy.codebase.exec.tasks.ITask;
-import net.xy.codebase.exec.tasks.InterThreadIntervall;
-import net.xy.codebase.exec.tasks.InterThreadRunnable;
-import net.xy.codebase.exec.tasks.InterThreadSchedulable;
-import net.xy.codebase.exec.tasks.InterThreadTimeoutable;
-import net.xy.codebase.exec.tasks.PriorityInterThreadRunnable;
-import net.xy.codebase.exec.tasks.RecurringTask;
+import net.xy.codebase.exec.tasks.InterThreadScheduledTask;
+import net.xy.codebase.exec.tasks.ScheduledTask;
 
 /**
  * implementation for inter thread job execution
@@ -112,46 +108,37 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	}
 
 	@Override
-	public ExecutionThrottler getThrottler(final E thread, final Runnable run) {
-		return new ExecutionThrottler(new InterThreadRunnable<E>(thread, run, this));
+	public ExecutionThrottler throttled(final E thread, final Runnable run) {
+		return new ExecutionThrottler(run, this, thread);
 	}
 
 	@Override
-	public ExecutionThrottler getPriorityThrottler(final E thread, final Runnable run, final int priority) {
-		return new ExecutionThrottler(new PriorityInterThreadRunnable<E>(thread, run, this, priority));
+	public ExecutionThrottler throttled(final E thread, final Runnable run, final int intervallMs) {
+		return new ExecutionThrottler(run, intervallMs, this, thread);
 	}
 
 	@Override
-	public ExecutionThrottler getThrottler(final E thread, final Runnable run, final int intervallMs) {
-		return new ExecutionThrottler(new InterThreadSchedulable<E>(thread, run, this), intervallMs);
+	public ExecutionLimiter limited(final E thread, final Runnable run, final int amount) {
+		return new ExecutionLimiter(run, amount, this, thread);
 	}
 
 	@Override
-	public ExecutionLimiter getLimiter(final E thread, final Runnable run, final int amount) {
-		return new ExecutionLimiter(new InterThreadRunnable<E>(thread, run, this), amount);
-	}
-
-	@Override
-	public ExecutionLimiter getPriorityLimiter(final E thread, final Runnable run, final int priority,
-			final int amount) {
-		return new ExecutionLimiter(new PriorityInterThreadRunnable<E>(thread, run, this, priority), amount);
-	}
-
-	@Override
-	public InterThreadTimeoutable<E> runLater(final E thread, final Runnable run, final int timeout) {
-		final InterThreadTimeoutable<E> res = new InterThreadTimeoutable<E>(thread, timeout, run, this);
+	public InterThreadScheduledTask<E> runLater(final E thread, final Runnable run, final int timeout) {
+		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, timeout, run, this);
 		return start(res) ? res : null;
 	}
 
 	@Override
-	public RecurringTask startIntervall(final E thread, final Runnable run, final int intervall) {
-		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, 0, run, this);
+	public ScheduledTask runIntervall(final E thread, final Runnable run, final int intervall) {
+		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, intervall, 0, run, this);
 		return start(res) ? res : null;
 	}
 
 	@Override
-	public RecurringTask startDelayed(final E thread, final Runnable run, final int startDelay, final int intervall) {
-		final InterThreadIntervall<E> res = new InterThreadIntervall<E>(thread, intervall, startDelay, run, this);
+	public ScheduledTask runDelayedIntervall(final E thread, final Runnable run, final int startDelay,
+			final int intervall) {
+		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, intervall, startDelay, run,
+				this);
 		return start(res) ? res : null;
 	}
 

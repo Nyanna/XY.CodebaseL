@@ -24,4 +24,19 @@ public class SharedTaskMonitor implements ITaskMonitor {
 	public PerfCounter getPerf() {
 		return perf;
 	}
+
+	@Override
+	public int getCurrent() {
+		return dele.getCurrent();
+	}
+
+	@Override
+	public long getLastChecked() {
+		return dele.getLastChecked();
+	}
+
+	@Override
+	public String toString() {
+		return String.format("SharedTaskMonitor [dele=%s]", dele);
+	}
 }
