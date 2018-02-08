@@ -124,7 +124,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 	@Override
 	public InterThreadScheduledTask<E> runLater(final E thread, final Runnable run, final int timeout) {
-		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, timeout, run, this);
+		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, 0, timeout, run, this);
 		return start(res) ? res : null;
 	}
 
@@ -135,8 +135,8 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	}
 
 	@Override
-	public ScheduledTask runDelayedIntervall(final E thread, final Runnable run, final int startDelay,
-			final int intervall) {
+	public ScheduledTask runDelayedIntervall(final E thread, final Runnable run, final int intervall,
+			final int startDelay) {
 		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, intervall, startDelay, run,
 				this);
 		return start(res) ? res : null;

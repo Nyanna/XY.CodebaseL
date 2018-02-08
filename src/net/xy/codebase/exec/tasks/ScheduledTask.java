@@ -15,9 +15,9 @@ public abstract class ScheduledTask implements ITask {
 		this(intervallMs, 0);
 	}
 
-	public ScheduledTask(final long intervallMs, final long nextMs) {
+	public ScheduledTask(final long intervallMs, final long delayMs) {
 		intervall = TimeUnit.MILLISECONDS.toNanos(intervallMs);
-		next = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(nextMs);
+		next = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(delayMs);
 	}
 
 	@Override

@@ -105,13 +105,13 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @param thread
 	 *            target thread category
 	 * @param run
-	 * @param startDelay
-	 *            delay for first startup in milliseconds
 	 * @param intervall
 	 *            intervall to run at in milliseconds
+	 * @param startDelay
+	 *            delay for first startup in milliseconds
 	 * @return null on failure
 	 */
-	public ScheduledTask runDelayedIntervall(E thread, Runnable run, int startDelay, int intervall);
+	public ScheduledTask runDelayedIntervall(E thread, Runnable run, int intervall, int startDelay);
 
 	/**
 	 * start self supplied recuring task

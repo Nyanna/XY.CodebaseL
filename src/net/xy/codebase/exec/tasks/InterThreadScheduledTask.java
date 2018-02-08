@@ -19,18 +19,18 @@ public class InterThreadScheduledTask<E extends Enum<E>> extends ScheduledTaskAd
 	 * @param timeoutMs
 	 * @param run
 	 */
-	public InterThreadScheduledTask(final E thread, final long timeoutMs, final Runnable run,
+	public InterThreadScheduledTask(final E thread, final long intervallMs, final Runnable run,
 			final IInterThreads<E> it) {
-		this(thread, timeoutMs, 0, run, it);
+		this(thread, intervallMs, 0, run, it);
 	}
 
-	public InterThreadScheduledTask(final E thread, final long timeoutMs, final long delay, final Runnable run) {
-		this(thread, timeoutMs, delay, run, null);
+	public InterThreadScheduledTask(final E thread, final long intervallMs, final long delay, final Runnable run) {
+		this(thread, intervallMs, delay, run, null);
 	}
 
-	public InterThreadScheduledTask(final E thread, final long timeoutMs, final long delay, final Runnable run,
+	public InterThreadScheduledTask(final E thread, final long intervallMs, final long delay, final Runnable run,
 			final IInterThreads<E> it) {
-		super(delay, timeoutMs, run);
+		super(intervallMs, delay, run);
 		this.thread = thread;
 		this.it = it;
 	}

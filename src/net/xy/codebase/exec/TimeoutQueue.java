@@ -322,7 +322,7 @@ public class TimeoutQueue {
 		@Override
 		public int compare(final ITask t1, final ITask t2) {
 			if (t1 == t2)
-				throw new IllegalStateException("Same object allready in queue");
+				throw new IllegalStateException("Same object allready in queue [" + t1 + "][" + t2 + "]");
 			return Primitive.compare(t1.nextRunFixed(), t2.nextRunFixed());
 		}
 	}
