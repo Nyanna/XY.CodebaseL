@@ -33,7 +33,7 @@ public abstract class ScheduledTask implements ITask {
 
 	@Override
 	public long nextRun() {
-		return stoped ? 0 : next;
+		return isStoped() ? 0 : next;
 	}
 
 	public void setNext(final long timeoutMs) {
@@ -42,9 +42,9 @@ public abstract class ScheduledTask implements ITask {
 
 	@Override
 	public final void run() {
-		if (!stoped) {
+		if (!isStoped()) {
 			innerRun();
-			if (!stoped && intervall > 0) {
+			if (!isStoped() && intervall > 0) {
 				next += intervall;
 				tq.add(this);
 			}

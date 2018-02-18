@@ -180,17 +180,7 @@ public class TimeoutQueue {
 	public void shutdown() {
 		if (diagnostic != null)
 			diagnostic.stop();
-		final ScheduledTask poison = new ScheduledTask(0, 100) {
-			@Override
-			public void innerRun() {
-				if (size() > 0) {
-					setNext(100);
-					add(this);
-				} else
-					timer.shutdown();
-			}
-		};
-		add(poison);
+		timer.shutdown();
 	}
 
 	/**
@@ -308,7 +298,7 @@ public class TimeoutQueue {
 		 * @return while loop is active
 		 */
 		public boolean isRunning() {
-			return running;
+			return running || tq.size() > 0;
 		}
 	}
 
