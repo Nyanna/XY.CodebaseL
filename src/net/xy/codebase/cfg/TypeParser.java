@@ -35,39 +35,39 @@ public class TypeParser {
 	private static final int MOD = Pattern.CASE_INSENSITIVE;
 	private static final String ARRAY_DELIMITER = ",";
 	// stricts
-	private static final Matcher PT_STRICT_STRING = Pattern.compile("(.*):String", MOD).matcher("");
-	private static final Matcher PT_STRICT_BYTE = Pattern.compile("([0-9\\-]{1,3}):Byte", MOD).matcher("");
-	private static final Matcher PT_STRICT_SHORT = Pattern.compile("([0-9\\-]{1,5}):Short", MOD).matcher("");
-	private static final Matcher PT_STRICT_INT = Pattern.compile("([0-9\\-]{1,10}):Integer", MOD).matcher("");
-	private static final Matcher PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,21}):Long", MOD).matcher("");
-	private static final Matcher PT_STRICT_FLOAT = Pattern.compile("([0-9,\\-fE]+):Float", MOD).matcher("");
-	private static final Matcher PT_STRICT_DOUBLE = Pattern.compile("([0-9.,\\-d]+):Double", MOD).matcher("");
-	private static final Matcher PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD).matcher("");
-	private static final Matcher PT_STRICT_CHAR = Pattern.compile("(.{1}):Char", MOD).matcher("");
-	private static final Matcher PT_STRING = Pattern.compile("(\".*\")", MOD).matcher("");
-	private static final Matcher PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD).matcher("");
-	private static final Matcher PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD).matcher("");
-	private static final Matcher PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD).matcher("");
-	private static final Matcher PT_LONG = Pattern.compile("([0-9\\-l]{1,21})", MOD).matcher("");
-	private static final Matcher PT_FLOAT = Pattern.compile("(-?[0-9.,]+E?[0-9]*f?)", MOD).matcher("");
-	private static final Matcher PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD).matcher("");
-	private static final Matcher PT_BOOL = Pattern.compile("(true|false)", MOD).matcher("");
-	private static final Matcher PT_CHAR = Pattern.compile("('.{1}')", MOD).matcher("");
-	private static final Matcher PT_HEXINT = Pattern.compile("(#[0-9A-F]{1,10})", MOD).matcher("");
+	private final Matcher PT_STRICT_STRING = Pattern.compile("(.*):String", MOD).matcher("");
+	private final Matcher PT_STRICT_BYTE = Pattern.compile("([0-9\\-]{1,3}):Byte", MOD).matcher("");
+	private final Matcher PT_STRICT_SHORT = Pattern.compile("([0-9\\-]{1,5}):Short", MOD).matcher("");
+	private final Matcher PT_STRICT_INT = Pattern.compile("([0-9\\-]{1,10}):Integer", MOD).matcher("");
+	private final Matcher PT_STRICT_LONG = Pattern.compile("([0-9\\-l]{1,21}):Long", MOD).matcher("");
+	private final Matcher PT_STRICT_FLOAT = Pattern.compile("([0-9,\\-fE]+):Float", MOD).matcher("");
+	private final Matcher PT_STRICT_DOUBLE = Pattern.compile("([0-9.,\\-d]+):Double", MOD).matcher("");
+	private final Matcher PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD).matcher("");
+	private final Matcher PT_STRICT_CHAR = Pattern.compile("(.{1}):Char", MOD).matcher("");
+	private final Matcher PT_STRING = Pattern.compile("(\".*\")", MOD).matcher("");
+	private final Matcher PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD).matcher("");
+	private final Matcher PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD).matcher("");
+	private final Matcher PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD).matcher("");
+	private final Matcher PT_LONG = Pattern.compile("([0-9\\-l]{1,21})", MOD).matcher("");
+	private final Matcher PT_FLOAT = Pattern.compile("(-?[0-9.,]+E?[0-9]*f?)", MOD).matcher("");
+	private final Matcher PT_DOUBLE = Pattern.compile("([0-9.,\\-d]+)", MOD).matcher("");
+	private final Matcher PT_BOOL = Pattern.compile("(true|false)", MOD).matcher("");
+	private final Matcher PT_CHAR = Pattern.compile("('.{1}')", MOD).matcher("");
+	private final Matcher PT_HEXINT = Pattern.compile("(#[0-9A-F]{1,10})", MOD).matcher("");
 	// calls an converter like factory method accepting string returning object
-	private static final Matcher PT_CONVERTER = Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD).matcher("");
+	private final Matcher PT_CONVERTER = Pattern.compile("\\[(.*)\\]:([a-zA-Z0-9.$]+)", MOD).matcher("");
 	// creates via reflection an instance with an string constructor
-	private static final Matcher PT_CUSTOM = Pattern.compile("(.*):([a-zA-Z0-9]+)", MOD).matcher("");
+	private final Matcher PT_CUSTOM = Pattern.compile("(.*):([a-zA-Z0-9]+)", MOD).matcher("");
 	// returns as lists
-	private static final Matcher PT_ARRAY_STRING_SIMPLE = Pattern.compile("\\{(.*)\\}", MOD).matcher("");
-	private static final Matcher PT_ARRAY_STRING = Pattern.compile("\\{(.*)\\}:String", MOD).matcher("");
-	private static final Matcher PT_ARRAY_BYTE = Pattern.compile("\\{(.*)\\}:Byte", MOD).matcher("");
-	private static final Matcher PT_ARRAY_SHORT = Pattern.compile("\\{(.*)\\}:Short", MOD).matcher("");
-	private static final Matcher PT_ARRAY_INT = Pattern.compile("\\{(.*)\\}:Integer", MOD).matcher("");
-	private static final Matcher PT_ARRAY_LONG = Pattern.compile("\\{(.*)\\}:Long", MOD).matcher("");
-	private static final Matcher PT_ARRAY_FLOAT = Pattern.compile("\\{(.*)\\}:Float", MOD).matcher("");
-	private static final Matcher PT_ARRAY_DOUBLE = Pattern.compile("\\{(.*)\\}:Double", MOD).matcher("");
-	private static final Matcher PT_ARRAY_BOOL = Pattern.compile("\\{(.*)\\}:Boolean", MOD).matcher("");
+	private final Matcher PT_ARRAY_STRING_SIMPLE = Pattern.compile("\\{(.*)\\}", MOD).matcher("");
+	private final Matcher PT_ARRAY_STRING = Pattern.compile("\\{(.*)\\}:String", MOD).matcher("");
+	private final Matcher PT_ARRAY_BYTE = Pattern.compile("\\{(.*)\\}:Byte", MOD).matcher("");
+	private final Matcher PT_ARRAY_SHORT = Pattern.compile("\\{(.*)\\}:Short", MOD).matcher("");
+	private final Matcher PT_ARRAY_INT = Pattern.compile("\\{(.*)\\}:Integer", MOD).matcher("");
+	private final Matcher PT_ARRAY_LONG = Pattern.compile("\\{(.*)\\}:Long", MOD).matcher("");
+	private final Matcher PT_ARRAY_FLOAT = Pattern.compile("\\{(.*)\\}:Float", MOD).matcher("");
+	private final Matcher PT_ARRAY_DOUBLE = Pattern.compile("\\{(.*)\\}:Double", MOD).matcher("");
+	private final Matcher PT_ARRAY_BOOL = Pattern.compile("\\{(.*)\\}:Boolean", MOD).matcher("");
 
 	/**
 	 * if true disable implecite relaxed checking

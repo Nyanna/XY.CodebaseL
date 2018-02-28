@@ -51,7 +51,7 @@ public class ParkingQueue<E> {
 		if (res)
 			added.call();
 		else
-			LOG.error("ParkinArrayQueue is full droping [" + elem + "][" + size() + "]");
+			LOG.error("ParkinQueue is full droping [" + elem + "][" + size() + "]");
 		return res;
 	}
 

@@ -764,16 +764,24 @@ public class SerializationContext {
 			final int alength = in.readInt();
 			final Object res = Array.newInstance(comp, alength);
 
-			for (int ac = 0; ac < alength; ac++)
+			for (int ac = 0; ac < alength; ac++) {
+				Object elem;
 				if (same) {
 					if (comp.isArray()) {
 						final Class<?> compClassO = comp.getComponentType();
 						final byte aeidO = getClassEid(compClassO);
-						Array.set(res, ac, readArray(in, aeidO, compClassO));
+						elem = readArray(in, aeidO, compClassO);
 					} else
-						Array.set(res, ac, read(in, atype));
+						elem = read(in, atype);
 				} else
-					Array.set(res, ac, read(in));
+					elem = read(in);
+				try {
+					Array.set(res, ac, elem);
+				} catch (final IllegalArgumentException ex) {
+					throw new FieldErrorException("" + ac,
+							"Error setting array element to [a=" + comp + "][" + elem + "]", ex);
+				}
+			}
 
 			return res;
 		} catch (final FieldErrorException ex) {

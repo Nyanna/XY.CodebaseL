@@ -22,7 +22,7 @@ public abstract class Executor implements IExecutor {
 	private ScheduledTask threadChecker;
 
 	public Executor(final InterThreads<?> inter) {
-		inter.start(threadChecker = new ThreadManager(200));
+		inter.start(threadChecker = new ThreadManager(40));
 	}
 
 	/*
@@ -174,20 +174,34 @@ public abstract class Executor implements IExecutor {
 	}
 
 	public class ThreadManager extends ScheduledTask {
+		private double workSum;
+		private double count;
+
 		private ThreadManager(final int intervallMs) {
 			super(intervallMs);
 		}
 
 		@Override
 		protected void innerRun() {
-			if (threadCount == 0 || threadCount < maxAmount && getWorkCount() > threadCount * 0.8f) {
+			final double frame = 0.8d;
+			workSum *= frame;
+			count *= frame;
+
+			workSum += getWorkCount() / Math.max(threadCount, 1d);
+			count++;
+
+			final double workAvr = workSum / count;
+			if (LOG.isDebugEnabled())
+				LOG.debug("Executor stat [" + workAvr + "]");
+
+			if (threadCount == 0 || threadCount < maxAmount && workAvr > 0.8f) {
 				threadCount++;
 				final Thread th = createThread(new Worker());
 				th.setDaemon(false);
 				th.start();
 				if (LOG.isDebugEnabled())
 					LOG.debug("Thread for executor was created [" + th + "]");
-			} else if (threadCount > coreAmount && getIdleCount() > threadCount * 0.8f) {
+			} else if (threadCount > coreAmount && workAvr < 0.2f) {
 				threadCount--;
 				exitThreads.incrementAndGet();
 			}

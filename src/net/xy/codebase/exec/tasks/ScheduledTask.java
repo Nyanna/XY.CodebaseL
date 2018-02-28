@@ -45,7 +45,9 @@ public abstract class ScheduledTask implements ITask {
 		if (!isStoped()) {
 			innerRun();
 			if (!isStoped() && intervall > 0) {
-				next += intervall;
+				final long d = System.nanoTime() - next;
+				next += intervall * (d / intervall + 1);
+				assert next > System.nanoTime();
 				tq.add(this);
 			}
 		}
