@@ -245,27 +245,31 @@ public class TimeoutQueue {
 		public void run() {
 			final PriorityBlockingQueue<ITask> q = tq.queue;
 			ITask nt = null;
-			while (isRunning()) {
-				final int state = tq.isFilled.getState();
-				if ((nt = q.poll()) == null) {
-					tq.isFilled.await(state);
-					continue;
-				}
+			while (isRunning())
+				try {
+					final int state = tq.isFilled.getState();
+					if ((nt = q.poll()) == null) {
+						tq.isFilled.await(state);
+						continue;
+					}
 
-				final long nextRun = nt.nextRun();
-				long wns = 0;
-				if (nextRun > 0 && (wns = nextRun - System.nanoTime()) > 0l) {
-					q.add(nt);
-					tq.isFilled.await(state, wns);
-					continue;
-				}
+					final long nextRun = nt.nextRun();
+					long wns = 0;
+					if (nextRun > 0 && (wns = nextRun - System.nanoTime()) > 0l) {
+						q.add(nt);
+						tq.isFilled.await(state, wns);
+						continue;
+					}
 
-				// enable on demand
-				// if (wns < -3000000)
-				// LOG.error("Task is out of planning [" + wns / 1000000 + "]["
-				// + nt + "]");
-				timedOut(nt, wns);
-			}
+					// enable on demand
+					// if (wns < -3000000)
+					// LOG.error("Task is out of planning [" + wns / 1000000 +
+					// "]["
+					// + nt + "]");
+					timedOut(nt, wns);
+				} catch (final Exception e) {
+					LOG.error("Error in TQ loop", e);
+				}
 			LOG.info("Exit TimeOutQueue Timer Thread [" + getName() + "]");
 			if (qobs != null)
 				qobs.queueExited();
