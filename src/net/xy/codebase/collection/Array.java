@@ -493,8 +493,10 @@ public class Array<E> implements Iterable<E>, Iterator<E>, ITypeArray, Externali
 		// size() - 1 - index);
 
 		final int tidx = getMaxIdx();
-		set(tidx, null);
-		setMaxIdx(tidx - 1);
+		if (tidx >= 0) {
+			set(tidx, null);
+			setMaxIdx(tidx - 1);
+		}
 		return value;
 	}
 
