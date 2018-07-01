@@ -1,6 +1,8 @@
 package net.xy.codebase.reflec;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class ReflectionUtils {
 
@@ -75,5 +77,18 @@ public class ReflectionUtils {
 		} catch (final ClassNotFoundException e) {
 		}
 		return false;
+	}
+
+	public static Object call(final String name, final Object obj) {
+		try {
+			final Class<?> curClass = obj instanceof Class ? (Class<?>) obj : obj.getClass();
+			final Object curObject = obj instanceof Class ? null : obj;
+
+			final Method method = curClass.getDeclaredMethod(name);
+			return method.invoke(curObject);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+				| SecurityException e) {
+			throw new IllegalArgumentException("Can't call method", e);
+		}
 	}
 }
