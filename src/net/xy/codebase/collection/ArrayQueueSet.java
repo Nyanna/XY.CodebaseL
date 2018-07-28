@@ -37,6 +37,8 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 				set.remove(elem);
 				LOG.error("Queue rejected addition cuz too full [" + elem + "][" + getClass().getSimpleName() + "]");
 			}
+			if (LOG.isTraceEnabled())
+				LOG.trace("Added [" + elem + "]");
 			return added;
 		}
 		return true;
@@ -47,7 +49,8 @@ public class ArrayQueueSet<E> extends ArrayQueue<E> {
 		final E elem = super.take();
 		if (elem != null)
 			if (!set.remove(elem)) {
-				LOG.error("Error element in queue which was not added or has changed, reset [" + elem + "]");
+				LOG.error("Error element in queue which was not added or has changed, reset [" + elem + "]["
+						+ elem.hashCode() + "]");
 				set.clear();
 				clear();
 			}
