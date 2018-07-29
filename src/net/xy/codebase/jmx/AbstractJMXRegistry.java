@@ -309,7 +309,7 @@ public abstract class AbstractJMXRegistry implements IJMXRegistry {
 			final String keyStorePassword = "WUNHMhVhbQJHVXm4V4vK";
 			final String trustStore = null; // "resources/lwserver_trust.jks";
 			final String trustStorePassword = null; // "DfmOpvMgZ1HVvQV0jEsl";
-			// TODO add trustmanager to allow only specific clients to connect
+			// XXX add trustmanager to allow only specific clients to connect
 
 			char[] keyStorePasswd = null;
 			KeyStore ks = null;
