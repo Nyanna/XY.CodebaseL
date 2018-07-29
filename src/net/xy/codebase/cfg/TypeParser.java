@@ -44,7 +44,7 @@ public class TypeParser {
 	private final Matcher PT_STRICT_DOUBLE = Pattern.compile("([0-9.,\\-d]+):Double", MOD).matcher("");
 	private final Matcher PT_STRICT_BOOL = Pattern.compile("(true|false):Boolean", MOD).matcher("");
 	private final Matcher PT_STRICT_CHAR = Pattern.compile("(.{1}):Char", MOD).matcher("");
-	private final Matcher PT_STRING = Pattern.compile("(\".*\")", MOD).matcher("");
+	private final Matcher PT_STRING = Pattern.compile("\"(.*)\"", MOD).matcher("");
 	private final Matcher PT_BYTE = Pattern.compile("x([0-9\\-]{1,3})", MOD).matcher("");
 	private final Matcher PT_SHORT = Pattern.compile("([0-9\\-]{1,5})s", MOD).matcher("");
 	private final Matcher PT_INT = Pattern.compile("([0-9\\-]{1,10})", MOD).matcher("");
