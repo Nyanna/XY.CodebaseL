@@ -286,6 +286,8 @@ public class TimeoutQueue {
 		private void timedOut(final ITask nt, final long wns) {
 			execCount++;
 			tq.run(nt, wns);
+			if (!running)
+				LOG.info("QueueTimer is shutting down and executes [" + nt + "][" + getName() + "]");
 		}
 
 		/**
@@ -296,6 +298,7 @@ public class TimeoutQueue {
 				running = false;
 				tq.isFilled.call();
 			}
+			LOG.info("Shutdown of QueueTimer was called  [" + getName() + "]");
 		}
 
 		/**
