@@ -2,6 +2,7 @@ package net.xy.codebase.exec;
 
 import java.util.Comparator;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -203,6 +204,10 @@ public class TimeoutQueue {
 		 */
 		private boolean running = true;
 		/**
+		 * ts of last shutdown call
+		 */
+		private long stopedAt;
+		/**
 		 * amount of executed tasks
 		 */
 		private int execCount = 0;
@@ -286,7 +291,7 @@ public class TimeoutQueue {
 		private void timedOut(final ITask nt, final long wns) {
 			execCount++;
 			tq.run(nt, wns);
-			if (!running)
+			if (!running && System.currentTimeMillis() > stopedAt + TimeUnit.SECONDS.toMillis(10))
 				LOG.info("QueueTimer is shutting down and executes [" + nt + "][" + getName() + "]");
 		}
 
@@ -295,6 +300,7 @@ public class TimeoutQueue {
 		 */
 		public void shutdown() {
 			synchronized (tq.queue) {
+				stopedAt = System.currentTimeMillis();
 				running = false;
 				tq.isFilled.call();
 			}
