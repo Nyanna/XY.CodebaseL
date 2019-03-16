@@ -2,9 +2,13 @@ package net.xy.codebase.exec.tasks;
 
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.xy.codebase.exec.TimeoutQueue;
 
 public abstract class ScheduledTask implements ITask {
+	private static final Logger LOG = LoggerFactory.getLogger(ScheduledTask.class);
 	private final long intervall;
 	private long next;
 	private long nextFixed;
@@ -43,6 +47,8 @@ public abstract class ScheduledTask implements ITask {
 	@Override
 	public final void run() {
 		if (!isStoped()) {
+			if (LOG.isTraceEnabled())
+				LOG.trace("Running task [" + this + "]");
 			innerRun();
 			if (!isStoped() && intervall > 0) {
 				final long d = System.nanoTime() - next;
@@ -73,14 +79,11 @@ public abstract class ScheduledTask implements ITask {
 
 	@Override
 	public String toString() {
-		return String.format("ScheduledTask %s[cl=%s]", toStringSuper(), getClass().getName());
+		return String.format("ScheduledTask [%s]", toStringSuper());
 	}
 
 	protected String toStringSuper() {
-		if (intervall > 0)
-			return String.format("[iv=%s, next=%s, %s]", intervall / 1000000, (nextRun() - System.nanoTime()) / 1000000,
-					isStoped());
-		else
-			return String.format("[next=%s, %s]", (nextRun() - System.nanoTime()) / 1000000, isStoped());
+		final long ival = intervall > 0 ? intervall / 1000000 : 0;
+		return String.format("iv=%s,next=%s,%s", ival, (nextRun() - System.nanoTime()) / 1000000, isStoped());
 	}
 }

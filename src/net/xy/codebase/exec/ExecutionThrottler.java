@@ -133,6 +133,11 @@ public class ExecutionThrottler<E extends Enum<E>> {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return String.format("ExecutionThrottler [%s,%s,%s,%s]", interval, enabled, hashCode(), capsule);
+	}
+
 	/**
 	 * fixed container for scheduling throttler
 	 *
@@ -210,7 +215,7 @@ public class ExecutionThrottler<E extends Enum<E>> {
 
 		@Override
 		public String toString() {
-			return "Throttled: " + runnable.toString();
+			return String.format("ThrottledRunnable [%s]", runnable);
 		}
 	}
 

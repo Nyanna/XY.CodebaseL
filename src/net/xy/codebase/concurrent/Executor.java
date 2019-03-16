@@ -206,5 +206,10 @@ public abstract class Executor implements IExecutor {
 				exitThreads.incrementAndGet();
 			}
 		}
+
+		@Override
+		public String toString() {
+			return String.format("ThreadManager [workSum=%s,count=%s,%s]", workSum, count, toStringSuper());
+		}
 	}
 }

@@ -1,5 +1,8 @@
 package net.xy.codebase.exec.tasks;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * convenience container for runnables, mainly for lamda syntax
  *
@@ -7,6 +10,7 @@ package net.xy.codebase.exec.tasks;
  *
  */
 public class ScheduledTaskAdapter extends ScheduledTask implements ICoveredRunnable {
+	private static final Logger LOG = LoggerFactory.getLogger(ScheduledTaskAdapter.class);
 	/**
 	 * encapsulated runnables
 	 */
@@ -25,6 +29,8 @@ public class ScheduledTaskAdapter extends ScheduledTask implements ICoveredRunna
 
 	@Override
 	protected void innerRun() {
+		if (LOG.isTraceEnabled())
+			LOG.trace("Running sync " + this);
 		run.run();
 	}
 
@@ -39,11 +45,11 @@ public class ScheduledTaskAdapter extends ScheduledTask implements ICoveredRunna
 
 	@Override
 	public String toString() {
-		return String.format("ScheduledTaskAdapter %s", super.toStringSuper());
+		return String.format("ScheduledTaskAdapter [%s]", toStringSuper());
 	}
 
 	@Override
 	protected String toStringSuper() {
-		return String.format("[%s]%s", run, super.toStringSuper());
+		return String.format("%s,r=%s", super.toStringSuper(), run);
 	}
 }

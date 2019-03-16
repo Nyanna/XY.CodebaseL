@@ -86,7 +86,10 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 		final TrackingQueue<Runnable> que = get(target);
 		if (que == null)
 			throw new IllegalArgumentException("Target job queue don't exists [" + target + "]");
-		return que.take(ms);
+		final Runnable runnable = que.take(ms);
+		if (LOG.isTraceEnabled() && runnable != null)
+			LOG.trace("Took job from que [" + target + "][" + runnable + "]");
+		return runnable;
 	}
 
 	@Override
@@ -102,8 +105,11 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 			else
 				LOG.error("Target thread too full droping job [" + target + "][" + que.size() + "][" + job + "]");
 			return false;
-		} else if (obs != null)
+		} else if (obs != null) {
+			if (LOG.isTraceEnabled())
+				LOG.trace("Adding job to que [" + target + "][" + que.size() + "][" + job + "]");
 			obs.jobAdded(target, job);
+		}
 		return true;
 	}
 

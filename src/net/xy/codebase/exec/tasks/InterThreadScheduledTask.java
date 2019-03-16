@@ -1,8 +1,12 @@
 package net.xy.codebase.exec.tasks;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.xy.codebase.exec.IInterThreads;
 
 public class InterThreadScheduledTask<E extends Enum<E>> extends ScheduledTaskAdapter {
+	private static final Logger LOG = LoggerFactory.getLogger(InterThreadScheduledTask.class);
 	/**
 	 * target thread
 	 */
@@ -41,11 +45,18 @@ public class InterThreadScheduledTask<E extends Enum<E>> extends ScheduledTaskAd
 
 	@Override
 	protected final void innerRun() {
+		if (LOG.isTraceEnabled())
+			LOG.trace("Running via executor " + this);
 		it.run(thread, getRunnable());
 	}
 
 	@Override
 	public String toString() {
-		return String.format("InterThreadScheduledTask [t=%s][%s]", thread, super.toStringSuper());
+		return String.format("%s [%s]", getClass().getSimpleName(), toStringSuper());
+	}
+
+	@Override
+	protected String toStringSuper() {
+		return String.format("t=%s,%s", thread, super.toStringSuper());
 	}
 }

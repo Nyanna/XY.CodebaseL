@@ -86,25 +86,36 @@ public class TimeoutQueue {
 	}
 
 	private void addDiagnosticTask() {
-		add(diagnostic = new ScheduledTask(30 * 1000) {
-			private long lastRun = System.currentTimeMillis();
+		add(diagnostic = new DiagnosticTask(30 * 1000));
+	}
 
-			@Override
-			public void innerRun() {
-				final long now = System.currentTimeMillis();
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("TQueue size [" + queue.size() + "][exec=" + timer.getExecCount() + "][" + timer.getName()
-							+ "]");
+	private class DiagnosticTask extends ScheduledTask {
+		private long lastRun = System.currentTimeMillis();
 
-					final long deltaT = now - lastRun;
-					final float tps = (float) timer.getExecCount() / deltaT * 1000;
-					LOG.debug("TQueue avr [" + tps + "][exec=" + timer.getExecCount() + "][delta=" + deltaT + "]["
-							+ timer.getName() + "]");
-				}
-				timer.resetExecCount();
-				lastRun = now;
+		private DiagnosticTask(final long intervallMs) {
+			super(intervallMs);
+		}
+
+		@Override
+		public void innerRun() {
+			final long now = System.currentTimeMillis();
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("TQueue size [" + queue.size() + "][exec=" + timer.getExecCount() + "][" + timer.getName()
+						+ "]");
+
+				final long deltaT = now - lastRun;
+				final float tps = (float) timer.getExecCount() / deltaT * 1000;
+				LOG.debug("TQueue avr [" + tps + "][exec=" + timer.getExecCount() + "][delta=" + deltaT + "]["
+						+ timer.getName() + "]");
 			}
-		});
+			timer.resetExecCount();
+			lastRun = now;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("DiagnosticTask [%s]", toStringSuper());
+		}
 	}
 
 	/**
