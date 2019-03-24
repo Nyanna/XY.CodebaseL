@@ -51,6 +51,7 @@ public class SerializationContext {
 	private final Map<Short, Class<?>> idxToClasses = new HashMap<Short, Class<?>>();
 	private HashMap<Byte, IExternalizer<?>> externalizers;
 	protected IObjectPool pool = ObjectPool.INSTANCE;
+	private long hash = 0;
 	/*
 	 * primitive type constants
 	 */
@@ -98,17 +99,56 @@ public class SerializationContext {
 			for (final Class<?> cl : clSet)
 				if (!cl.isInterface() && !isSerializable(cl)) {
 					noSri = true;
-					LOG.error("Class doesn't implements serializable [" + cl + "]");
+					throw new IllegalArgumentException("Class doesn't implements serializable [" + cl + "]");
 				} else
 					try {
 						if (!cl.isArray() && !cl.isEnum() && !cl.isInterface())
 							cl.getDeclaredConstructor();
 						addClass(cl, idx++);
 					} catch (final NoSuchMethodException e) {
-						LOG.error("Class dont has an no arg constructor[" + cl + "]");
+						throw new IllegalArgumentException("Class dont has an no arg constructor[" + cl + "]");
 					}
 		if (noSri)
 			throw new IllegalArgumentException("Tried not non serializable classes");
+
+		long hash = 0l;
+		for (final Class<?> clazz : classesToIdx.keySet())
+			hash += hashClass(clazz);
+		this.hash = hash;
+	}
+
+	private long hashClass(final Class<?> cl) {
+		long result = 13;
+
+		for (final Field field : cl.getDeclaredFields()) {
+			if (!isValidField(field))
+				continue;
+
+			Class<?> type = field.getType();
+			while (type.isArray()) {
+				result *= 13;
+				type = type.getComponentType();
+			}
+			if (type.isInterface() || type.isEnum())
+				continue;
+
+			if (!classesToIdx.containsKey(type))
+				throw new IllegalArgumentException("Class has field that is not in context [" + cl.getName() + "]["
+						+ field.getName() + "][" + type.getName() + "]");
+
+			result *= type.getName().hashCode();
+		}
+
+		if (cl.getSuperclass() != null)
+			result *= hashClass(cl.getSuperclass());
+		return result;
+	}
+
+	/**
+	 * @return overall hash and primary id of serialization context
+	 */
+	public long getHash() {
+		return hash;
 	}
 
 	/**
@@ -396,7 +436,7 @@ public class SerializationContext {
 			throws IOException, IllegalAccessException {
 		final List<Field> fields = getFields(tcl);
 		for (final Field field : fields)
-			if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
+			if (isValidField(field)) {
 				field.setAccessible(true);
 				try {
 					write(out, field.get(target));
@@ -407,6 +447,10 @@ public class SerializationContext {
 					throw new IllegalArgumentException("Error serializing field [" + field.getName() + "]", ex2);
 				}
 			}
+	}
+
+	private boolean isValidField(final Field field) {
+		return !Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers());
 	}
 
 	/**
@@ -676,7 +720,7 @@ public class SerializationContext {
 			IOException, InstantiationException, ClassNotFoundException, InvocationTargetException {
 		final List<Field> fields = getFields(cl);
 		for (final Field field : fields)
-			if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isTransient(field.getModifiers())) {
+			if (isValidField(field)) {
 				if (field.getAnnotation(IgnoreRead.class) != null)
 					continue;
 
