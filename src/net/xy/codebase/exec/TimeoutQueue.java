@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.Primitive;
-import net.xy.codebase.concurrent.Monitor;
+import net.xy.codebase.concurrent.Semaphore;
 import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.ScheduledTask;
 import net.xy.codebase.exec.tasks.ScheduledTaskAdapter;
@@ -46,7 +46,7 @@ public class TimeoutQueue {
 	/**
 	 * for waits in empty ques
 	 */
-	private final Monitor isFilled = new Monitor();
+	private final Semaphore isFilled = new Semaphore();
 
 	/**
 	 * default
@@ -313,7 +313,7 @@ public class TimeoutQueue {
 			synchronized (tq.queue) {
 				stopedAt = System.currentTimeMillis();
 				running = false;
-				tq.isFilled.call();
+				tq.isFilled.callAll();
 			}
 			LOG.info("Shutdown of QueueTimer was called  [" + getName() + "]");
 		}

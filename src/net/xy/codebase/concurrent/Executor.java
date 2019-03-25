@@ -15,13 +15,13 @@ public abstract class Executor implements IExecutor {
 	private final AtomicInteger exitThreads = new AtomicInteger(0);
 	private int threadCount = 0;
 
-	private int coreAmount = Math.max(2, Runtime.getRuntime().availableProcessors() - 1);
+	private int coreAmount = 2;
 	private int maxAmount = Math.max(coreAmount, Runtime.getRuntime().availableProcessors());
 
 	private volatile boolean shutdown = false;
 	private ScheduledTask threadChecker;
 
-	public Executor(final InterThreads<?> inter) {
+	public void start(final InterThreads<?> inter) {
 		inter.start(threadChecker = new ThreadManager(40));
 	}
 
@@ -159,7 +159,6 @@ public abstract class Executor implements IExecutor {
 
 		public void jobAccepted() {
 			vote(State.Working);
-			check(); // cuz maybe enabled new ones
 		}
 
 		public boolean vote(final State vote) {

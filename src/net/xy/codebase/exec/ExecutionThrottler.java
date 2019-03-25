@@ -13,7 +13,7 @@ import net.xy.codebase.exec.tasks.InterThreadScheduledTask;
 
 /**
  * throttler to execute an runnable not more than every interval. ensures that
- * no run call would be missed.
+ * no run call would be missed. you have to call start() after creation.
  *
  * @author Xyan
  *
@@ -29,10 +29,6 @@ public class ExecutionThrottler<E extends Enum<E>> {
 	 */
 	private final ThrottledRunnable capsule;
 	private final ThrottledScheduler scheduler;
-	/**
-	 * intervall to run at in ms
-	 */
-	private final int interval;
 	// in nanos
 	private final long intervalNs;
 	/**
@@ -72,14 +68,13 @@ public class ExecutionThrottler<E extends Enum<E>> {
 	@SuppressWarnings("unchecked")
 	public <T extends ITask & IPriority> ExecutionThrottler(final Runnable runnable, final int interval,
 			final InterThreads<E> inter, final E target) {
-		this.interval = interval;
 		this.inter = inter;
 		this.target = target;
 		intervalNs = TimeUnit.MILLISECONDS.toNanos(interval);
 		if (runnable instanceof IPriority)
-			capsule = new PriorityThrottledRunnable((T) runnable);
+			capsule = new PriorityThrottledRunnable((T) runnable, this);
 		else
-			capsule = new ThrottledRunnable(runnable);
+			capsule = new ThrottledRunnable(runnable, this);
 		scheduler = new ThrottledScheduler(inter);
 	}
 
@@ -100,7 +95,8 @@ public class ExecutionThrottler<E extends Enum<E>> {
 			final int runs = lastUpdate.get();
 			if (runs != 0 && lastUpdate.compareAndSet(runs, runs + 1)) {
 				if (LOG.isTraceEnabled())
-					LOG.trace("Request throttled run [" + interval + "][" + capsule + "]");
+					LOG.trace("Request throttled run [" + TimeUnit.NANOSECONDS.toMillis(intervalNs) + "][" + capsule
+							+ "]");
 				return;
 			} else if (lastUpdate.compareAndSet(0, 1)) {
 				// start runnable
@@ -110,14 +106,15 @@ public class ExecutionThrottler<E extends Enum<E>> {
 					scheduler.setNext(nextStart > now ? nextStart : 0L);
 				}
 				if (LOG.isTraceEnabled())
-					LOG.trace("Start throttled [" + interval + "][" + capsule + "]");
+					LOG.trace("Start throttled [" + TimeUnit.NANOSECONDS.toMillis(intervalNs) + "][" + capsule + "]");
 				if (!planThrottler()) {
 					lastUpdate.set(0);
 					LOG.error("Failed to schedule throttle, reseting");
 				}
 				return;
 			} else if (LOG.isTraceEnabled())
-				LOG.trace("Inefficient loop repeat [" + interval + "][" + capsule + "]");
+				LOG.trace(
+						"Inefficient loop repeat [" + TimeUnit.NANOSECONDS.toMillis(intervalNs) + "][" + capsule + "]");
 		}
 	}
 
@@ -135,7 +132,8 @@ public class ExecutionThrottler<E extends Enum<E>> {
 
 	@Override
 	public String toString() {
-		return String.format("ExecutionThrottler [%s,%s,%s,%s]", interval, enabled, hashCode(), capsule);
+		return String.format("ExecutionThrottler [%s,%s,%s,%s]", TimeUnit.NANOSECONDS.toMillis(intervalNs), enabled,
+				hashCode(), capsule);
 	}
 
 	/**
@@ -161,47 +159,56 @@ public class ExecutionThrottler<E extends Enum<E>> {
 	 * @author Xyan
 	 *
 	 */
-	public class ThrottledRunnable implements Runnable, ICoveredRunnable {
+	public static class ThrottledRunnable implements Runnable, ICoveredRunnable {
 		/**
 		 * target action to run
 		 */
 		private final Runnable runnable;
+		/**
+		 * backreference to throttler
+		 */
+		private final ExecutionThrottler<?> throttler;
 
 		/**
 		 * default
 		 *
 		 * @param runnable
 		 */
-		public ThrottledRunnable(final Runnable runnable) {
+		public ThrottledRunnable(final Runnable runnable, final ExecutionThrottler<?> throttler) {
 			this.runnable = runnable;
+			this.throttler = throttler;
 		}
 
 		@Override
 		public void run() {
+			final AtomicInteger lastUpdate = throttler.lastUpdate;
 			final int wish = lastUpdate.get();
 			final long now = System.nanoTime();
-			lastStart = now;
+			final long intervalNs = throttler.intervalNs;
+
+			throttler.lastStart = now;
 			if (LOG.isTraceEnabled())
-				LOG.trace("Run throttled [" + interval + "][" + this + "]");
+				LOG.trace("Run throttled [" + TimeUnit.NANOSECONDS.toMillis(intervalNs) + "][" + this + "]");
 			runGuarded();
 			if (lastUpdate.compareAndSet(wish, 0)) {
 				if (LOG.isTraceEnabled())
-					LOG.trace("Terminate throttled run [" + interval + "][" + this + "]");
+					LOG.trace("Terminate throttled run [" + TimeUnit.NANOSECONDS.toMillis(intervalNs) + "][" + this
+							+ "]");
 				return;
 			} else {
 				// update in future or has changed
 				if (intervalNs > 0)
-					scheduler.setNext(now + intervalNs);
+					throttler.scheduler.setNext(now + intervalNs);
 				if (LOG.isTraceEnabled())
-					LOG.trace("Rerun throttled run [" + interval + "][" + this + "]");
-				if (!planThrottler())
+					LOG.trace("Rerun throttled run [" + TimeUnit.NANOSECONDS.toMillis(intervalNs) + "][" + this + "]");
+				if (!throttler.planThrottler())
 					LOG.error("Error rescheduling throttler [" + this + "]");
 			}
 		}
 
 		private void runGuarded() {
 			try {
-				if (enabled)
+				if (throttler.enabled)
 					runnable.run();
 			} catch (final Exception e) {
 				LOG.error("Error running throttled", e);
@@ -225,14 +232,15 @@ public class ExecutionThrottler<E extends Enum<E>> {
 	 * @author Xyan
 	 *
 	 */
-	public class PriorityThrottledRunnable extends ThrottledRunnable implements IPriority {
+	public static class PriorityThrottledRunnable extends ThrottledRunnable implements IPriority {
 		/**
 		 * target action to run
 		 */
 		private final IPriority runnable;
 
-		public <R extends Runnable & IPriority> PriorityThrottledRunnable(final R runnable) {
-			super(runnable);
+		public <R extends Runnable & IPriority> PriorityThrottledRunnable(final R runnable,
+				final ExecutionThrottler<?> throttler) {
+			super(runnable, throttler);
 			this.runnable = runnable;
 		}
 

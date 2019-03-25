@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xy.codebase.concurrent.Monitor;
 import net.xy.codebase.concurrent.Semaphore;
 
 /**
@@ -19,7 +18,7 @@ public class ParkingQueue<E> {
 	private static final Logger LOG = LoggerFactory.getLogger(ParkingQueue.class);
 	private final Queue<E> aq;
 	private final Semaphore added = new Semaphore();
-	private final Monitor empty = new Monitor();
+	private final Semaphore empty = new Semaphore();
 
 	/**
 	 * default with default ArrayQueue
@@ -79,7 +78,7 @@ public class ParkingQueue<E> {
 			elem = aq.take();
 
 			if (elem == null) {
-				empty.call();
+				empty.callAll();
 
 				if (waitMillis < 0) {
 					added.await(state, waitMillis);

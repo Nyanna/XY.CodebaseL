@@ -14,6 +14,10 @@ import net.xy.codebase.exec.ThreadUtils;
  */
 public abstract class Sync {
 	/**
+	 * bitmask to preserve max and min integer as special values
+	 */
+	private static int BITMASK = 1073741823;
+	/**
 	 * last queued tail node
 	 */
 	protected final AtomicReference<Slot> tail = new AtomicReference<Slot>();
@@ -69,9 +73,14 @@ public abstract class Sync {
 			sl.setWaiting(state);
 			if (nTime < 0)
 				LockSupport.park(this);
-			else
+			else {
 				LockSupport.parkNanos(this, wTime);
-			sl.setRuning();
+				if (!sl.setRuning(state)) {
+					// i don't woke myself so i use the permit
+					LockSupport.unpark(th); // for safety add one
+					LockSupport.park(this);
+				}
+			}
 		}
 		dequeue(sl, th);
 	}
@@ -187,8 +196,9 @@ public abstract class Sync {
 		 */
 		public boolean wake() {
 			final int state = waiting.get();
-			final boolean res = state != 0 && waiting.compareAndSet(state, 0);
-			LockSupport.unpark(thread.get());
+			final boolean res = state != Integer.MIN_VALUE && setRuning(state);
+			if (res)
+				LockSupport.unpark(thread.get());
 			return res;
 		}
 
@@ -198,11 +208,13 @@ public abstract class Sync {
 		 * @param state
 		 */
 		public void setWaiting(final int state) {
-			waiting.set(state);
+			final int shiftstate = state % BITMASK;
+			waiting.set(shiftstate);
 		}
 
-		public void setRuning() {
-			waiting.set(0);
+		public boolean setRuning(final int state) {
+			final int shiftstate = state % BITMASK;
+			return waiting.compareAndSet(shiftstate, Integer.MIN_VALUE);
 		}
 
 		/**
