@@ -1,8 +1,8 @@
 package net.xy.codebase.exec;
 
-import net.xy.codebase.exec.TimeoutQueue.IQueueTaskObserver;
 import net.xy.codebase.exec.tasks.ITask;
 import net.xy.codebase.exec.tasks.ScheduledTask;
+import net.xy.codebase.exec.tq.IQueueObserver;
 
 /**
  * interface for cross thread task execution
@@ -131,7 +131,7 @@ public interface IInterThreads<E extends Enum<E>> {
 	 * @author Xyan
 	 *
 	 */
-	public static interface IJobObserver<E> extends IQueueTaskObserver {
+	public static interface IJobObserver<E> extends IQueueObserver {
 		/**
 		 *
 		 * @param target

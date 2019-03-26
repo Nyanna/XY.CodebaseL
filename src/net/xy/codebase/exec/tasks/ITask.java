@@ -1,6 +1,6 @@
 package net.xy.codebase.exec.tasks;
 
-import net.xy.codebase.exec.TimeoutQueue;
+import net.xy.codebase.exec.tq.TimeoutQueue;
 
 /**
  * task contract

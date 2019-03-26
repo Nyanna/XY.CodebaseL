@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.xy.codebase.exec.TimeoutQueue;
+import net.xy.codebase.exec.tq.TimeoutQueue;
 
 public abstract class ScheduledTask implements ITask {
 	private static final Logger LOG = LoggerFactory.getLogger(ScheduledTask.class);

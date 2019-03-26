@@ -7,8 +7,9 @@ import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.exec.IInterThreads.IJobObserver;
 import net.xy.codebase.exec.tasks.ITask;
+import net.xy.codebase.exec.tq.AbstractQueueObserver;
 
-public class JobObserver<J> implements IJobObserver<J> {
+public class JobObserver<J> extends AbstractQueueObserver implements IJobObserver<J> {
 	private static final Logger LOG = LoggerFactory.getLogger(JobObserver.class);
 	private static final long IGNORE_LATENCY = TimeUnit.MILLISECONDS.toNanos(5);
 	/**
@@ -64,11 +65,6 @@ public class JobObserver<J> implements IJobObserver<J> {
 	}
 
 	@Override
-	public void taskAdded(final ITask t) {
-
-	}
-
-	@Override
 	public void taskStarted(final ITask t, final long latency) {
 		if (latency < IGNORE_LATENCY)
 			return;
@@ -86,9 +82,5 @@ public class JobObserver<J> implements IJobObserver<J> {
 		} else
 			lastDelayCounter++;
 		delayCount++;
-	}
-
-	@Override
-	public void taskStoped(final ITask t) {
 	}
 }

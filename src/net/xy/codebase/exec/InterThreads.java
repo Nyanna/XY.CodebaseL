@@ -28,13 +28,13 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	/**
 	 * timeout queue for delayed task execution
 	 */
-	protected final TimeoutQueue tque;
+	protected final InterTimeoutQueue tque;
 
 	/**
 	 * inner, initializing common fields
 	 */
 	private InterThreads() {
-		tque = new TimeoutQueue("InterThreads");
+		tque = new InterTimeoutQueue("InterThreads", this);
 	}
 
 	/**
@@ -66,7 +66,7 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 	@Override
 	public void setObserver(final net.xy.codebase.exec.IInterThreads.IJobObserver<E> obs) {
 		super.setObserver(obs);
-		tque.setObserver(obs);
+		tque.addObserver(obs);
 	}
 
 	/**
@@ -130,22 +130,18 @@ public class InterThreads<E extends Enum<E>> extends AbstractInterThreads<E> {
 
 	@Override
 	public InterThreadScheduledTask<E> runLater(final E thread, final Runnable run, final int timeout) {
-		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, 0, timeout, run, this);
-		return start(res) ? res : null;
+		return tque.runLater(thread, run, timeout);
 	}
 
 	@Override
 	public ScheduledTask runIntervall(final E thread, final Runnable run, final int intervall) {
-		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, intervall, 0, run, this);
-		return start(res) ? res : null;
+		return tque.runIntervall(thread, run, intervall);
 	}
 
 	@Override
 	public ScheduledTask runDelayedIntervall(final E thread, final Runnable run, final int intervall,
 			final int startDelay) {
-		final InterThreadScheduledTask<E> res = new InterThreadScheduledTask<E>(thread, intervall, startDelay, run,
-				this);
-		return start(res) ? res : null;
+		return tque.runDelayedIntervall(thread, run, intervall, startDelay);
 	}
 
 	@Override
