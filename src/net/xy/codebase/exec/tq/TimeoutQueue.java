@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.xy.codebase.asserts.Assert;
 import net.xy.codebase.concurrent.Semaphore;
 import net.xy.codebase.exec.tasks.ITask;
 
@@ -101,6 +102,8 @@ public class TimeoutQueue {
 	public boolean add(final ITask t) {
 		if (!isRunning())
 			return false;
+
+		Assert.True(t != null, "Task should not be null");
 
 		if (LOG.isTraceEnabled())
 			LOG.trace("add task [" + t + "]");
