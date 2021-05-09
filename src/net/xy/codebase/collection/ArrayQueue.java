@@ -179,7 +179,7 @@ public class ArrayQueue<E> implements Queue<E> {
 	 */
 	@Override
 	public void clear() {
-		while (take() != null)
+		while (takeInner() != null)
 			;
 	}
 
