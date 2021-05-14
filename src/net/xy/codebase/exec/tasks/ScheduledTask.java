@@ -40,8 +40,22 @@ public abstract class ScheduledTask implements ITask {
 		return isStoped() ? 0 : next;
 	}
 
-	public void setNext(final long timeoutMs) {
+	/**
+	 * set next execution time by offset to now
+	 *
+	 * @param timeoutMs offset to now
+	 */
+	public void setNextOffset(final long timeoutMs) {
 		next = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
+	}
+
+	/**
+	 * set absolute next execution time
+	 *
+	 * @param timeNanos
+	 */
+	public void setNextTime(final long timeNanos) {
+		next = timeNanos;
 	}
 
 	@Override

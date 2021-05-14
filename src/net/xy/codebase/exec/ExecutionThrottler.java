@@ -49,8 +49,8 @@ public class ExecutionThrottler<E extends Enum<E>> {
 	private final E target;
 
 	/**
-	 * with 0 intervall ensures only that not 2 runnable are scheduled at the
-	 * same time
+	 * with 0 intervall ensures only that not 2 runnable are scheduled at the same
+	 * time
 	 *
 	 * @param runnable
 	 */
@@ -62,8 +62,7 @@ public class ExecutionThrottler<E extends Enum<E>> {
 	 * default
 	 *
 	 * @param runnable
-	 * @param interval
-	 *            in ms
+	 * @param interval in ms
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends ITask & IPriority> ExecutionThrottler(final Runnable runnable, final int interval,
@@ -103,7 +102,7 @@ public class ExecutionThrottler<E extends Enum<E>> {
 				if (intervalNs > 0) {
 					final long now = System.nanoTime();
 					final long nextStart = lastStart + intervalNs;
-					scheduler.setNext(nextStart > now ? nextStart : 0L);
+					scheduler.setNextTime(nextStart > now ? nextStart : 0L);
 				}
 				if (LOG.isTraceEnabled())
 					LOG.trace("Start throttled [" + TimeUnit.NANOSECONDS.toMillis(intervalNs) + "][" + capsule + "]");
@@ -198,7 +197,7 @@ public class ExecutionThrottler<E extends Enum<E>> {
 			} else {
 				// update in future or has changed
 				if (intervalNs > 0)
-					throttler.scheduler.setNext(now + intervalNs);
+					throttler.scheduler.setNextTime(now + intervalNs);
 				if (LOG.isTraceEnabled())
 					LOG.trace("Rerun throttled run [" + TimeUnit.NANOSECONDS.toMillis(intervalNs) + "][" + this + "]");
 				if (!throttler.planThrottler())
