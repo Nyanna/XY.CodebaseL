@@ -54,16 +54,21 @@ public interface IPerfCounter {
 	public long getAvrLoopTime();
 
 	/**
-	 * average time from one call to loop end to the next one, called intervall
-	 * time
+	 * average time from one call to loop end to the next one, called intervall time
 	 *
 	 * @return
 	 */
 	public long getAvrLoopIntervalTime();
 
 	/**
-	 * last time from one call to loop end to the next one, called intervall
-	 * time
+	 * amount of measures in last loop
+	 *
+	 * @return
+	 */
+	public long getLastLoopCalls();
+
+	/**
+	 * last time from one call to loop end to the next one, called intervall time
 	 *
 	 * @return
 	 */
@@ -107,7 +112,7 @@ public interface IPerfCounter {
 
 	/**
 	 * bypass the intern data stores nad just count a measure
-	 * 
+	 *
 	 * @param nanoTime
 	 * @param measureStart
 	 */

@@ -44,6 +44,14 @@ public class PerfCounter implements IPerfCounter {
 	 */
 	private long lastLoopEnd;
 	/**
+	 * amount of start calls in current loop
+	 */
+	private long loopCalls;
+	/**
+	 * amount of start calls in last loop
+	 */
+	private long lastLoopCalls;
+	/**
 	 * sum values
 	 */
 	private double overallSum;
@@ -61,8 +69,7 @@ public class PerfCounter implements IPerfCounter {
 	private final double frame;
 
 	/**
-	 * @param decay
-	 *            exponential frame
+	 * @param decay exponential frame
 	 */
 	public PerfCounter(final double decay) {
 		frame = 1d - decay;
@@ -80,6 +87,7 @@ public class PerfCounter implements IPerfCounter {
 			LOG.error("Error started measure twice, ignore last measure", new Exception());
 		}
 		measureStart = nanoTime;
+		loopCalls++;
 	}
 
 	@Override
@@ -132,6 +140,9 @@ public class PerfCounter implements IPerfCounter {
 
 		overallSum += lastLoopSum;
 		loopCounts++;
+
+		lastLoopCalls = loopCalls;
+		loopCalls = 0;
 	}
 
 	@Override
@@ -177,6 +188,11 @@ public class PerfCounter implements IPerfCounter {
 	@Override
 	public long lastUpdateAge(final long nanoTime) {
 		return TimeUnit.NANOSECONDS.toMicros(nanoTime - measureStop.get());
+	}
+
+	@Override
+	public long getLastLoopCalls() {
+		return lastLoopCalls;
 	}
 
 	@Override

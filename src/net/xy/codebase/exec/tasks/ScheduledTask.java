@@ -11,7 +11,7 @@ public abstract class ScheduledTask implements ITask {
 	private static final Logger LOG = LoggerFactory.getLogger(ScheduledTask.class);
 	private final long intervall;
 	private long next;
-	private long nextFixed;
+	private long nextFixed = Long.MIN_VALUE;
 	private volatile boolean stoped = false;
 	private TimeoutQueue tq;
 
@@ -30,9 +30,22 @@ public abstract class ScheduledTask implements ITask {
 	}
 
 	@Override
-	public void setQueue(final TimeoutQueue tq) {
+	public final void enterQueue(final TimeoutQueue tq) {
+		// Assert.True(nextFixed == Long.MIN_VALUE, "Error tried to add allready added
+		// task again");
 		this.tq = tq;
 		nextFixed = nextRun();
+		if (nextFixed == Long.MIN_VALUE)
+			LOG.error("Error tried to add allready added task again [" + this + "]", new Exception());
+	}
+
+	@Override
+	public final void leaveQueue() {
+		// Assert.True(nextFixed != Long.MIN_VALUE, "Error removed task gots removed
+		// again");
+		nextFixed = Long.MIN_VALUE;
+		if (nextFixed != Long.MIN_VALUE)
+			LOG.error("Error removed task gots removed again [" + this + "]", new Exception());
 	}
 
 	@Override

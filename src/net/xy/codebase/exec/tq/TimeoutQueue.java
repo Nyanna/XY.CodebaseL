@@ -64,6 +64,7 @@ public class TimeoutQueue {
 		this.name = name + " " + TimeoutQueue.class.getSimpleName() + "-" + COUNTER.incrementAndGet();
 		queue = new PriorityBlockingQueue<ITask>(100, new TaskComparator());
 		thread.setQueue(queue);
+		thread.setTimeoutQueue(this);
 		thread.setCondition(added);
 		thread.setObserver(obs);
 		thread.setPriority(Thread.MAX_PRIORITY);
@@ -107,15 +108,15 @@ public class TimeoutQueue {
 
 		if (LOG.isTraceEnabled())
 			LOG.trace("add task [" + t + "]");
-		t.setQueue(this);
+		t.enterQueue(this);
 
 		final boolean res = queue.add(t);
-		if (queue.peek() == t)
-			added.call();
 		if (!res)
 			LOG.error("Error inserting task into timeout que [" + t + "][" + timer.getName() + "]");
-		else if (obs != null)
+		else if (obs != null) {
+			added.call();
 			obs.taskAdded(t);
+		}
 		return res;
 	}
 

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import net.xy.codebase.concurrent.Semaphore;
 import net.xy.codebase.exec.ThreadExtended;
+import net.xy.codebase.exec.ThreadUtils;
 import net.xy.codebase.exec.tasks.ITask;
 
 /**
@@ -27,6 +28,10 @@ public class QueueTimerThread extends ThreadExtended {
 	 * ref to parent queue
 	 */
 	private PriorityBlockingQueue<ITask> queue;
+	/**
+	 * back reference to the surrounding TimeoutQueue for task add purpose
+	 */
+	private TimeoutQueue timeoutQueue;
 	/**
 	 * for waits in empty ques
 	 */
@@ -77,6 +82,15 @@ public class QueueTimerThread extends ThreadExtended {
 		this.queue = queue;
 	}
 
+	/**
+	 * set back reference for readd purpose
+	 *
+	 * @param timeoutQueue
+	 */
+	public void setTimeoutQueue(final TimeoutQueue timeoutQueue) {
+		this.timeoutQueue = timeoutQueue;
+	}
+
 	@Override
 	public void run() {
 		final PriorityBlockingQueue<ITask> q = queue;
@@ -88,18 +102,22 @@ public class QueueTimerThread extends ThreadExtended {
 					added.await(state);
 					continue;
 				}
+				nt.leaveQueue();
 
 				final long nextRun = nt.nextRun();
 				long wns = 0;
 				if (nextRun > 0 && (wns = nextRun - System.nanoTime()) > 0l) {
-					q.add(nt);
+					// first wait time to first task
 					added.await(state, wns);
+					// than add again to repeat
+					timeoutQueue.add(nt);
 					continue;
 				}
 
 				timedOut(nt, wns);
 			} catch (final Exception e) {
 				LOG.error("Error in TQ loop", e);
+				ThreadUtils.sleep(1000);
 			}
 		LOG.info("Exit TimeOutQueue Timer Thread [" + getName() + "]");
 		if (obs != null)

@@ -15,11 +15,17 @@ public interface ITask extends Runnable {
 	public long nextRun();
 
 	/**
-	 * for recurring implementation have to self readd
+	 * for recurring implementation have to self read, also acts as a boundary check
+	 * for double insertions or removals
 	 *
 	 * @param tq
 	 */
-	public void setQueue(TimeoutQueue tq);
+	public void enterQueue(TimeoutQueue tq);
+
+	/**
+	 * acts as a boundary check for double insertions or removals
+	 */
+	public void leaveQueue();
 
 	/**
 	 * an fixed ts created uppon tq insertion to secure binary heap
